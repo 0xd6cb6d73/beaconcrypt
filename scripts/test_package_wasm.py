@@ -53,12 +53,12 @@ class PackagingTest(unittest.TestCase):
         self.repo = Path(self.temporary.name) / "repo"
         self.output = Path(self.temporary.name) / "release"
         for path, content in {
-            "go.mod": f"module {packager.MODULE}\n\ngo 1.25.0\n".encode(),
-            "go.sum": b"",
-            "api.go": b"package beaconcrypt\n",
-            "backend_wazero.go": b'package beaconcrypt\nimport _ "embed"\n//go:embed internal/wasm/beaconcrypt.wasm\nvar guest []byte\n',
-            "beaconcrypt_go.c": b"/* C shim */\n",
-            "beaconcrypt_go.h": b"/* C declarations */\n",
+            "go/go.mod": f"module {packager.MODULE}\n\ngo 1.25.0\n".encode(),
+            "go/go.sum": b"",
+            "go/api.go": b"package beaconcrypt\n",
+            "go/backend_wazero.go": b'package beaconcrypt\nimport _ "embed"\n//go:embed internal/wasm/beaconcrypt.wasm\nvar guest []byte\n',
+            "go/beaconcrypt_go.c": b"/* C shim */\n",
+            "go/beaconcrypt_go.h": b"/* C declarations */\n",
             "beaconcrypt/bindings.h": b"/* Rust declarations */\n",
             "LICENSE": b"0BSD fixture\n",
             "Cargo.toml": b"[workspace]\n",
@@ -66,9 +66,9 @@ class PackagingTest(unittest.TestCase):
             "beaconcrypt-crypto/Cargo.toml": b'[package]\nname="beaconcrypt-crypto"\n',
             "beaconcrypt-crypto/src/lib.rs": b"#![no_std]\n",
             "scripts/wasm-toolchain.json": b'{"rust":"1.99.1","target":"wasm32-wasip1","wasm_abi_version":1}',
-            "internal/wasm/beaconcrypt.wasm": guest(),
-            "internal/wasm/runtime.go": b"package wasm\n",
-            "testdata/fixture.json": b'{"fixture":true}',
+            "go/internal/wasm/beaconcrypt.wasm": guest(),
+            "go/internal/wasm/runtime.go": b"package wasm\n",
+            "go/testdata/fixture.json": b'{"fixture":true}',
             "target/do-not-ship": b"build output",
             ".tools/do-not-ship": b"tool cache",
         }.items():
@@ -182,7 +182,7 @@ class PackagingTest(unittest.TestCase):
                 "beaconcrypt_go.h",
                 "beaconcrypt/bindings.h",
                 "LICENSE",
-                str(packager.WASM_PATH),
+                str(packager.BUNDLE_WASM_PATH),
                 "internal/wasm/runtime.go",
                 "testdata/fixture.json",
             ):
@@ -248,7 +248,7 @@ class PackagingTest(unittest.TestCase):
             )
             self.assertFalse(manifest["source_dirty"])
 
-        for filename in ("api.go", "unexpected-source.go"):
+        for filename in ("go/api.go", "go/unexpected-source.go"):
             with self.subTest(filename=filename):
                 source = self.repo / filename
                 original = source.read_bytes() if source.exists() else None
@@ -265,7 +265,7 @@ class PackagingTest(unittest.TestCase):
 
     def test_dirty_build_cannot_be_released_after_checkout_is_restored(self):
         self.initialize_git()
-        source = self.repo / "api.go"
+        source = self.repo / "go" / "api.go"
         original = source.read_bytes()
         source.write_bytes(b"package beaconcrypt // dirty at build time\n")
         self.assertTrue(self.record_build()["source_dirty"])

@@ -13,7 +13,7 @@ import (
 	"io"
 	"os"
 
-	beaconcrypt "github.com/0xd6cb6d73/beaconcrypt"
+	beaconcrypt "github.com/0xd6cb6d73/beaconcrypt/go"
 )
 
 type command struct {

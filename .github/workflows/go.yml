@@ -45,12 +45,12 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: wasm-generated
-          path: internal/wasm
+          path: go/internal/wasm
 
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version-file: go/go.mod
           check-latest: true
 
       - name: Set up MinGW UCRT64 on Windows
@@ -82,6 +82,7 @@ jobs:
 
       - name: Test Go module
         if: runner.os != 'Windows'
+        working-directory: go
         env:
           CGO_ENABLED: 1
         run: |
@@ -94,6 +95,7 @@ jobs:
 
       - name: Test Go module on Windows
         if: runner.os == 'Windows'
+        working-directory: go
         env:
           CGO_ENABLED: 1
           CC: gcc
@@ -108,11 +110,12 @@ jobs:
 
       - name: Test native and Wasm interoperability through the public API
         if: runner.os != 'Windows'
+        working-directory: go
         run: |
-          mkdir -p .build
-          CGO_ENABLED=1 go build -o .build/interop-native ./testdata/interop
-          CGO_ENABLED=0 go build -tags=beaconcrypt_wazero -o .build/interop-wasm ./testdata/interop
-          python3 scripts/test-wasm-interop.py --native .build/interop-native --wasm .build/interop-wasm
+          mkdir -p ../.build
+          CGO_ENABLED=1 go build -o ../.build/interop-native ./testdata/interop
+          CGO_ENABLED=0 go build -tags=beaconcrypt_wazero -o ../.build/interop-wasm ./testdata/interop
+          python3 ../scripts/test-wasm-interop.py --native ../.build/interop-native --wasm ../.build/interop-wasm
 
   cross-build:
     name: Cross-build CGO-free consumers and release bundle
@@ -122,18 +125,19 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version-file: go/go.mod
       - uses: actions/download-artifact@v8
         with:
           name: wasm-generated
-          path: internal/wasm
+          path: go/internal/wasm
       - name: Build the existing consumer unchanged
+        working-directory: examples/go
         run: |
-          mkdir -p target/wasm-consumers
+          mkdir -p ../../target/wasm-consumers
           for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64; do
             IFS=/ read -r go_os go_arch <<< "$target"
             CGO_ENABLED=0 GOOS="$go_os" GOARCH="$go_arch" go build -trimpath \
-              -o "target/wasm-consumers/$go_os-$go_arch" ./examples/go/main.go
+              -o "../../target/wasm-consumers/$go_os-$go_arch" ./main.go
           done
       - uses: actions/download-artifact@v8
         with:
@@ -163,11 +167,12 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version-file: go/go.mod
           check-latest: true
 
       - name: Publish module to Go proxy
         run: |
+          cd go
           module_path="$(go list -m)"
           go_version="${GITHUB_REF_NAME}"
 

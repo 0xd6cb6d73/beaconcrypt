@@ -7,7 +7,7 @@ ChaCha20 and Poly1305 definitions in RFC 8439.  Independent implementations
 then verify the resulting fixture in:
 
 * scripts/generate_kat_vectors.py (PyCryptodome)
-* scripts/generate_kat_vectors.go (golang.org/x/crypto)
+* go/scripts/generate_kat_vectors.go (golang.org/x/crypto)
 * beaconcrypt/src/shared.rs (libsodium-rs)
 
 The accompanying algebra and verification procedure are documented in

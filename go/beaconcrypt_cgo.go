@@ -5,10 +5,10 @@
 package beaconcrypt
 
 /*
-#cgo CFLAGS: -I${SRCDIR}/beaconcrypt
-#cgo windows LDFLAGS: -L${SRCDIR}/target/x86_64-pc-windows-gnu/release -l:libbeaconcrypt.a -lbcrypt -lws2_32 -luserenv -ldbghelp -lntdll
-#cgo linux LDFLAGS: -L${SRCDIR}/target/release -l:libbeaconcrypt.a
-#cgo darwin LDFLAGS: ${SRCDIR}/target/release/libbeaconcrypt.a
+#cgo CFLAGS: -I${SRCDIR}/../beaconcrypt
+#cgo windows LDFLAGS: -L${SRCDIR}/../target/x86_64-pc-windows-gnu/release -l:libbeaconcrypt.a -lbcrypt -lws2_32 -luserenv -ldbghelp -lntdll
+#cgo linux LDFLAGS: -L${SRCDIR}/../target/release -l:libbeaconcrypt.a
+#cgo darwin LDFLAGS: ${SRCDIR}/../target/release/libbeaconcrypt.a
 #include "beaconcrypt_go.h"
 */
 import "C"

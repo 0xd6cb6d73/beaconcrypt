@@ -80,7 +80,7 @@ Build and run runtime tests and bindings:
 ```bash
 cargo test --workspace --locked
 cargo build -p beaconcrypt-ffi --features gobinds --release --target x86_64-pc-windows-gnu
-go test -a -count=1 .
+(cd go && go test -a -count=1 .)
 uv run maturin develop --uv
 uv run pytest tests
 ```
@@ -108,12 +108,12 @@ The [native mutation configuration](.cargo/mutants.toml) exercises the adapter, 
 ### Reproducing known-answer test vectors
 
 The fixed cryptographic values used by the Rust known-answer tests can be
-reproduced independently with Python and Go. Run both generators from the
-repository root:
+reproduced independently with Python and Go. Run the Python generator from the
+repository root and the Go generator from the `go/` directory:
 
 ```bash
 uv run python scripts/generate_kat_vectors.py
-go run scripts/generate_kat_vectors.go
+(cd go && go run ./scripts/generate_kat_vectors.go)
 ```
 
 The Python generator uses PyCryptodome. The Go generator uses the Go team's
@@ -158,7 +158,8 @@ From python, you can just use the wheels published to pypi, see the [example](ex
 The [C interface](beaconcrypt/src/cbinds.rs) uses opaque role-specific handles; the caller is responsible for their lifetimes and for freeing returned buffers. See the [example](examples/c/main.c) for usage.
 
 Go supports the native CGO bindings and an embedded Wasm backend through wazero,
-using the same import path and public API. Native builds link the Rust library
+using the same import path and public API, published as
+`github.com/0xd6cb6d73/beaconcrypt/go` from the [`go/`](go/) directory. Native builds link the Rust library
 built with `gobinds`. Both backends require Go 1.25 or newer. CGO-free builds use a generated guest included in the Go
 release bundle; no binary artifacts are committed to Git. See the [Go example](examples/go/main.go).
 

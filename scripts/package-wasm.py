@@ -13,9 +13,11 @@ import re
 import subprocess
 import tarfile
 
-MODULE = "github.com/0xd6cb6d73/beaconcrypt"
-WASM_PATH = Path("internal/wasm/beaconcrypt.wasm")
-BUILD_INFO_PATH = Path("internal/wasm/beaconcrypt.build.json")
+MODULE = "github.com/0xd6cb6d73/beaconcrypt/go"
+MODULE_DIR = Path("go")
+WASM_PATH = MODULE_DIR / "internal/wasm/beaconcrypt.wasm"
+BUILD_INFO_PATH = MODULE_DIR / "internal/wasm/beaconcrypt.build.json"
+BUNDLE_WASM_PATH = Path("internal/wasm/beaconcrypt.wasm")
 MANIFEST_NAME = "beaconcrypt-wasm-manifest.json"
 REQUIRED_EXPORTS = {
     "memory",
@@ -215,33 +217,44 @@ def record_build(repo):
 
 
 def module_files(repo):
+    module_dir = repo / MODULE_DIR
     files = {}
     for pattern in ("*.go", "*.c", "*.h", "*.s", "*.S"):
         files.update(
             {
                 path.name: path.read_bytes()
-                for path in repo.glob(pattern)
+                for path in module_dir.glob(pattern)
                 if path.is_file()
             }
         )
-    for required in ("go.mod", "go.sum", "LICENSE", "beaconcrypt/bindings.h"):
-        files[required] = (repo / required).read_bytes()
-    for optional in ("README.md", "doc/wasm.md", "beaconcrypt-parse/generated/LICENSE"):
+    for name, required in (
+        ("go.mod", MODULE_DIR / "go.mod"),
+        ("go.sum", MODULE_DIR / "go.sum"),
+        ("LICENSE", Path("LICENSE")),
+        ("beaconcrypt/bindings.h", Path("beaconcrypt/bindings.h")),
+    ):
+        files[name] = (repo / required).read_bytes()
+    for name, optional in (
+        ("README.md", Path("README.md")),
+        ("doc/wasm.md", Path("doc/wasm.md")),
+        (
+            "beaconcrypt-parse/generated/LICENSE",
+            Path("beaconcrypt-parse/generated/LICENSE"),
+        ),
+    ):
         if (repo / optional).is_file():
-            files[optional] = (repo / optional).read_bytes()
-    for path in sorted((repo / "internal").rglob("*")):
-        if path.is_symlink():
-            raise ValueError(f"module bundle must not contain symlinks: {path}")
-        if path.is_file() and (
-            path.suffix == ".go" or path.relative_to(repo) == WASM_PATH
-        ):
-            files[path.relative_to(repo).as_posix()] = path.read_bytes()
-    for path in sorted((repo / "testdata").rglob("*")):
-        if path.is_symlink():
-            raise ValueError(f"module bundle must not contain symlinks: {path}")
-        if path.is_file():
-            files[path.relative_to(repo).as_posix()] = path.read_bytes()
-    if WASM_PATH.as_posix() not in files:
+            files[name] = (repo / optional).read_bytes()
+    for directory in ("internal", "testdata"):
+        include_all = directory == "testdata"
+        for path in sorted(module_dir.joinpath(directory).rglob("*")):
+            if path.is_symlink():
+                raise ValueError(f"module bundle must not contain symlinks: {path}")
+            relative = path.relative_to(module_dir)
+            if path.is_file() and (
+                include_all or path.suffix == ".go" or relative == BUNDLE_WASM_PATH
+            ):
+                files[relative.as_posix()] = path.read_bytes()
+    if BUNDLE_WASM_PATH.as_posix() not in files:
         raise ValueError("embedded Wasm is missing; run scripts/build-wasm.sh first")
     if not re.search(
         r"^module\s+" + re.escape(MODULE) + r"\s*$", files["go.mod"].decode(), re.M

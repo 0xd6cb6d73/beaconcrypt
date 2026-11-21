@@ -18,7 +18,7 @@ fi
 # A caller's relative CARGO_TARGET_DIR is interpreted relative to this repository.
 export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$repo_dir/target}"
 cargo build --locked --release -p beaconcrypt-wasm --target "$wasm_target"
-mkdir -p -- "$repo_dir/internal/wasm"
+mkdir -p -- "$repo_dir/go/internal/wasm"
 cp -- "$CARGO_TARGET_DIR/$wasm_target/release/beaconcrypt_wasm.wasm" \
-  "$repo_dir/internal/wasm/beaconcrypt.wasm"
+  "$repo_dir/go/internal/wasm/beaconcrypt.wasm"
 python3 "$script_dir/package-wasm.py" --record-build

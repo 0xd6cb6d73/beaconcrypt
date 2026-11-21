@@ -17,7 +17,7 @@ jobs:
           echo 'RUSTUP_TOOLCHAIN=1.99.1' >> "$GITHUB_ENV"
       - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version-file: go/go.mod
       - name: Test guest ABI and host callbacks
         run: bash scripts/test-wasm.sh
       - name: Test release packaging
@@ -25,6 +25,7 @@ jobs:
       - name: Build Wasm once
         run: bash scripts/build-wasm.sh
       - name: Validate the embedded artifact
+        working-directory: go
         run: |
           CGO_ENABLED=0 go test ./...
           CGO_ENABLED=1 go test -tags=beaconcrypt_wazero ./...
@@ -40,8 +41,8 @@ jobs:
         with:
           name: wasm-generated
           path: |
-            internal/wasm/beaconcrypt.wasm
-            internal/wasm/beaconcrypt.build.json
+            go/internal/wasm/beaconcrypt.wasm
+            go/internal/wasm/beaconcrypt.build.json
           retention-days: 1
       - uses: actions/upload-artifact@v7
         with:

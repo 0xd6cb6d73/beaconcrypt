@@ -172,7 +172,7 @@ Two library-backed generators independently verify both openings using different
 
 ```shell
 uv run python scripts/generate_kat_vectors.py
-go run scripts/generate_kat_vectors.go
+(cd go && go run ./scripts/generate_kat_vectors.go)
 ```
 
 The Rust test performs a third verification through libsodium-rs and checks that the two BLAKE2b commitments differ:
