@@ -1,0 +1,9 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Passive scenarios check transcript confidentiality.
+   The active-classical model separately checks the strictly stronger agreement and authenticity properties. *)
+query attacker(INITIAL_SECRET).
+query attacker(CACHED_SECRET).
+query attacker(ADVANCE_SECRET).
+query attacker(FUTURE_SECRET).
+query attacker(BEACON_RECORD_SECRET).

@@ -1,0 +1,5 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Deliberate post-quantum regression control. Unlike quantum-capabilities.pvl, this rule also recovers an ML-KEM secret key from its public key. *)
+reduc forall secret_key: bitstring;
+  quantum_recover_mlkem_secret(mlkem_public(secret_key)) = secret_key.

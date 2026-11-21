@@ -1,0 +1,6 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+channel c.
+
+free QUANTUM_ED_CAPABILITY_SECRET: bitstring [private].
+free QUANTUM_X25519_CAPABILITY_SECRET: bitstring [private].

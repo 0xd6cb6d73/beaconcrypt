@@ -15,6 +15,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  RUSTUP_TOOLCHAIN: 1.99.1
   GOPROXY: https://proxy.golang.org
   GONOSUMDB: ""
 
@@ -44,12 +45,12 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: wasm-generated
-          path: internal/wasm
+          path: go/internal/wasm
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version-file: go/go.mod
           check-latest: true
 
       - name: Set up MinGW UCRT64 on Windows
@@ -64,9 +65,12 @@ jobs:
         if: runner.os == 'Windows'
         run: '"${{ steps.msys2.outputs.msys2-location }}\ucrt64\bin" >> $env:GITHUB_PATH'
 
+      - name: Install Rust 1.99.1
+        run: rustup toolchain install 1.99.1 --profile minimal
+
       - name: Build native library
         if: runner.os != 'Windows'
-        run: cargo build --verbose -p beaconcrypt --release --features gobinds
+        run: cargo build --verbose -p beaconcrypt-ffi --release --features gobinds
 
       - name: Build native library on Windows
         if: runner.os == 'Windows'
@@ -74,10 +78,11 @@ jobs:
           CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: gcc
         run: |
           rustup target add x86_64-pc-windows-gnu
-          cargo build --verbose -p beaconcrypt --release --target x86_64-pc-windows-gnu --features gobinds
+          cargo build --verbose -p beaconcrypt-ffi --release --target x86_64-pc-windows-gnu --features gobinds
 
       - name: Test Go module
         if: runner.os != 'Windows'
+        working-directory: go
         env:
           CGO_ENABLED: 1
         run: |
@@ -90,6 +95,7 @@ jobs:
 
       - name: Test Go module on Windows
         if: runner.os == 'Windows'
+        working-directory: go
         env:
           CGO_ENABLED: 1
           CC: gcc
@@ -104,11 +110,12 @@ jobs:
 
       - name: Test native and Wasm interoperability through the public API
         if: runner.os != 'Windows'
+        working-directory: go
         run: |
-          mkdir -p .build
-          CGO_ENABLED=1 go build -o .build/interop-native ./testdata/interop
-          CGO_ENABLED=0 go build -tags=beaconcrypt_wazero -o .build/interop-wasm ./testdata/interop
-          python3 scripts/test-wasm-interop.py --native .build/interop-native --wasm .build/interop-wasm
+          mkdir -p ../.build
+          CGO_ENABLED=1 go build -o ../.build/interop-native ./testdata/interop
+          CGO_ENABLED=0 go build -tags=beaconcrypt_wazero -o ../.build/interop-wasm ./testdata/interop
+          python3 ../scripts/test-wasm-interop.py --native ../.build/interop-native --wasm ../.build/interop-wasm
 
   cross-build:
     name: Cross-build CGO-free consumers and release bundle
@@ -116,20 +123,21 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version-file: go/go.mod
       - uses: actions/download-artifact@v8
         with:
           name: wasm-generated
-          path: internal/wasm
+          path: go/internal/wasm
       - name: Build the existing consumer unchanged
+        working-directory: examples/go
         run: |
-          mkdir -p target/wasm-consumers
+          mkdir -p ../../target/wasm-consumers
           for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64; do
             IFS=/ read -r go_os go_arch <<< "$target"
             CGO_ENABLED=0 GOOS="$go_os" GOARCH="$go_arch" go build -trimpath \
-              -o "target/wasm-consumers/$go_os-$go_arch" ./examples/go/main.go
+              -o "../../target/wasm-consumers/$go_os-$go_arch" ./main.go
           done
       - uses: actions/download-artifact@v8
         with:
@@ -157,13 +165,14 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version-file: go/go.mod
           check-latest: true
 
       - name: Publish module to Go proxy
         run: |
+          cd go
           module_path="$(go list -m)"
           go_version="${GITHUB_REF_NAME}"
 

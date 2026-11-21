@@ -1,0 +1,98 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* Target-relative ideal record service. This is not a source KDF model. Private honest messages have separate privileged API and network-only observations. Every material alias retains its actual key; imports record prior knowledge. The service does not establish native nonce uniqueness, target-key freshness, application entropy, writer success or a source-to-applied-pi compiler. *)
+set traceDisplay = none.
+set explainDerivation = false.
+set verboseClauses = none.
+set verboseRules = false.
+set verboseGoalReachable = false.
+free live_material_create: channel.
+free live_material_alias: channel.
+free live_material_import: channel.
+table live_material_keys(bitstring, bitstring).
+fun ps1_primitive_seal(bitstring, bitstring, sequence, key_id, bitstring): bitstring [data].
+fun ps1_primitive_open(bitstring, bitstring, sequence, key_id, bitstring): bitstring [data].
+fun ps1_primitive_reveal(): bitstring [data].
+fun ps1_primitive_open_some(channel, bitstring, bitstring): bitstring [data].
+fun ps1_primitive_open_none(channel, bitstring): bitstring [data].
+event PS1PrimitiveSeal(bitstring, bitstring, bitstring, sequence, key_id, bitstring, bitstring).
+event PS1PrimitiveOpen(bitstring, bitstring, bitstring, sequence, key_id, bitstring, bitstring).
+event PS1PrimitiveReveal(bitstring).
+
+
+fun live_honest_request(bitstring, bitstring, sequence, key_id, bitstring): bitstring [data].
+event LiveHonestMessage(bitstring, bitstring).
+event LiveApiPlaintext(bitstring, bitstring).
+
+let LiveHonestService(endpoint: channel, key: bitstring) =
+  in(endpoint, live_honest_request(nonce: bitstring, associated_data: bitstring,
+    target: sequence, sender: key_id, request: bitstring));
+  new plaintext [key]: bitstring;
+  event LiveHonestMessage(key, plaintext);
+  let frame = seal_frame(ratchet_key_nonce(key, nonce), associated_data, target, sender, plaintext) in
+  event PS1PrimitiveSeal(key, nonce, associated_data, target, sender, plaintext, frame) [];
+  out(c, frame).
+
+fun live_network_deliver(bitstring, bitstring, sequence, key_id, bitstring): bitstring [data].
+fun live_network_some(channel, bitstring): bitstring [data].
+fun live_network_none(channel, bitstring): bitstring [data].
+
+let LiveNetworkService(endpoint: channel, key: bitstring) =
+  in(endpoint, live_network_deliver(nonce: bitstring, associated_data: bitstring,
+    target: sequence, sender: key_id, frame: bitstring));
+  let plaintext = open_frame(ratchet_key_nonce(key, nonce), associated_data, target, sender, frame) in
+  (event PS1PrimitiveOpen(key, nonce, associated_data, target, sender, plaintext, frame);
+   out(c, live_network_some(endpoint,
+     live_network_deliver(nonce, associated_data, target, sender, frame))))
+  else
+  out(c, live_network_none(endpoint,
+    live_network_deliver(nonce, associated_data, target, sender, frame))).
+
+let PS1PrimitiveSealService(endpoint: channel, key: bitstring) =
+  in(endpoint, ps1_primitive_seal(nonce: bitstring, associated_data: bitstring,
+    target: sequence, sender: key_id, plaintext: bitstring));
+  let frame = seal_frame(ratchet_key_nonce(key, nonce), associated_data, target, sender, plaintext) in
+  event PS1PrimitiveSeal(key, nonce, associated_data, target, sender, plaintext, frame) [];
+  out(c, frame).
+
+let PS1PrimitiveOpenService(endpoint: channel, key: bitstring) =
+  in(endpoint, ps1_primitive_open(nonce: bitstring, associated_data: bitstring,
+    target: sequence, sender: key_id, frame: bitstring));
+  let plaintext = open_frame(ratchet_key_nonce(key, nonce), associated_data, target, sender, frame) in
+  (event PS1PrimitiveOpen(key, nonce, associated_data, target, sender, plaintext, frame);
+   event LiveApiPlaintext(key, plaintext);
+   out(c, ps1_primitive_open_some(endpoint,
+     ps1_primitive_open(nonce, associated_data, target, sender, frame), plaintext)))
+  else
+  out(c, ps1_primitive_open_none(endpoint,
+    ps1_primitive_open(nonce, associated_data, target, sender, frame))).
+
+let PS1PrimitiveRevealService(endpoint: channel, key: bitstring) =
+  in(endpoint, =ps1_primitive_reveal());
+  event PS1PrimitiveReveal(key);
+  out(c, key).
+
+let LiveMaterialInstall(key: bitstring) =
+  new handle []: bitstring;
+  new endpoint []: channel;
+  insert live_material_keys(handle, key);
+  out(c, (handle, endpoint));
+  (!LiveNetworkService(endpoint, key)
+   | !LiveHonestService(endpoint, key)
+   | !PS1PrimitiveSealService(endpoint, key)
+   | !PS1PrimitiveOpenService(endpoint, key)
+   | !PS1PrimitiveRevealService(endpoint, key)).
+
+let LiveMaterialCreate() =
+  in(live_material_create, request: bitstring);
+  new key []: bitstring;
+  LiveMaterialInstall(key).
+
+let LiveMaterialAlias() =
+  in(live_material_alias, handle: bitstring);
+  get live_material_keys(=handle, key: bitstring) in
+  LiveMaterialInstall(key).
+
+let LiveMaterialImport() =
+  in(live_material_import, key: bitstring);
+  event PS1PrimitiveReveal(key);
+  LiveMaterialInstall(key).

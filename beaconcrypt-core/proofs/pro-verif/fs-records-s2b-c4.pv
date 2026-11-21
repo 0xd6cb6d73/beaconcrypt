@@ -1,0 +1,10 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-s2b C4, security result (abstraction witness), (K_s, K_r,
+   T_max) = (2, 3, 3): no Beacon accepts a frame above T_max, so the far
+   branch never fires in this scenario, where every Beacon pins the honest
+   Server key. *)
+query s: bitstring, b: bitstring, kid: key_id, root: bitstring, t: nat;
+  event(FsFarAccepted(server_to_beacon(), s, b, kid, root, t)).
+
+process FsRecordsS2bMain()

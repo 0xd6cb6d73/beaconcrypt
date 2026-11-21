@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: 0BSD
 
+#[cfg(not(hax_compilation))]
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 mod concrete;
@@ -51,10 +52,15 @@ use refined::{
 /// Fixed width of every symmetric-ratchet root and chain value.
 pub const RATCHET_CHAIN_SIZE: usize = 32;
 
-/// Fixed HKDF domain label for initial and subsequent symmetric-ratchet derivations.
-pub const SYM_RATCHET_INFO_SIZE: usize = 41;
+/// Fixed HKDF domain label for message-step derivations.
+pub const SYM_RATCHET_INFO_SIZE: usize = 48;
 pub const SYM_RATCHET_INFO: &[u8; SYM_RATCHET_INFO_SIZE] =
-	b"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305";
+	b"SymRatchetMessage_HKDF_SHA-512_CHACHA20_POLY1305";
+
+/// Fixed HKDF domain label for root-to-directional-chain initialization.
+pub const INITIAL_RATCHET_INFO_SIZE: usize = 45;
+pub const INITIAL_RATCHET_INFO: &[u8; INITIAL_RATCHET_INFO_SIZE] =
+	b"SymRatchetInit_HKDF_SHA-512_CHACHA20_POLY1305";
 
 /// Number of bytes returned by one production symmetric-ratchet HKDF expansion.
 pub const RATCHET_KDF_OUTPUT_SIZE: usize =
@@ -63,7 +69,7 @@ pub const RATCHET_KDF_OUTPUT_SIZE: usize =
 const _: () = assert!(RATCHET_KDF_OUTPUT_SIZE == 76);
 
 /// Fixed-width symmetric-ratchet chain bytes owned by the extracted boundary.
-#[derive(Zeroize, ZeroizeOnDrop)]
+#[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
 pub struct RatchetChain {
 	bytes: [u8; RATCHET_CHAIN_SIZE],
 }
@@ -83,7 +89,7 @@ impl RatchetChain {
 }
 
 /// Fixed-width symmetric-ratchet message-key bytes owned by the extracted boundary.
-#[derive(Zeroize, ZeroizeOnDrop)]
+#[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
 pub struct RatchetKey {
 	bytes: [u8; crate::commitment::AEAD_KEY_SIZE],
 }
@@ -103,7 +109,7 @@ impl RatchetKey {
 }
 
 /// Fixed-width symmetric-ratchet AEAD nonce bytes owned by the extracted boundary.
-#[derive(Zeroize, ZeroizeOnDrop)]
+#[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
 pub struct RatchetNonce {
 	bytes: [u8; crate::commitment::AEAD_NONCE_SIZE],
 }
@@ -123,7 +129,7 @@ impl RatchetNonce {
 }
 
 /// Fixed-width key and nonce produced by one symmetric-ratchet step.
-#[derive(Zeroize, ZeroizeOnDrop)]
+#[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
 pub struct RatchetMaterial {
 	key: RatchetKey,
 	nonce: RatchetNonce,
@@ -153,11 +159,35 @@ impl RatchetMaterial {
 	}
 }
 
+/// Core-owned initial-ratchet KDF invocation, distinct from every message step.
+#[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
+pub struct InitialRatchetKdfRequest {
+	input: [u8; RATCHET_CHAIN_SIZE],
+	info: [u8; INITIAL_RATCHET_INFO_SIZE],
+}
+
+impl InitialRatchetKdfRequest {
+	pub(crate) const fn new(input: [u8; RATCHET_CHAIN_SIZE]) -> Self {
+		Self {
+			input,
+			info: *INITIAL_RATCHET_INFO,
+		}
+	}
+
+	pub const fn input(&self) -> &[u8; RATCHET_CHAIN_SIZE] {
+		&self.input
+	}
+
+	pub const fn info(&self) -> &[u8; INITIAL_RATCHET_INFO_SIZE] {
+		&self.info
+	}
+}
+
 /// Core-owned invocation of the symmetric-ratchet KDF domain.
 ///
 /// Both fields are private so an executor can read but cannot alter the exact
 /// input or protocol label selected by the core transition that created it.
-#[derive(Zeroize, ZeroizeOnDrop)]
+#[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
 pub struct SymmetricRatchetKdfRequest {
 	input: [u8; RATCHET_CHAIN_SIZE],
 	info: [u8; SYM_RATCHET_INFO_SIZE],
@@ -186,7 +216,7 @@ impl SymmetricRatchetKdfRequest {
 /// cross-phase width confusion. The type does not prove which pending request
 /// produced the bytes; request/response provenance and cryptographic correctness
 /// remain obligations of the external interpreter.
-#[derive(Zeroize, ZeroizeOnDrop)]
+#[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
 pub struct RatchetKdfResponse {
 	bytes: [u8; RATCHET_KDF_OUTPUT_SIZE],
 }

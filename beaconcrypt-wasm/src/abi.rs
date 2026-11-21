@@ -22,6 +22,8 @@ pub(crate) fn error_status(error: PersistenceError) -> u32 {
 		PersistenceError::Initialization => INITIALIZATION,
 		PersistenceError::Digest => 11,
 		PersistenceError::Poisoned => 12,
+		PersistenceError::Storage => 13,
+		PersistenceError::CommitUnknown => 15,
 	}
 }
 
@@ -96,7 +98,7 @@ impl Drop for Response {
 }
 
 thread_local! {
-	pub(crate) static ALLOCATIONS: RefCell<BTreeMap<usize, Zeroizing<Box<[u8]>>>> = RefCell::new(BTreeMap::new());
+	pub(crate) static ALLOCATIONS: RefCell<BTreeMap<usize, Zeroizing<Box<[u8]>>>> = const { RefCell::new(BTreeMap::new()) };
 }
 
 fn allocate(mut bytes: Zeroizing<Vec<u8>>) -> Option<u32> {

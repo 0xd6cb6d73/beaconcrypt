@@ -1,0 +1,36 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Prefix consistency is a property within one complete input/salt/label address. Current initial45 and message48 requests select different addresses. Free constructors idealize distinct outputs; the runtime fixed-input fixture is only a regression check and is not a collision-impossibility theorem. *)
+free HKDF_INITIAL_PREFIX_WITNESS: bitstring [private].
+free HKDF_MESSAGE_PREFIX_WITNESS: bitstring [private].
+free HKDF_CROSS_PHASE_LEFT_WITNESS: bitstring [private].
+free HKDF_CROSS_PHASE_RIGHT_WITNESS: bitstring [private].
+
+event HkdfSameInitialLabelPrefix(bitstring).
+event HkdfSameMessageLabelPrefix(bitstring).
+event HkdfCrossPhaseLeftAlias(bitstring).
+event HkdfCrossPhaseRightAlias(bitstring).
+
+let HkdfPrefixConformanceControls() =
+  new input: bitstring;
+  (
+    let initial_left = server_to_beacon_chain(input) in
+    let initial_stream_left = hkdf_first_32(hkdf_sha512_no_salt(input, initial_ratchet_domain())) in
+    if initial_left = initial_stream_left then
+      event HkdfSameInitialLabelPrefix(HKDF_INITIAL_PREFIX_WITNESS)
+  |
+    let message_key = material_key(ratchet_material(input)) in
+    let message_stream_key = hkdf_first_32(hkdf_sha512_no_salt(input, symmetric_ratchet_domain())) in
+    if message_key = message_stream_key then
+      event HkdfSameMessageLabelPrefix(HKDF_MESSAGE_PREFIX_WITNESS)
+  |
+    let initial_left = server_to_beacon_chain(input) in
+    let message_key = material_key(ratchet_material(input)) in
+    if initial_left = message_key then
+      event HkdfCrossPhaseLeftAlias(HKDF_CROSS_PHASE_LEFT_WITNESS)
+  |
+    let initial_right = beacon_to_server_chain(input) in
+    let message_next = ratchet_next(input) in
+    if initial_right = message_next then
+      event HkdfCrossPhaseRightAlias(HKDF_CROSS_PHASE_RIGHT_WITNESS)
+  ).

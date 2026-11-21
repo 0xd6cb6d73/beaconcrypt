@@ -1,0 +1,52 @@
+// SPDX-License-Identifier: 0BSD
+
+//go:build cgo && !beaconcrypt_wazero
+
+#include "beaconcrypt_go.h"
+#include "_cgo_export.h"
+
+typedef struct {
+	void (*sink)(void *, const uint8_t *, uintptr_t);
+	void *context;
+} snapshot_delivery;
+
+static bool go_store_load(void *context, void *sink_context, void (*sink)(void *, const uint8_t *, uintptr_t)) {
+	snapshot_delivery delivery = {sink, sink_context};
+	return beaconcryptGoStoreLoad((uintptr_t)context, &delivery);
+}
+
+static bool go_store_compare_and_swap(void *context, const beaconcrypt_SnapshotHeadInfo *expected, const uint8_t *bytes, uintptr_t len) {
+	return beaconcryptGoStoreCompareAndSwap((uintptr_t)context, (beaconcrypt_SnapshotHeadInfo *)expected, (uint8_t *)bytes, len);
+}
+
+static void go_store_destroy(void *context) {
+	beaconcryptGoStoreDestroy((uintptr_t)context);
+}
+
+static uint32_t go_store_last_error(void *context) {
+	return beaconcryptGoStoreLastError((uintptr_t)context);
+}
+
+static beaconcrypt_SnapshotStoreCallbacksV2 go_store_callbacks(uintptr_t handle) {
+	beaconcrypt_SnapshotStoreCallbacksV2 callbacks = {
+		{(void *)handle, go_store_load, go_store_compare_and_swap, go_store_destroy}, go_store_last_error
+	};
+	return callbacks;
+}
+
+beaconcrypt_Server *beaconcrypt_go_server_create_with_store(uint64_t server_kid, const uint8_t *seed, uintptr_t seed_len, const uint8_t *mldsa_seed, uintptr_t mldsa_seed_len, uintptr_t token, uint32_t *status_out) {
+	return beaconcrypt_server_create_with_store_v2(server_kid, seed, seed_len, mldsa_seed, mldsa_seed_len, go_store_callbacks(token), status_out);
+}
+
+beaconcrypt_Server *beaconcrypt_go_server_create_with_store_and_lineage(uint64_t server_kid, const uint8_t *seed, uintptr_t seed_len, const uint8_t *mldsa_seed, uintptr_t mldsa_seed_len, uintptr_t token, const uint8_t *lineage, uintptr_t lineage_len, uint32_t *status_out) {
+	return beaconcrypt_server_create_with_store_and_lineage_v2(server_kid, seed, seed_len, mldsa_seed, mldsa_seed_len, go_store_callbacks(token), lineage, lineage_len, status_out);
+}
+
+beaconcrypt_Server *beaconcrypt_go_server_restore_with_store(uintptr_t token, uint32_t *status_out) {
+	return beaconcrypt_server_restore_with_store_v2(go_store_callbacks(token), status_out);
+}
+
+void beaconcrypt_go_deliver_snapshot(void *opaque_delivery, const uint8_t *bytes, uintptr_t len) {
+	snapshot_delivery *delivery = (snapshot_delivery *)opaque_delivery;
+	delivery->sink(delivery->context, bytes, len);
+}

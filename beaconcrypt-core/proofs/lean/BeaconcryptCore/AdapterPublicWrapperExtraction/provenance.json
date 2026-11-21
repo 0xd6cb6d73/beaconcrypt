@@ -1,0 +1,434 @@
+{
+  "charon_flags": [
+    "--include=beaconcrypt::beacon::_proof_beacon_init_ready",
+    "--include=beaconcrypt::beacon::_::identity_pk",
+    "--include=beaconcrypt::beacon::_::identity_sk",
+    "--include=beaconcrypt::server::_::identity_pk",
+    "--include=beaconcrypt::server::_::identity_sk",
+    "--include=beaconcrypt::server::_::identity_key_kid",
+    "--include=beaconcrypt::server::_::mldsa_public_key",
+    "--include=beaconcrypt::server::_::authentication_pin",
+    "--include=beaconcrypt::auth::server_pin",
+    "--include=beaconcrypt::beacon::_::finish_registration::closure::_::call_once",
+    "--include=beaconcrypt::server::_::build_registration_response::closure::_::call_once",
+    "--include=beaconcrypt::ratchet::RatchetManager",
+    "--include=beaconcrypt::ratchet::_::from_kernel",
+    "--include=beaconcrypt::shared::EstablishedRemote",
+    "--include=beaconcrypt::shared::_::from_peer",
+    "--include=beaconcrypt::server::registration_response_len",
+    "--include=beaconcrypt_core::transport::RegistrationApplication",
+    "--include=beaconcrypt_core::pqxdh::ServerBinding",
+    "--include=beaconcrypt_crypto::crypto_sign::KeyPair",
+    "--include=beaconcrypt::server::Server",
+    "--include=beaconcrypt::beacon::Beacon",
+    "--include=beaconcrypt::server::ServerIdentity",
+    "--include=core::option::Option",
+    "--include=beaconcrypt_parse::transport::initkex",
+    "--include=core::ops::control_flow::ControlFlow",
+    "--include=beaconcrypt::server::RegistrationOutput",
+    "--include=beaconcrypt_core::agreement::AgreementEffect",
+    "--include=core::result::Result",
+    "--include=beaconcrypt::pqxdh::RegistrationKeys",
+    "--include=beaconcrypt::server::RegResponse",
+    "--include=beaconcrypt_core::registration::SignedResponseView",
+    "--include=beaconcrypt_parse::transport::kexresponse",
+    "--include=hashbrown::map::Entry",
+    "--include=beaconcrypt::beacon::BeaconState",
+    "--include=beaconcrypt::beacon::RegistrationAuthentication",
+    "--include=beaconcrypt_crypto::crypto_kx::KeyPair",
+    "--include=beaconcrypt_crypto::crypto_kem::mlkem768::KeyPair",
+    "--include=beaconcrypt_core::pqxdh::BeaconStartInputs",
+    "--include=beaconcrypt_core::pqxdh::BeaconCoins",
+    "--include=beaconcrypt_core::registration::InitView",
+    "--include=beaconcrypt_core::authentication::InitFields",
+    "--include=beaconcrypt_core::registration::BeaconInitialOpen",
+    "--include=beaconcrypt::pqxdh::execute_agreement::closure",
+    "--include=beaconcrypt_core::agreement::DhRequest",
+    "--include=beaconcrypt_core::agreement::DhSecretRole",
+    "--include=beaconcrypt_core::registration::Ed25519SigningRequest",
+    "--include=beaconcrypt::pqxdh::NoEntropy",
+    "--include=beaconcrypt_core::agreement::RootKdfRequest",
+    "--include=beaconcrypt::shared::_::from_peer::closure::_::call_once",
+    "--include=beaconcrypt::ratchet::RatchetKernelSlot",
+    "--include=beaconcrypt::ratchet::_::new",
+    "--include=beaconcrypt::shared::map_peer_ratchet",
+    "--include={impl core::ops::function::FnOnce for {impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration::closure}",
+    "--include={impl core::ops::function::FnOnce for {impl beaconcrypt::server::ProviderServer for beaconcrypt::server::Server}::build_registration_response::closure}",
+    "--include=beaconcrypt::pqxdh::execute_agreement",
+    "--include=beaconcrypt::pqxdh::execute_beacon_agreement",
+    "--include=beaconcrypt::pqxdh::execute_agreement::closure::_::call_once",
+    "--start-from=beaconcrypt::server::_::authenticate_registration_lookup",
+    "--start-from=beaconcrypt::server::_::get_shared_secret_from_lookup_with_rng",
+    "--start-from={impl beaconcrypt::server::ProviderServer for beaconcrypt::server::Server}::build_registration_response",
+    "--start-from=beaconcrypt::beacon::_::get_registration_bundle_with_rng",
+    "--start-from={impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration",
+    "--include=beaconcrypt_crypto::crypto_kx::KeyPair",
+    "--include=beaconcrypt_crypto::crypto_kem::mlkem768::KeyPair",
+    "--include=beaconcrypt_core::pqxdh::BeaconStartInputs",
+    "--include=beaconcrypt_core::pqxdh::BeaconCoins",
+    "--include=beaconcrypt_core::registration::Ed25519SigningRequest",
+    "--include=beaconcrypt_core::registration::InitView",
+    "--include=beaconcrypt_core::authentication::InitFields",
+    "--include=beaconcrypt::server::ServerIdentity",
+    "--include={impl beaconcrypt::server::ProviderServer for beaconcrypt::server::Server}::build_registration_response::closure",
+    "--include=beaconcrypt_core::registration::SignedResponseView",
+    "--include=hashbrown::map::Entry",
+    "--include={impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration::closure",
+    "--include=beaconcrypt_core::registration::BeaconInitialOpen",
+    "--opaque=beaconcrypt",
+    "--opaque=core",
+    "--opaque=alloc",
+    "--opaque=std",
+    "--include=core::ops::control_flow::ControlFlow",
+    "--include=core::option::Option",
+    "--include=core::result::Result",
+    "--include=core::convert::Infallible",
+    "--include=beaconcrypt::server::Server",
+    "--include=beaconcrypt::server::_::authenticate_registration_lookup",
+    "--include=beaconcrypt::server::_::get_shared_secret_from_lookup_with_rng",
+    "--include={impl beaconcrypt::server::ProviderServer for beaconcrypt::server::Server}::build_registration_response",
+    "--include=beaconcrypt::beacon::_::get_registration_bundle_with_rng",
+    "--include={impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration",
+    "--include=beaconcrypt::pqxdh::RegistrationKeys",
+    "--include=beaconcrypt::beacon::RegistrationAuthentication",
+    "--include=beaconcrypt_core::registration::BeaconInitEffect",
+    "--include=beaconcrypt::beacon::Beacon",
+    "--include=beaconcrypt::beacon::BeaconState",
+    "--include=beaconcrypt::server::RegistrationOutput",
+    "--include=beaconcrypt::server::RegResponse",
+    "--include=beaconcrypt_core::agreement::AgreementEffect",
+    "--include=beaconcrypt_core::registration::BeaconRegistrationEffect",
+    "--opaque=beaconcrypt_core",
+    "--opaque=beaconcrypt_parse",
+    "--opaque=beaconcrypt_crypto",
+    "--opaque=hashbrown",
+    "--opaque=ml_dsa",
+    "--opaque=serde",
+    "--opaque=zeroize",
+    "--opaque=siphasher",
+    "--opaque=beaconcrypt::auth::authenticate_init",
+    "--opaque=beaconcrypt::server::decode_init",
+    "--include=beaconcrypt_parse::transport::initkex",
+    "--include=beaconcrypt_parse::transport::kexresponse"
+  ],
+  "charon_sysroot": "default",
+  "control_sha256": "ed0b8a9c43e688f55b032dcb932a78437a9712dd7928d3821350f81de39a6d51",
+  "installed_sha256": {
+    "Funs.lean": "54370a28a090adf9d2ea380be000a2c4e8afe2e8eb28be875b0f3210808b3eb7",
+    "Types.lean": "034a5834e69790432a82d6e1afed2daad8b089d0a4be882207b5fbd868e1a8a9",
+    "external-signatures.json": "ed83e570af577456a4799159c46c1740ac74f3c26375c13b7c58fff22fe941e4"
+  },
+  "model_sha256": {
+    "FunsExternal.lean": "da0aa0e14b68685cda8b4305a48f6d8339bfc8423bdf08010e3e209b74338d07",
+    "LocalOperations.lean": "db56a253bbf01b98a5ed4f9399462f7ea8384483a0f0c1a0280e1757bccce6b9",
+    "PlatformOperations.lean": "4072543b50cbc124e7807776a0d707aed933aa750b82e6e8d466a179d7cf3fc1",
+    "TypesExternal.lean": "d3176270986f85a6d8a41017bae4c4af84f214aca03c5e2498c928245f390b4e"
+  },
+  "normalization": {
+    "control_laws": [
+      "branch_tail",
+      "terminal_tail",
+      "loop_congr",
+      "init_loop_factor",
+      "dh_selectionM"
+    ],
+    "function_binders": "variable [BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator]\nvariable [BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations]\nvariable [BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations]\nvariable [BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations]\nvariable [BeaconcryptCore.Refinement.PublicWrapperPlatform.Codecs]\nvariable [beaconcrypt.ratchet.Operations]\nvariable [beaconcrypt.auth.Operations]\nvariable [BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations]\nvariable [BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations]\n",
+    "interfaces": [
+      [
+        "core.option.Option.take core.option.Option.None",
+        "core.option.Option.take (core.option.Option.None : core.option.Option beaconcrypt_crypto.crypto_kx.KeyPair)"
+      ],
+      [
+        "beaconcrypt_core.session.SessionBinding.assigned_key_id binding",
+        "BeaconcryptCore.Refinement.PublicWrapperPlatform.assignedKeyId binding"
+      ],
+      [
+        "beaconcrypt_core.session.SessionBinding.beacon_identity_public_key\n                                    sb",
+        "BeaconcryptCore.Refinement.PublicWrapperPlatform.beaconIdentity\n                                  sb"
+      ],
+      [
+        "beaconcrypt_core.peer.Peer.binding peer",
+        "BeaconcryptCore.Refinement.PublicWrapperPlatform.peerBinding peer"
+      ]
+    ],
+    "namespace": [
+      "beaconcrypt",
+      "beaconcrypt_public_wrapper"
+    ],
+    "source_changes": [
+      "beaconcrypt/src/beacon.rs",
+      "beaconcrypt/src/pqxdh.rs"
+    ],
+    "strict_warning_header": [
+      "dupNamespace",
+      "hashCommand",
+      "unusedVariables",
+      "style.whitespace",
+      "style.setOption",
+      "style.longLine"
+    ],
+    "type_binders": "variable [BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]\nvariable [BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]\nvariable [BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]\n",
+    "unused_binder_alpha": {
+      "Funs.lean": [
+        [
+          "pqxdh.execute_agreement.closure.Insts.CoreOpsFunctionFnOnceTuplePublicKeyOptionArrayU832.call_once",
+          "c",
+          "_c"
+        ],
+        [
+          "pqxdh.execute_agreement.closure.Insts.CoreOpsFunctionFnOnceTuplePublicKeyOptionArrayU832.call_once",
+          "rand_coreTryCryptoRngInst",
+          "_rand_coreTryCryptoRngInst"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_1.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairArrayU832.call_once",
+          "c",
+          "_c"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_1.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairArrayU832.call_once",
+          "rand_coreTryCryptoRngInst",
+          "_rand_coreTryCryptoRngInst"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_3.Insts.CoreOpsFunctionFnTupleOptionArrayU832.call",
+          "rand_coreTryCryptoRngInst",
+          "_rand_coreTryCryptoRngInst"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_8.Insts.CoreOpsFunctionFnTupleOptionArrayU832.call",
+          "rand_coreTryCryptoRngInst",
+          "_rand_coreTryCryptoRngInst"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_4.Insts.CoreOpsFunctionFnOnceTupleSharedZeroizingArrayU832OptionArrayU832.call_once",
+          "rand_coreTryCryptoRngInst",
+          "_rand_coreTryCryptoRngInst"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_5.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairOptionArrayU832.call_once",
+          "rand_coreTryCryptoRngInst",
+          "_rand_coreTryCryptoRngInst"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_6.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832.call_once",
+          "rand_coreTryCryptoRngInst",
+          "_rand_coreTryCryptoRngInst"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_7.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832.call_once",
+          "rand_coreTryCryptoRngInst",
+          "_rand_coreTryCryptoRngInst"
+        ],
+        [
+          "shared.EstablishedRemote.from_peer",
+          "SignaturePkInst",
+          "_SignaturePkInst"
+        ]
+      ],
+      "Types.lean": [
+        [
+          "pqxdh.execute_agreement.closure_8",
+          "R",
+          "_R"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_8",
+          "Clause0_Clause0_Error",
+          "_Clause0_Clause0_Error"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_7",
+          "R",
+          "_R"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_7",
+          "Clause0_Clause0_Error",
+          "_Clause0_Clause0_Error"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_6",
+          "R",
+          "_R"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_6",
+          "Clause0_Clause0_Error",
+          "_Clause0_Clause0_Error"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_5",
+          "R",
+          "_R"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_5",
+          "Clause0_Clause0_Error",
+          "_Clause0_Clause0_Error"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_4",
+          "R",
+          "_R"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_4",
+          "Clause0_Clause0_Error",
+          "_Clause0_Clause0_Error"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_3",
+          "R",
+          "_R"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_3",
+          "Clause0_Clause0_Error",
+          "_Clause0_Clause0_Error"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_2",
+          "Clause0_Clause0_Error",
+          "_Clause0_Clause0_Error"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_1",
+          "R",
+          "_R"
+        ],
+        [
+          "pqxdh.execute_agreement.closure_1",
+          "Clause0_Clause0_Error",
+          "_Clause0_Clause0_Error"
+        ],
+        [
+          "pqxdh.execute_agreement.closure",
+          "R",
+          "_R"
+        ],
+        [
+          "pqxdh.execute_agreement.closure",
+          "Clause0_Clause0_Error",
+          "_Clause0_Clause0_Error"
+        ]
+      ]
+    }
+  },
+  "raw_generated_sha256": {
+    "Funs.lean": "eb29b84827855cb39823d42e5b7fb079b3f9b5c4f83b0a4b56a57de44c61bf34",
+    "FunsExternal_Template.lean": "82ebd1df189df86f25f0631617a603c52f78f7c1d408e585d0dc53dd25f504b3",
+    "Types.lean": "e45665ee6898871ae5506e757eb9e88d95058010bb4a624662a9fb03560d5814",
+    "TypesExternal_Template.lean": "9d20f7f0ad6038ace8d9a8e9606fa518c7acf12ca665c2306824ecd6ade04098"
+  },
+  "rustflags": "--cfg hax_compilation --cfg hax_backend_lean",
+  "source_sha256": {
+    "Cargo.lock": "2f9299d8f9844467ef90c9bbea76cdcacec7e1dffae7025930565ef56906b8e6",
+    "Cargo.toml": "755b24b6a434712ac0b941dcb1cf629321f128555a43b5e574c38dd5bf1b3b53",
+    "beaconcrypt-core/Cargo.toml": "8e41a5e7c6f9715417628967f404745000e89d177902bde70d1969ef00af5f09",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/Funs.lean": "b8fa8c9f866d96fbbc92e8e951dd8d1356f7049afe0dedc394adab5995034c2a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/FunsExternal.lean": "d898df0271bb1140fd0eeea86337d4bb5594f68703f4dccc08aab6c33e401d45",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/Types.lean": "0fe2fc42db0b5338f3174d00744fb42c58e3c744631ceeed483cc3d47fc19169",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/TypesExternal.lean": "b09a6f6a9217795d9c5bdbcf4320f89d95675c3d5b4c10878f9ff256a638ae04",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterInitAuthenticationExtraction/Funs.lean": "e50f57a96cbc7c6d99952362e6acf54a4af0a783071907f64075174eb30e379f",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterInitAuthenticationExtraction/FunsExternal.lean": "be7980412c80e4aeec8733ea6199a8a2e69474a62c0ff6aac9069d1d2a3f657a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterInitAuthenticationExtraction/Types.lean": "3f07bce43b6019e0aa326cf0dc4bc470723c77e81c5a191e34db3b56f07910eb",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterInitAuthenticationExtraction/TypesExternal.lean": "cfa042fa660082aeb5695f866b214af8564de9c8eaa2adf5f4fe4ff5293c03d0",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterRecordExtraction/Funs.lean": "fd2e995d850f4092689b2506583856faff58168f907088ad0c9ec7c07a215efe",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterRecordExtraction/FunsExternal.lean": "67f891b27f9b58a27a3f37a1616c7ffe3316cae057d99317a4c1d190a01c1759",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterRecordExtraction/Types.lean": "357423d7a8e17ddd6dbad50d75cbedf6ebbbbd2f40838207b524a949457113cf",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterRecordExtraction/TypesExternal.lean": "ea25a6c6cebec3b11a45151e8d0ab7ba46d774442008af4225efba53a19d25bd",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterRegistrationWriterExtraction/Funs.lean": "f269274f063fc823d730e267757887efdb8fda8c2321879b6dad61ac9372a24d",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterRegistrationWriterExtraction/FunsExternal.lean": "197462035401c72108c54d6b91f6b915f2b6ea9ecce13af43b1e50baa74c2d0f",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterRegistrationWriterExtraction/Types.lean": "523a0503ca4fe1b0dbd21ae29e8eae7372805f85c432feb50a536f4599492e19",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterRegistrationWriterExtraction/TypesExternal.lean": "b98d2579b61fc15b5ab92fc4b187a0fc7414def3c43248a4f5c8f750c8e15253",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterWireExtraction/Funs.lean": "f18bac513d0a035754095822efd96644187acc5bcc4a0d104c2049c902e9719e",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterWireExtraction/FunsExternal.lean": "9822fc8237bc8030f80a44c545a6122390db0f427a26302a0366b537ca2a4406",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterWireExtraction/Types.lean": "576aad809c9febbdafd88e8411b23d3c3b330d6f49e35571acb5ec06c9cc8692",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterWireExtraction/TypesExternal.lean": "5d568aed82c0d290139a088dd1089c1474967c9f7930940884220add19519bff",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Extraction/Funs.lean": "74ca109a7e8e33723d8edf96002535a12ca5f821b3b19ef8217d03acf952f776",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Extraction/Types.lean": "79472aa24f2b553cc654783be11f2bbb8101cd299a75151c9fe7cc5774b31f09",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/AdapterPublicControlNormalization.lean": "eade6763e7ee198250fb13a1b26dd33f34ce7146139e82c438c89fc0a83b1774",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/RegistrationPrimitiveExtraction/Types.lean": "953c3ff6fb0cbdc01ebb4adf78c2b843b8c4bf237f903c023da4e4b77d0a3027",
+    "beaconcrypt-core/src/agreement.rs": "7abf5bb56eb76ed461d52d0d6efff8bb18f165cc6831417a4f78f6e4d0672fa6",
+    "beaconcrypt-core/src/authentication.rs": "eef28a2a39d5134528173e40d22d02f9846319d2c2d67dc4b0e60d14d6637659",
+    "beaconcrypt-core/src/commitment.rs": "ca2e0a3eb7ce3712b1933a8bc6f548fa9fff5093a677ee6f7fb8bcdf090a162d",
+    "beaconcrypt-core/src/constants.rs": "60cfbabca698e1aeb53166425f589989b17f4b936aa271b102750deaf1d54418",
+    "beaconcrypt-core/src/lib.rs": "2b43ceb71b1b71fa69a69d9f41c2e62de7a54c54198803633412927234c627d6",
+    "beaconcrypt-core/src/peer.rs": "5ace82b81a3e1c191223fd0629be3f00bbd321336baed0b568c9e432df0f9d77",
+    "beaconcrypt-core/src/pqxdh.rs": "0e90604b6537968f73873850ca7626f5019a9482c3225bb333d9a3ff555fde4f",
+    "beaconcrypt-core/src/pqxdh/concrete.rs": "fb8bfbbf3c2a6615540983a4665def830ffd6493a1dfaa9ffad396793bd0c5f0",
+    "beaconcrypt-core/src/ratchet.rs": "ff8981ab40ed42f406e04b1258063b8e5a9418af76cccc9f065f12160fa08f47",
+    "beaconcrypt-core/src/ratchet/concrete.rs": "c9f907f20f23ac2851792ff6eef77565a843e61ff266d21617411100e12e431d",
+    "beaconcrypt-core/src/ratchet/control.rs": "6c17cc0dbe7445be04dc3ab123a60ecbf3d757da6337a7132d5dafd3e06f5639",
+    "beaconcrypt-core/src/ratchet/refined.rs": "ce940e42b1e95bc841121ba80107ce74757fea4f4fcbd771834b93e28cdb459f",
+    "beaconcrypt-core/src/record.rs": "530f820ec1998cb60ce9f2d6666f33feabcfcc597fd06997d1272d3abba9edc0",
+    "beaconcrypt-core/src/record_effects.rs": "dbdf79661a17c8d8c128ff349a7efe906d6713912e5510c9a0476b0c3efad2b5",
+    "beaconcrypt-core/src/registration.rs": "8be65a2c601a151d0ec9d2a570b929d55d72394edceac59599e1b11d741bba83",
+    "beaconcrypt-core/src/session.rs": "4f83234a89c0fe8df60d68753930339f68208e2f14c464849177006af550c15e",
+    "beaconcrypt-core/src/transport.rs": "795012d453a3ed209d6f8815eeedb2ccabaebd9a81d03f932d64f95aea9c3617",
+    "beaconcrypt-crypto/Cargo.toml": "dc34ba30e7cfbe1c17e27be5ffe2e49f151c9ba170fed7e42baf5bc09cec4560",
+    "beaconcrypt-crypto/src/crypto_aead.rs": "1b62a128ed169c81a45825ede6853b32ae715ce9ea96f9d53803e7fb461b9bf1",
+    "beaconcrypt-crypto/src/crypto_generichash.rs": "292e806217ff105632f48ac32d89f3e9820b8a2b118810790be06e60104168f3",
+    "beaconcrypt-crypto/src/crypto_kdf.rs": "8fc41159cc32f483a89ee4a273b9ebdf32fd75d23591580c991efb8b8c70cdf2",
+    "beaconcrypt-crypto/src/crypto_kem.rs": "3c9a4f768a65f0b013c3b4a479d17be07574adc09305456692effc1ded5e2af5",
+    "beaconcrypt-crypto/src/crypto_kx.rs": "d91d59ad9bc3e95ab8f8227c870282b039274bba07a5572696bf65deaa49b387",
+    "beaconcrypt-crypto/src/crypto_scalarmult.rs": "e5eb492b32357a010c29c6655dc0e2397ab8747225a04b349613f310b570d2ca",
+    "beaconcrypt-crypto/src/crypto_sign.rs": "8340a01b3c081ab79c621785cd4c6193b8af1fa483a4cd726b00ddc172fa011c",
+    "beaconcrypt-crypto/src/lib.rs": "5d808be88690164585ab2c5c17f84396789defbf694694ab3150e709b7debc7f",
+    "beaconcrypt-ffi/Cargo.toml": "2ce277d83eeeb3fcfb82189a8bbe2ad74ffe52490a0bfeb72034a0a66710fec5",
+    "beaconcrypt-ffi/build.rs": "10965a2a16fb0081574ad49abea4d202165fa74caf4fa6aa55f0009023931903",
+    "beaconcrypt-parse/Cargo.toml": "58af4e0cdf2b2dec9cb607cbfc14fafdb1f56db59f95016171504dd83392676e",
+    "beaconcrypt-parse/src/frame.rs": "76d0549aa06916e95fc51c03af9431996d26596bb1053121883d592918c96f92",
+    "beaconcrypt-parse/src/frame_tests.rs": "1061147b64fed42af962accf164ab4e6fe885a9226052c0b17ff9ab9b08483a2",
+    "beaconcrypt-parse/src/generated/cbordetver.rs": "e60e27d58b3fe7eeaca202e9751b596c88884b4a76d5bf57a345a21861066d6c",
+    "beaconcrypt-parse/src/generated/cbordetveraux.rs": "36420e78b9feed0a4c4a1b6a57b28aeba16ae38be9c61f5ff8165fa088ac3589",
+    "beaconcrypt-parse/src/generated/transport.rs": "c271a30fe4aa35fb90782c7cec8755c50148fdab139fa7e1eadafd5e4b373b66",
+    "beaconcrypt-parse/src/lib.rs": "1566e1f7314eb0c46354c6d0763e019272fbb891ef95a08959ed153d63917b9a",
+    "beaconcrypt-parse/src/preflight_tests.rs": "509c205dcecd6e86ae23a5183500dbafc1ecc397de77ed6da317ac50e133c46a",
+    "beaconcrypt-wasm/Cargo.toml": "e4a7a2c3aeec7038b8e09b75f2894473e16be0a92750c0dd62c92d5e81ddf616",
+    "beaconcrypt-wasm/src/abi.rs": "dca21659fe559463e64002bf33962f50675d5ee6a4514bc47d869289af787ece",
+    "beaconcrypt-wasm/src/abi_tests.rs": "82f0ad94b7aa097bb27f53c65d5a658597107cbadd19a31bfe64ead660bcbddb",
+    "beaconcrypt-wasm/src/lib.rs": "61a9783a97a8d7ac929c586100d7e5240bbb7fb44e1761a644d0b866113ee6cb",
+    "beaconcrypt-wasm/src/store.rs": "24e9719ab0115328b2b3865f3bb7d18da809e0a4a58736df7e9f345cfcd24b3b",
+    "beaconcrypt-wasm/src/store_tests.rs": "63edd62fdaebab5ecc04d29155d99456404259977853d992cb123962d6b0fcfc",
+    "beaconcrypt-wasm/src/tests.rs": "15749c3248c46bba2a078acc6d3869ae3a3fbf66677731217510a109d72a59bf",
+    "beaconcrypt/Cargo.toml": "bd72a2dd47102f91b1f927b90666f78674a9e4af91419dffad3ac69d7195a098",
+    "beaconcrypt/src/auth.rs": "f812e268cdd86cac01c43fdba5b25b944ebcdda1f6c03407203a6fbfa9ed16b5",
+    "beaconcrypt/src/beacon.rs": "669482d038c8143ac25698bd4a1517480745c9b29c348d7d5c023992f813a845",
+    "beaconcrypt/src/cbinds.rs": "d6b84d410a604fa89ee95e2e237df94012e8ef7f6532130ad7c21a31eef04d46",
+    "beaconcrypt/src/collections.rs": "2eac87345a8673bad9fe89e705a65eb0f20c6ac67a2516872fedd599576b8334",
+    "beaconcrypt/src/deser.rs": "b112980cd91dc0e6b08048859bd3c373dd6eebc01e3e55f5d5c29af92a3be6a1",
+    "beaconcrypt/src/error.rs": "588ef788b61ad3914b4b8d2ca031cd0229d0d0e3c158b4e42f285ad169019753",
+    "beaconcrypt/src/lib.rs": "59b2239615ff5c4bfa10db7a7162b078db5abdd10f143f9a3624937a6ff4a3ba",
+    "beaconcrypt/src/persistence.rs": "6e34349583feff9bb372a5a9a0ef5c387708ac69be189e8893bf176be3086bbf",
+    "beaconcrypt/src/pqxdh.rs": "031465df2916c2fd118a28b3cb91f79484f535e2149c9c5bc48d3c5395dacf23",
+    "beaconcrypt/src/pybinds.rs": "47065efeda4b5908cfa4c2d08ed160a07de5b00fa2aa4a941d692727b76d93fb",
+    "beaconcrypt/src/ratchet.rs": "f9fa5f0b41821cc54fe5f626d18a853489300a7a2cde061efd8f7f0da277370d",
+    "beaconcrypt/src/row_binding_server.rs": "337de396cec39c4dde6be0022a378bc3669151a9659d6dfbaadae880732a22b3",
+    "beaconcrypt/src/row_cbinds.rs": "c7fd1f48d414573d3d0e984e7e33a005bb727e3f7faa4d16ee987972bd15bf07",
+    "beaconcrypt/src/row_persistence.rs": "5da4c4e3edac635df5a38963d85e4ce3a02a68818e8366249cbed0cdb4b6aad6",
+    "beaconcrypt/src/row_pybinds.rs": "d954d1ccea96f37d1a6cedf84e952b6807d14d827495b0eb8369f13d39f06eb4",
+    "beaconcrypt/src/ser.rs": "ada89cf894690a70a03dd604ac8b1689e28311e055bfd657d47d7a765fe8260c",
+    "beaconcrypt/src/server.rs": "b5e6992a58eacce5b51d2624ff58206fbd56c744a97561146d07176a9242b66b",
+    "beaconcrypt/src/shared.rs": "98ff9810f5b1a8425a2177dab49c53eda6aa75cf5f78aedb1617712b4da17387",
+    "beaconcrypt/src/wire.rs": "74acbaed761b8c7d4d492ac8acc4cc4c9374852ffb278ca5b948e092f6b0aa74",
+    "hax.toml": "5010245f379886dba312f63d3d56f0fa9d3378c927d488106dd096d1bc7206f1",
+    "scripts/extract_adapter_public_wrappers.py": "cc51495fc1a11bb5f4476fdccf6a6fd2d86b8ba8f120bc3b118ee72c4b06248b",
+    "scripts/extract_adapter_record.py": "8ce5111851d445c8412805bcdbbe513bd40a3457be518e929abd1a62cb09f4ae",
+    "scripts/prepare_adapter_public_wrappers.py": "810ff4d5e067703a319d25dcc087885d6085f717088c8a70c5ff580c5a546237",
+    "scripts/registration_codec_normalization.py": "531703e877f85a89cb2d6a0980b7098ba34ae6458a783760e0e27ec78af0102d"
+  },
+  "tool_sha256": {
+    "aeneas": "88bc16127fd3f4ebbb72c9d0620d7b4c0c3b0810f8eebcc46c219ff7bba60727",
+    "charon": "60ac6a5c4bf9151f0d6db961009268b91ea445e3a5c93bdb8dbfe5b48da36ebc"
+  },
+  "tools": {
+    "aeneas": "nightly-2026.09.03-6852e64",
+    "charon": "nightly-2026.09.02"
+  },
+  "versions": {
+    "hax-lean-lib": "174840bf2f633ae3bae955e08f781b3737ffc0b8",
+    "lean": "leanprover/lean4:v4.35.0"
+  }
+}

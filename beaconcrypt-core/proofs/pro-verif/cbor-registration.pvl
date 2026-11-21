@@ -1,0 +1,59 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* The CBOR response carries only C || T || U. The logical CryptoFrame below
+   is reconstructed with sequence one and the caller's pinned Server ID;
+   neither value is read from the payload. This finite control checks the CTX
+   consequence, independently of CBOR parsing or primitive implementation. *)
+fun cbor_registration_payload(bitstring, bitstring, bitstring): bitstring [data].
+reduc forall body: bitstring, tag: bitstring, commitment: bitstring,
+             seq: sequence, sender: key_id;
+  cbor_registration_strip(crypto_frame(body, tag, commitment, seq, sender)) =
+    cbor_registration_payload(body, tag, commitment).
+reduc forall body: bitstring, tag: bitstring, commitment: bitstring,
+             pinned: key_id;
+  cbor_registration_restore(cbor_registration_payload(body, tag, commitment), pinned) =
+    crypto_frame(body, tag, commitment, first_sequence(), pinned).
+
+free cbor_registration_channel: channel.
+free CBOR_REGISTRATION_AD: bitstring.
+free CBOR_REGISTRATION_PLAINTEXT: bitstring.
+fun cbor_pinned_sender(): key_id [data].
+fun cbor_other_sender(): key_id [data].
+
+event CborRegistrationGenuineOpened().
+event CborRegistrationLaterAttempted().
+event CborRegistrationLaterOpened().
+event CborRegistrationOtherSenderAttempted().
+event CborRegistrationOtherSenderOpened().
+
+query event(CborRegistrationGenuineOpened()).
+query event(CborRegistrationLaterAttempted()).
+query event(CborRegistrationLaterOpened()).
+query event(CborRegistrationOtherSenderAttempted()).
+query event(CborRegistrationOtherSenderOpened()).
+
+let CborRegistrationControl() =
+  new key: bitstring;
+  new nonce: bitstring;
+  let material = ratchet_key_nonce(key, nonce) in
+  let genuine = cbor_registration_strip(seal_frame(material, CBOR_REGISTRATION_AD,
+    first_sequence(), cbor_pinned_sender(), CBOR_REGISTRATION_PLAINTEXT)) in
+  (* Reuse material deliberately: rejection must follow from the authenticated
+     sequence/sender, even without the additional separation of ratchet keys. *)
+  let later = cbor_registration_strip(seal_frame(material, CBOR_REGISTRATION_AD,
+    next_sequence(next_sequence(first_sequence())), cbor_pinned_sender(), CBOR_REGISTRATION_PLAINTEXT)) in
+  let other_sender = cbor_registration_strip(seal_frame(material, CBOR_REGISTRATION_AD,
+    first_sequence(), cbor_other_sender(), CBOR_REGISTRATION_PLAINTEXT)) in
+  out(cbor_registration_channel, (genuine, later, other_sender));
+  !in(cbor_registration_channel, candidate: bitstring);
+  (
+  (if candidate = later then event CborRegistrationLaterAttempted()) |
+  (if candidate = other_sender then event CborRegistrationOtherSenderAttempted()) |
+  let restored = cbor_registration_restore(candidate, cbor_pinned_sender()) in
+  let opened = open_frame(material, CBOR_REGISTRATION_AD, first_sequence(), cbor_pinned_sender(), restored) in
+  if opened = CBOR_REGISTRATION_PLAINTEXT then
+  (
+    (if candidate = genuine then event CborRegistrationGenuineOpened()) |
+    (if candidate = later then event CborRegistrationLaterOpened()) |
+    (if candidate = other_sender then event CborRegistrationOtherSenderOpened())
+  )).

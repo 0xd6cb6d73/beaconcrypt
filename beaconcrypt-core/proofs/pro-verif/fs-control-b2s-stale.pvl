@@ -1,0 +1,16 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* NEGATIVE CONTROL C-STALE for fs-records-b2s: a failed open at a target
+   t <= T_max restores the receive state from before the previous success
+   instead of keeping the entry state.  With K_r = 3 attempts from the state
+   (r = 0, nothing cached) left by the response build, that is the state
+   left by the build: after one earlier success it is exactly the state
+   before that success, after none it is the entry state, and a state
+   restored by the third attempt is never used.  Successful opens are
+   unchanged.  Loaded instead of fs-records-b2s-window.pvl; C3 must become
+   FALSE. *)
+letfun fs_b2s_cached_after_success(cached_1: bool) = false.
+
+letfun fs_b2s_failed_r(r: nat, target: nat) = 0.
+
+letfun fs_b2s_failed_cached_1(r: nat, target: nat, cached_1: bool) = false.

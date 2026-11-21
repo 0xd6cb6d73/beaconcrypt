@@ -1,0 +1,3 @@
+import BeaconcryptCore.Refinement.RegistrationPositiveSlice
+
+set_option warningAsError true

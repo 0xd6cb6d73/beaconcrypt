@@ -1,0 +1,37 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+query server_ml: bitstring, init_hash: bitstring, response: bitstring;
+  event(JointResponseVerified(server_ml, init_hash, response)) ==>
+  event(JointResponseSigned(server_ml, init_hash, response)).
+
+query request: bitstring, server_ml: bitstring, init_hash: bitstring, response: bitstring,
+      root: bitstring, ad: bitstring, assigned: key_id, initial: bitstring;
+  event(JointBeaconCompleted(request, server_ml, init_hash, response, root, ad, assigned, initial)) ==>
+  event(JointServerCommitted(request, server_ml, init_hash, response, root, ad, assigned, initial)).
+
+query request: bitstring, server_ml: bitstring, init_hash: bitstring, root: bitstring, ad: bitstring,
+      seq: sequence, sender: key_id, receiver: key_id, plaintext: bitstring;
+  event(JointRecordReceived(request, server_ml, init_hash, root, ad, server_to_beacon(), seq, sender, receiver, plaintext)) &&
+    event(JointSessionCreated(request)) ==>
+  event(JointRecordSent(request, server_ml, init_hash, root, ad, server_to_beacon(), seq, sender, receiver, plaintext)).
+
+query request: bitstring, server_ml: bitstring, init_hash: bitstring, root: bitstring, ad: bitstring,
+      seq: sequence, sender: key_id, receiver: key_id, plaintext: bitstring;
+  event(JointRecordReceived(request, server_ml, init_hash, root, ad, beacon_to_server(), seq, sender, receiver, plaintext)) &&
+    event(JointSessionCreated(request)) ==>
+  event(JointRecordSent(request, server_ml, init_hash, root, ad, beacon_to_server(), seq, sender, receiver, plaintext)).
+
+query attacker(MLDSA_JOINT_INITIAL).
+query attacker(MLDSA_JOINT_SERVER_RECORD).
+query attacker(MLDSA_JOINT_BEACON_RECORD).
+query event(JointHonestComplete()).
+query event(JointServerRecordOpened()).
+query event(JointBeaconRecordOpened()).
+query event(JointOwnedAccepted()).
+query event(JointCopiedKemAccepted()).
+query attacker(MLDSA_JOINT_OWNED_INITIAL).
+query attacker(MLDSA_JOINT_OWNED_RECORD).
+query event(JointReplayRejected()).
+query event(JointClassicalRecovered()).
+
+process MldsaJointSession()

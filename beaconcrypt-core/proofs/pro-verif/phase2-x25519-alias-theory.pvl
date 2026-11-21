@@ -1,0 +1,27 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* X25519 interface with canonical and high-bit-flipped public encodings. *)
+fun x25519_public(bitstring): bitstring.
+fun x25519_high_bit_alias(bitstring): bitstring.
+fun x25519_flip_high_bit(bitstring): bitstring
+reduc forall alias_secret: bitstring;
+  x25519_flip_high_bit(x25519_public(alias_secret)) = x25519_high_bit_alias(alias_secret)
+otherwise forall alias_secret: bitstring;
+  x25519_flip_high_bit(x25519_high_bit_alias(alias_secret)) = x25519_public(alias_secret).
+reduc forall identity_secret: bitstring;
+  x25519_public_from_ed(ed_public(identity_secret)) = x25519_public(identity_secret).
+fun x25519_shared(bitstring, bitstring): bitstring [private].
+fun x25519_server_dh(bitstring, bitstring): bitstring
+reduc forall server_secret: bitstring, beacon_secret: bitstring;
+  x25519_server_dh(server_secret, x25519_public(beacon_secret)) =
+  x25519_shared(server_secret, beacon_secret)
+otherwise forall server_secret: bitstring, beacon_secret: bitstring;
+  x25519_server_dh(server_secret, x25519_high_bit_alias(beacon_secret)) =
+  x25519_shared(server_secret, beacon_secret).
+fun x25519_beacon_dh(bitstring, bitstring): bitstring
+reduc forall beacon_secret: bitstring, server_secret: bitstring;
+  x25519_beacon_dh(beacon_secret, x25519_public(server_secret)) =
+  x25519_shared(server_secret, beacon_secret)
+otherwise forall beacon_secret: bitstring, server_secret: bitstring;
+  x25519_beacon_dh(beacon_secret, x25519_high_bit_alias(server_secret)) =
+  x25519_shared(server_secret, beacon_secret).

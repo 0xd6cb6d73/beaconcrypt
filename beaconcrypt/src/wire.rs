@@ -2,6 +2,9 @@
 
 //! Allocate output only from trusted slice lengths, and publish successful encodings.
 
+use alloc::vec::Vec;
+
+#[cfg(test)]
 use beaconcrypt_parse::CryptoFrame;
 #[cfg(any(feature = "beacon", test))]
 use beaconcrypt_parse::InitKex;
@@ -20,6 +23,7 @@ fn encode_record(capacity: usize, serialize: impl FnOnce(&mut [u8]) -> usize) ->
 	Some(output)
 }
 
+#[cfg(test)]
 pub(crate) fn encode_frame(frame: CryptoFrame<'_>) -> Option<Vec<u8>> {
 	let capacity =
 		beaconcrypt_parse::encoded_frame_len(frame.seq, frame.key_id, frame.cipher_text.len())?;
@@ -28,13 +32,19 @@ pub(crate) fn encode_frame(frame: CryptoFrame<'_>) -> Option<Vec<u8>> {
 	})
 }
 
+pub(crate) fn encode_frame_parts(sequence: u64, sender: u64, parts: &[&[u8]]) -> Option<Vec<u8>> {
+	let ciphertext_length = parts
+		.iter()
+		.try_fold(0usize, |length, part| length.checked_add(part.len()))?;
+	let capacity = beaconcrypt_parse::encoded_frame_len(sequence, sender, ciphertext_length)?;
+	encode_record(capacity, |output| {
+		beaconcrypt_parse::encode_frame_parts(sequence, sender, parts, output)
+	})
+}
+
 /// Exact on-wire length before deriving a key or allocating ciphertext.
 pub(crate) fn frame_len(plaintext_len: usize, sequence: u64, sender: u64) -> Option<usize> {
-	beaconcrypt_parse::encoded_frame_len(
-		sequence,
-		sender,
-		plaintext_len.checked_add(crate::ratchet::MESSAGE_OVERHEAD)?,
-	)
+	beaconcrypt_core::transport::protected_frame_len(plaintext_len, sequence, sender)
 }
 
 #[cfg(any(feature = "beacon", test))]
@@ -58,6 +68,7 @@ pub(crate) fn encode_response(response: KexResponse<'_>) -> Option<Vec<u8>> {
 			response.ephemeral_key.len(),
 			response.kem_cipher_text.len(),
 			response.app_cipher_text.len(),
+			response.signature.len(),
 		],
 		response.key_id,
 	)?;
@@ -106,6 +117,7 @@ mod tests {
 			ephemeral_key: &[0; 32],
 			kem_cipher_text: &[0; 1_088],
 			app_cipher_text: &[],
+			signature: &[0; crate::auth::MLDSA_SIGNATURE_LEN],
 			key_id: u64::MAX,
 		};
 		assert!(

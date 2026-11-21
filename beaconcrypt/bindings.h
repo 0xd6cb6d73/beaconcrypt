@@ -15,6 +15,10 @@
  */
 #define beaconcrypt_MAX_MESSAGE_SIZE 33554432
 
+#define beaconcrypt_MLDSA_PUBLIC_KEY_LEN 1952
+
+#define beaconcrypt_MLDSA_SIGNATURE_LEN 3309
+
 
 
 #define beaconcrypt_KDF_STATE_SIZE 32
@@ -77,10 +81,50 @@
 
 #define beaconcrypt_STATUS_POISONED 12
 
+#define beaconcrypt_STATUS_STORAGE 13
+
+#define beaconcrypt_STATUS_COMMIT_UNKNOWN 15
+
+/**
+ * No send key was consumed and no output is available.
+ */
+#define beaconcrypt_SEND_OUTCOME_REJECTED 0
+
+/**
+ * A send key was consumed and the message contains the successful output.
+ */
+#define beaconcrypt_SEND_OUTCOME_SENT 1
+
+/**
+ * A send key was consumed, but no output could be constructed.
+ */
+#define beaconcrypt_SEND_OUTCOME_CONSUMED_WITHOUT_OUTPUT 2
+
+/**
+ * A storage failure, including an uncertain commit outcome. No operation output is released.
+ */
+#define beaconcrypt_ROW_STATUS_STORAGE 13
+
+#define beaconcrypt_ROW_STATUS_INVALID_SESSION 14
+
+#define beaconcrypt_ROW_PHASE_ACCEPTANCE 1
+
+#define beaconcrypt_ROW_PHASE_COMPLETION 2
+
 /**
  * Opaque beacon handle exposed by the C API and owned by its caller.
  */
 typedef struct beaconcrypt_Beacon beaconcrypt_Beacon;
+
+/**
+ * A database-backed row server. Serialize calls on one handle and never reenter it from callbacks.
+ */
+typedef struct beaconcrypt_RowServerHandle beaconcrypt_RowServerHandle;
+
+/**
+ * A trusted callback-scoped transaction session. The pointer and any calls using it must remain on the callback's thread and must not escape that callback. Recursive session calls are rejected and abort the transaction. Session outputs are pending and must not be published before the outer server call succeeds. Do not reenter the owning server.
+ */
+typedef struct beaconcrypt_RowSessionHandle beaconcrypt_RowSessionHandle;
 
 /**
  * Opaque server handle owned by the C caller.
@@ -127,6 +171,8 @@ typedef struct beaconcrypt_SnapshotHeadInfo {
  * `load` returns false without calling `sink` for an empty store. Otherwise it calls `sink` synchronously exactly once with nonempty borrowed snapshot bytes and returns true; Rust copies the bytes before `sink` returns. `compare_and_swap` compares the complete current head against `expected` (null means an empty store), validates the successor, and durably stores the exact replacement bytes and head before returning true. The store must protect integrity, provenance and freshness; snapshot bytes and digests do not authenticate themselves.
  *
  * Constructors take ownership of `context` immediately, including on failure. `destroy`, when supplied, runs exactly once after the final callback; otherwise the caller manages the context lifetime. All callbacks and borrowed arguments remain valid until they return, must not unwind, retain borrowed pointers, call the sink after `load` returns, or reenter the owning handle. The caller serializes access to the handle and store.
+ *
+ * This original callback layout preserves the legacy C ABI. Use `SnapshotStoreCallbacksV2` and the constructors ending in `_v2` to report storage failures separately from absence and comparison rejection.
  */
 typedef struct beaconcrypt_SnapshotStoreCallbacks {
   void *context;
@@ -137,6 +183,16 @@ typedef struct beaconcrypt_SnapshotStoreCallbacks {
                            uintptr_t replacement_len);
   void (*destroy)(void *context);
 } beaconcrypt_SnapshotStoreCallbacks;
+
+/**
+ * Versioned snapshot callbacks with storage-error reporting.
+ *
+ * `last_error` reports the result of the immediately preceding load or CAS callback: STATUS_OK, STATUS_STORAGE for a definite failure without a commit, or STATUS_COMMIT_UNKNOWN if a CAS may have committed. Reset this status when beginning each callback. A null `last_error` retains the legacy empty-store or conflict interpretation of false. Context ownership and callback lifetime rules are the same as `SnapshotStoreCallbacks`.
+ */
+typedef struct beaconcrypt_SnapshotStoreCallbacksV2 {
+  struct beaconcrypt_SnapshotStoreCallbacks callbacks;
+  uint32_t (*last_error)(void *context);
+} beaconcrypt_SnapshotStoreCallbacksV2;
 
 /**
  * Result returned after a successful server-side beacon registration.
@@ -175,7 +231,52 @@ typedef struct beaconcrypt_EncryptState {
   uint64_t seq;
 } beaconcrypt_EncryptState;
 
+/**
+ * Explicit send effect. Inspect `status` first; `outcome` is meaningful only for STATUS_OK. Only SEND_OUTCOME_SENT contains buffers and metadata. Release both message buffers with `beaconcrypt_free_buffer`. A persistent successful outcome is published only after its state commits; persistence errors suppress the outcome and output.
+ */
+typedef struct beaconcrypt_SendResult {
+  uint32_t status;
+  uint32_t outcome;
+  struct beaconcrypt_EncryptState message;
+} beaconcrypt_SendResult;
 
+/**
+ * A serializable database transaction interface. `begin`, `store` and `commit` return true on success. `commit` must durably commit the outer transaction before returning true. `rollback` must safely discard any active transaction or do nothing if none exists; it is called after failed begin or commit callbacks. `load` returns 0 for absence, 1 after synchronously calling the sink exactly once, and -1 on error. Protect every read, including absence, with locks or atomic read-set validation at commit. Values are secret, opaque bytes; keys must be stored exactly. Constructors consume context immediately, and invoke destroy exactly once, including on failure. Borrowed pointers and sinks must not escape callbacks. Callbacks must not unwind or reenter the handle. The database must protect integrity, provenance and rollback resistance.
+ */
+typedef struct beaconcrypt_RowStoreCallbacks {
+  void *context;
+  bool (*begin)(void*);
+  int32_t (*load)(void*, const uint8_t*, uintptr_t, void*, void(*)(void*, const uint8_t*, uintptr_t));
+  bool (*store)(void*, const uint8_t*, uintptr_t, const uint8_t*, uintptr_t);
+  bool (*commit)(void*);
+  void (*rollback)(void*);
+  void (*destroy)(void*);
+} beaconcrypt_RowStoreCallbacks;
+
+/**
+ * Optional cached-peer expectation support. `expect` returns 1 after protecting the exact expected bytes (or absence when present is false) through the final atomic commit, 0 for a conflict, and -1 for a storage failure. It may stage a CAS condition instead of loading the row. A null callback falls back to load and compare. Context ownership and transaction callbacks are inherited unchanged from store.
+ */
+typedef struct beaconcrypt_CachedRowStoreCallbacks {
+  struct beaconcrypt_RowStoreCallbacks store;
+  int32_t (*expect)(void*, const uint8_t*, uintptr_t, const uint8_t*, uintptr_t, bool);
+} beaconcrypt_CachedRowStoreCallbacks;
+
+/**
+ * A committed row message and authenticated peer/sequence metadata. Free `data` with `beaconcrypt_free_buffer`; it contains ciphertext for encrypt and plaintext for decrypt. Failure returns an empty buffer and zero metadata; inspect the server's last status.
+ */
+typedef struct beaconcrypt_RowMessageBuffer {
+  struct beaconcrypt_Buffer data;
+  uint64_t key_id;
+  uint64_t seq;
+} beaconcrypt_RowMessageBuffer;
+
+/**
+ * The effect of an operation inside a transaction. `message.data` is null when no message was produced. `changed` can be true even without a message. Free a non-null message buffer with `beaconcrypt_free_buffer`. These bytes are pending until the outer transaction succeeds.
+ */
+typedef struct beaconcrypt_RowTransitionBuffer {
+  struct beaconcrypt_RowMessageBuffer message;
+  bool changed;
+} beaconcrypt_RowTransitionBuffer;
 
 #ifdef __cplusplus
 extern "C" {
@@ -190,33 +291,50 @@ extern "C" {
 void beaconcrypt_free_buffer(struct beaconcrypt_Buffer buffer);
 
 /**
- * Create a server with a randomly generated identity key.
+ * Create a server with independently generated Ed25519 and ML-DSA-65 identity keys.
  *
  * Returns an owned handle, or null on failure. Release a non-null handle with `beaconcrypt_server_free`.
  */
 struct beaconcrypt_Server *beaconcrypt_server_new(uint64_t server_kid);
 
 /**
- * Create a server with an optional deterministic identity seed.
+ * Create a server with independent optional Ed25519 and ML-DSA-65 identity seeds.
  *
- * A null pointer or zero length selects a random identity key. A non-empty seed must contain exactly `beaconcrypt_ED25519_SEED_SIZE` readable bytes.
+ * Each null pointer or zero length selects an independently generated identity key. Each non-empty seed must contain exactly 32 readable secret bytes.
  *
  * Returns an owned handle, or null when creation fails. Release a non-null handle with `beaconcrypt_server_free`.
  */
 struct beaconcrypt_Server *beaconcrypt_server_new_from_seed(uint64_t server_kid,
                                                             const uint8_t *seed_ptr,
-                                                            uintptr_t seed_len);
+                                                            uintptr_t seed_len,
+                                                            const uint8_t *mldsa_seed_ptr,
+                                                            uintptr_t mldsa_seed_len);
 
 /**
  * Create a server whose results are released only after the store's durable compare-and-swap succeeds.
  *
- * The callbacks take ownership of their context even when construction fails. A null seed or zero seed length selects a random identity. `status_out` may be null; otherwise it receives a `beaconcrypt_STATUS_*` code. Returns null on failure.
+ * The callbacks take ownership of their context even when construction fails. Each null seed or zero seed length selects an independently generated identity. `status_out` may be null; otherwise it receives a `beaconcrypt_STATUS_*` code. Returns null on failure.
  */
 struct beaconcrypt_Server *beaconcrypt_server_create_with_store(uint64_t server_kid,
                                                                 const uint8_t *seed_ptr,
                                                                 uintptr_t seed_len,
+                                                                const uint8_t *mldsa_seed_ptr,
+                                                                uintptr_t mldsa_seed_len,
                                                                 struct beaconcrypt_SnapshotStoreCallbacks callbacks,
                                                                 uint32_t *status_out);
+
+/**
+ * Versioned durable constructor with explicit callback storage-error reporting.
+ *
+ * Context ownership and callback lifetime rules match the corresponding legacy constructor.
+ */
+struct beaconcrypt_Server *beaconcrypt_server_create_with_store_v2(uint64_t server_kid,
+                                                                   const uint8_t *seed_ptr,
+                                                                   uintptr_t seed_len,
+                                                                   const uint8_t *mldsa_seed_ptr,
+                                                                   uintptr_t mldsa_seed_len,
+                                                                   struct beaconcrypt_SnapshotStoreCallbacksV2 callbacks,
+                                                                   uint32_t *status_out);
 
 /**
  * Create a durable server under a caller-provisioned 32-byte lineage.
@@ -226,10 +344,27 @@ struct beaconcrypt_Server *beaconcrypt_server_create_with_store(uint64_t server_
 struct beaconcrypt_Server *beaconcrypt_server_create_with_store_and_lineage(uint64_t server_kid,
                                                                             const uint8_t *seed_ptr,
                                                                             uintptr_t seed_len,
+                                                                            const uint8_t *mldsa_seed_ptr,
+                                                                            uintptr_t mldsa_seed_len,
                                                                             struct beaconcrypt_SnapshotStoreCallbacks callbacks,
                                                                             const uint8_t *lineage_ptr,
                                                                             uintptr_t lineage_len,
                                                                             uint32_t *status_out);
+
+/**
+ * Versioned durable constructor with explicit callback storage-error reporting.
+ *
+ * Context ownership and callback lifetime rules match the corresponding legacy constructor.
+ */
+struct beaconcrypt_Server *beaconcrypt_server_create_with_store_and_lineage_v2(uint64_t server_kid,
+                                                                               const uint8_t *seed_ptr,
+                                                                               uintptr_t seed_len,
+                                                                               const uint8_t *mldsa_seed_ptr,
+                                                                               uintptr_t mldsa_seed_len,
+                                                                               struct beaconcrypt_SnapshotStoreCallbacksV2 callbacks,
+                                                                               const uint8_t *lineage_ptr,
+                                                                               uintptr_t lineage_len,
+                                                                               uint32_t *status_out);
 
 /**
  * Restore the trusted current snapshot and durably claim its next generation before returning a live owner.
@@ -238,6 +373,14 @@ struct beaconcrypt_Server *beaconcrypt_server_create_with_store_and_lineage(uint
  */
 struct beaconcrypt_Server *beaconcrypt_server_restore_with_store(struct beaconcrypt_SnapshotStoreCallbacks callbacks,
                                                                  uint32_t *status_out);
+
+/**
+ * Versioned durable constructor with explicit callback storage-error reporting.
+ *
+ * Context ownership and callback lifetime rules match the corresponding legacy constructor.
+ */
+struct beaconcrypt_Server *beaconcrypt_server_restore_with_store_v2(struct beaconcrypt_SnapshotStoreCallbacksV2 callbacks,
+                                                                    uint32_t *status_out);
 
 /**
  * Read the owner's current non-secret snapshot head. Returns a status code without changing the last operation's status.
@@ -293,15 +436,17 @@ struct beaconcrypt_Server *beaconcrypt_server_new_from_state(const uint8_t *stat
 struct beaconcrypt_Buffer beaconcrypt_server_export_state(const struct beaconcrypt_Server *handle);
 
 /**
- * Create a beacon bound to a server identity public key.
+ * Create a beacon bound to both server identity public keys.
  *
- * `server_pk_ptr` must point to an Ed25519 public key of the length implied by the API constants.
+ * `server_pk_ptr` must point to an Ed25519 public key, and `server_mldsa_pk_ptr` must point to an ML-DSA-65 public key of `beaconcrypt_MLDSA_PUBLIC_KEY_LEN` bytes. Both pins are mandatory.
  *
  * Returns an owned handle, or null for absent or incorrectly sized input or a reported initialization/key-generation failure. Release a non-null handle with `beaconcrypt_beacon_free`.
  */
 struct beaconcrypt_Beacon *beaconcrypt_beacon_new(uint64_t server_kid,
                                                   const uint8_t *server_pk_ptr,
-                                                  uintptr_t server_pk_len);
+                                                  uintptr_t server_pk_len,
+                                                  const uint8_t *server_mldsa_pk_ptr,
+                                                  uintptr_t server_mldsa_pk_len);
 
 /**
  * Release a server handle created by this API.
@@ -332,6 +477,12 @@ struct beaconcrypt_Buffer beaconcrypt_server_identity_pk(const struct beaconcryp
 struct beaconcrypt_Buffer beaconcrypt_beacon_identity_pk(const struct beaconcrypt_Beacon *handle);
 
 /**
+ * Copy the server's ML-DSA-65 public key into a caller-owned buffer.
+ * Returns an empty buffer for a null handle and preserves the last operation's status.
+ */
+struct beaconcrypt_Buffer beaconcrypt_server_mldsa_public_key(const struct beaconcrypt_Server *handle);
+
+/**
  * Generate the beacon's serialized registration bundle.
  *
  * Returns an empty buffer when the handle is invalid or the beacon cannot generate a bundle in its current state.
@@ -341,7 +492,7 @@ struct beaconcrypt_Buffer beaconcrypt_generate_registration(struct beaconcrypt_B
 /**
  * Register a beacon and build its initial server response.
  *
- * `msg_ptr` may be null when `msg_len` is zero to omit the initial message. On failure, returns an empty response with key identifier zero.
+ * A null `msg_ptr` with zero length omits the initial message. A non-null pointer with zero length explicitly supplies an empty message: acceptance consumes its replay marker, then response construction rejects it. A null pointer with nonzero length is invalid before acceptance. On failure, returns an empty response with key identifier zero.
  */
 struct beaconcrypt_RegistrationResponse beaconcrypt_register_beacon(struct beaconcrypt_Server *handle,
                                                                     const uint8_t *reg_ptr,
@@ -367,6 +518,37 @@ struct beaconcrypt_Buffer beaconcrypt_encrypt_to_beacon(struct beaconcrypt_Serve
                                                         uint64_t key_id,
                                                         const uint8_t *ptr,
                                                         uintptr_t len);
+
+/**
+ * Encrypt a server-to-beacon message and report its exact send effect. Empty plaintext is an unchanged rejection. Invalid pointers or handles report STATUS_INVALID_ARGUMENT. A storage error reports no outcome; confirmed persistent outcomes are released only after commit.
+ */
+struct beaconcrypt_SendResult beaconcrypt_encrypt_to_beacon_outcome(struct beaconcrypt_Server *handle,
+                                                                    uint64_t key_id,
+                                                                    const uint8_t *ptr,
+                                                                    uintptr_t len);
+
+/**
+ * Encrypt a server-to-beacon message with observational metadata and an explicit send effect. Empty plaintext is an unchanged rejection. Free both successful buffers with `beaconcrypt_free_buffer`.
+ */
+struct beaconcrypt_SendResult beaconcrypt_encrypt_and_update_outcome(struct beaconcrypt_Server *handle,
+                                                                     uint64_t key_id,
+                                                                     const uint8_t *ptr,
+                                                                     uintptr_t len);
+
+/**
+ * Encrypt with an explicit send effect and successful JSON in message.data. message.state is empty; metadata is valid only for SEND_OUTCOME_SENT. Free successful data with `beaconcrypt_free_buffer`.
+ */
+struct beaconcrypt_SendResult beaconcrypt_encrypt_and_update_json_outcome(struct beaconcrypt_Server *handle,
+                                                                          uint64_t key_id,
+                                                                          const uint8_t *ptr,
+                                                                          uintptr_t len);
+
+/**
+ * Encrypt a beacon-to-server message with an explicit send effect. Empty plaintext is an unchanged rejection; invalid pointers or handles report STATUS_INVALID_ARGUMENT. Only SEND_OUTCOME_SENT contains output and metadata.
+ */
+struct beaconcrypt_SendResult beaconcrypt_encrypt_to_server_outcome(struct beaconcrypt_Beacon *handle,
+                                                                    const uint8_t *ptr,
+                                                                    uintptr_t len);
 
 /**
  * Decrypt a beacon-to-server message.
@@ -432,6 +614,173 @@ struct beaconcrypt_Buffer beaconcrypt_encrypt_to_server(struct beaconcrypt_Beaco
 struct beaconcrypt_Buffer beaconcrypt_decrypt_server_message(struct beaconcrypt_Beacon *handle,
                                                              const uint8_t *ptr,
                                                              uintptr_t len);
+
+/**
+ * Create a server in an empty database namespace. Lineage must have 32 bytes; each optional seed has zero or 32 bytes. Store context is consumed even on invalid arguments.
+ */
+struct beaconcrypt_RowServerHandle *beaconcrypt_row_server_create(uint64_t kid,
+                                                                  const uint8_t *seed,
+                                                                  uintptr_t seed_len,
+                                                                  const uint8_t *mldsa,
+                                                                  uintptr_t mldsa_len,
+                                                                  struct beaconcrypt_RowStoreCallbacks callbacks,
+                                                                  const uint8_t *lineage,
+                                                                  uintptr_t lineage_len,
+                                                                  uint32_t *status_out);
+
+/**
+ * Open an existing namespace without loading peers or advancing their state. Store context is consumed even on failure.
+ */
+struct beaconcrypt_RowServerHandle *beaconcrypt_row_server_open(struct beaconcrypt_RowStoreCallbacks callbacks,
+                                                                const uint8_t *lineage,
+                                                                uintptr_t lineage_len,
+                                                                uint32_t *status_out);
+
+/**
+ * Create a row server with a bounded decoded-peer cache. Capacity zero disables caching. Existing row operations, composition callbacks and free functions accept the returned handle. The database remains authoritative and every cached predecessor is validated in the transaction. Store context is consumed even on invalid arguments.
+ */
+struct beaconcrypt_RowServerHandle *beaconcrypt_cached_row_server_create(uint64_t kid,
+                                                                         const uint8_t *seed,
+                                                                         uintptr_t seed_len,
+                                                                         const uint8_t *mldsa,
+                                                                         uintptr_t mldsa_len,
+                                                                         struct beaconcrypt_CachedRowStoreCallbacks callbacks,
+                                                                         const uint8_t *lineage,
+                                                                         uintptr_t lineage_len,
+                                                                         uintptr_t cache_capacity,
+                                                                         uint32_t *status_out);
+
+/**
+ * Open an existing row namespace with a bounded decoded-peer cache, initially empty. Store context is consumed even on failure.
+ */
+struct beaconcrypt_RowServerHandle *beaconcrypt_cached_row_server_open(struct beaconcrypt_CachedRowStoreCallbacks callbacks,
+                                                                       const uint8_t *lineage,
+                                                                       uintptr_t lineage_len,
+                                                                       uintptr_t cache_capacity,
+                                                                       uint32_t *status_out);
+
+/**
+ * Return zero for an uncached handle.
+ */
+uintptr_t beaconcrypt_row_server_cache_capacity(const struct beaconcrypt_RowServerHandle *handle);
+
+uintptr_t beaconcrypt_row_server_cached_peer_count(const struct beaconcrypt_RowServerHandle *handle);
+
+/**
+ * Discard local decoded peers without changing the database. Serialize with all other handle calls.
+ */
+void beaconcrypt_row_server_clear_cache(struct beaconcrypt_RowServerHandle *handle);
+
+void beaconcrypt_row_server_free(struct beaconcrypt_RowServerHandle *handle);
+
+uint32_t beaconcrypt_row_server_last_status(const struct beaconcrypt_RowServerHandle *handle);
+
+/**
+ * A null message with zero length omits the initial payload; a non-null zero-length message supplies an empty payload and rejects response construction after consuming the registration.
+ */
+struct beaconcrypt_RegistrationResponse beaconcrypt_row_server_register(struct beaconcrypt_RowServerHandle *handle,
+                                                                        const uint8_t *registration,
+                                                                        uintptr_t registration_len,
+                                                                        const uint8_t *message,
+                                                                        uintptr_t message_len);
+
+struct beaconcrypt_Buffer beaconcrypt_row_server_encrypt(struct beaconcrypt_RowServerHandle *handle,
+                                                         const uint8_t *data,
+                                                         uintptr_t len,
+                                                         uint64_t kid);
+
+struct beaconcrypt_RowMessageBuffer beaconcrypt_row_server_encrypt_with_metadata(struct beaconcrypt_RowServerHandle *handle,
+                                                                                 const uint8_t *data,
+                                                                                 uintptr_t len,
+                                                                                 uint64_t kid);
+
+/**
+ * Encrypt with a committed, explicit send effect. Empty plaintext is an unchanged rejection. Errors suppress all outcomes and output; inspect result.status before result.outcome. Release successful buffers with beaconcrypt_free_buffer.
+ */
+struct beaconcrypt_SendResult beaconcrypt_row_server_encrypt_outcome(struct beaconcrypt_RowServerHandle *handle,
+                                                                     const uint8_t *data,
+                                                                     uintptr_t len,
+                                                                     uint64_t kid);
+
+struct beaconcrypt_Buffer beaconcrypt_row_server_decrypt(struct beaconcrypt_RowServerHandle *handle,
+                                                         const uint8_t *data,
+                                                         uintptr_t len);
+
+struct beaconcrypt_RowMessageBuffer beaconcrypt_row_server_decrypt_with_metadata(struct beaconcrypt_RowServerHandle *handle,
+                                                                                 const uint8_t *data,
+                                                                                 uintptr_t len);
+
+struct beaconcrypt_Buffer beaconcrypt_row_server_identity_pk(const struct beaconcrypt_RowServerHandle *handle);
+
+struct beaconcrypt_Buffer beaconcrypt_row_server_mldsa_public_key(const struct beaconcrypt_RowServerHandle *handle);
+
+/**
+ * Compose application rows and at most one native transition in one durable transaction. The callback returns true after calling its supplied sink exactly once, including for an empty result; false aborts. The sink copies bytes synchronously and must not escape the callback. Context is borrowed for this call; no destructor is invoked. The callback is trusted not to publish pending results. Only this function's returned buffer is commit-gated; an error returns a null buffer and sets last_status.
+ */
+struct beaconcrypt_Buffer beaconcrypt_row_server_transaction(struct beaconcrypt_RowServerHandle *handle,
+                                                             void *context,
+                                                             bool (*callback)(void*,
+                                                                              struct beaconcrypt_RowSessionHandle*,
+                                                                              void*,
+                                                                              void(*)(void*,
+                                                                                      const uint8_t*,
+                                                                                      uintptr_t)));
+
+/**
+ * Compose the two registration commits. Acceptance returns 0 for a final result, 1 to continue, or -1 to abort; it calls its sink exactly once for 0 or 1, supplying final-result or completion-context bytes respectively. Completion returns true and calls its sink exactly once with final-result bytes, or returns false to abort. All sinks copy synchronously and must not escape their callback. The acceptance callback can return a cached result without accepting, or accept once and continue with application context. Completion runs only after confirmed acceptance commit. On error, phase_out is ACCEPTANCE or COMPLETION; completion means acceptance definitely committed. Unknown commits require authoritative application-row lookup. Context and callbacks are borrowed only for this call.
+ */
+struct beaconcrypt_Buffer beaconcrypt_row_server_registration_transaction(struct beaconcrypt_RowServerHandle *handle,
+                                                                          void *context,
+                                                                          int32_t (*accept)(void*,
+                                                                                            struct beaconcrypt_RowSessionHandle*,
+                                                                                            void*,
+                                                                                            void(*)(void*,
+                                                                                                    const uint8_t*,
+                                                                                                    uintptr_t)),
+                                                                          bool (*finish)(void*,
+                                                                                         struct beaconcrypt_RowSessionHandle*,
+                                                                                         const uint8_t*,
+                                                                                         uintptr_t,
+                                                                                         void*,
+                                                                                         void(*)(void*,
+                                                                                                 const uint8_t*,
+                                                                                                 uintptr_t)),
+                                                                          uint32_t *phase_out);
+
+uint32_t beaconcrypt_row_session_last_status(const struct beaconcrypt_RowSessionHandle *handle);
+
+/**
+ * Application keys are scoped separately from native records. A null result with STATUS_REJECTED is absence; a non-null zero-length buffer is a present empty value.
+ */
+struct beaconcrypt_Buffer beaconcrypt_row_session_load(struct beaconcrypt_RowSessionHandle *handle,
+                                                       const uint8_t *key,
+                                                       uintptr_t key_len);
+
+bool beaconcrypt_row_session_store(struct beaconcrypt_RowSessionHandle *handle,
+                                   const uint8_t *key,
+                                   uintptr_t key_len,
+                                   const uint8_t *value,
+                                   uintptr_t value_len);
+
+struct beaconcrypt_RowTransitionBuffer beaconcrypt_row_session_encrypt(struct beaconcrypt_RowSessionHandle *handle,
+                                                                       const uint8_t *data,
+                                                                       uintptr_t len,
+                                                                       uint64_t kid);
+
+struct beaconcrypt_RowTransitionBuffer beaconcrypt_row_session_decrypt(struct beaconcrypt_RowSessionHandle *handle,
+                                                                       const uint8_t *data,
+                                                                       uintptr_t len);
+
+bool beaconcrypt_row_session_accept_registration(struct beaconcrypt_RowSessionHandle *handle,
+                                                 const uint8_t *data,
+                                                 uintptr_t len);
+
+/**
+ * A null initial message uses the protocol witness; a non-null empty one attempts an empty payload. This function is valid only in the completion callback.
+ */
+struct beaconcrypt_RowTransitionBuffer beaconcrypt_row_session_complete_registration(struct beaconcrypt_RowSessionHandle *handle,
+                                                                                     const uint8_t *message,
+                                                                                     uintptr_t len);
 
 #ifdef __cplusplus
 }  // extern "C"

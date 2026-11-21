@@ -1,0 +1,7 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s bound K_r = 2: two attacker-scheduled receive attempts of
+   each installed Server peer.  Used for the witnesses that need two
+   receives (C5a, C5b, C5c). *)
+expand FS_B2S_RECV_STEP(FsB2sRecv2, FsB2sRecvStop, FsB2sRecvStop).
+expand FS_B2S_RECV_STEP(FsB2sRecv1, FsB2sRecv2, FsB2sRecv2).

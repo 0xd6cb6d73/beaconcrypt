@@ -1,0 +1,5 @@
+(* SPDX-License-Identifier: 0BSD *)
+query s:bitstring,k:bitstring,kid:key_id,root:bitstring,t:nat,m:bitstring;
+ event(FsReceived(beacon_to_server(),s,ed_public(k),kid,root,t,m)) && event(L2SelectedIdentity(k))
+ ==> event(L2Published(beacon_to_server(),s,ed_public(k),kid,root,t,m)).
+process L2Main(true)

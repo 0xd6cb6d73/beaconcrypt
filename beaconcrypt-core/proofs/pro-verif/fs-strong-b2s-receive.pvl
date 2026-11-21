@@ -1,0 +1,348 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Active strong-secrecy derivative of the maintained fs process.
+   See doc/impl/proverif-active-strong-secrecy.md for the exact bounds,
+   test eligibility and source-abstraction obligations. *)
+
+
+
+fun fs_far_chain(bitstring, nat): bitstring.
+
+def FS_B2S_RECV_STEP(Cur, Next, Failed) {
+let Cur(
+  server_identity: bitstring,
+  beacon_identity: bitstring,
+  assigned_key_id: key_id,
+  root: bitstring,
+  associated_data: bitstring,
+  receive_material_1: bitstring,
+  receive_material_2: bitstring,
+  far_anchor: bitstring,
+  r: nat,
+  cached_1: bool
+) =
+  
+  in(c, (call_label: bitstring, frame: bitstring)) [precise];
+
+  let crypto_frame(
+    frame_cipher: bitstring,
+    frame_tag: bitstring,
+    frame_commitment: bitstring,
+    fs_seq(t: nat),
+    =assigned_key_id
+  ) = frame in
+  (
+
+    if t <= r then
+    (
+
+      if t = 1 && cached_1 then
+      (
+
+        let plaintext = open_frame(
+          receive_material_1,
+          associated_data,
+          fs_seq(1),
+          assigned_key_id,
+          frame
+        ) in
+        (
+
+          event FsReceived(
+            beacon_to_server(),
+            server_identity,
+            beacon_identity,
+            assigned_key_id,
+            root,
+            1,
+            plaintext
+          );
+          event FsReceivedFrame(
+            beacon_to_server(),
+            server_identity,
+            beacon_identity,
+            assigned_key_id,
+            root,
+            1,
+            frame
+          );
+ out(c, fs_strong_reply(call_label, frame, true));
+          Next(
+            server_identity,
+            beacon_identity,
+            assigned_key_id,
+            root,
+            associated_data,
+            receive_material_1,
+            receive_material_2,
+            far_anchor,
+            r,
+            fs_b2s_cached_after_success(cached_1)
+          )
+        )
+        else
+        (
+
+          event FsReceiveRejected(
+            beacon_to_server(),
+            server_identity,
+            beacon_identity,
+            assigned_key_id,
+            root,
+            t,
+            frame
+          );
+ out(c, fs_strong_reply(call_label, frame, false));
+          Failed(
+            server_identity,
+            beacon_identity,
+            assigned_key_id,
+            root,
+            associated_data,
+            receive_material_1,
+            receive_material_2,
+            far_anchor,
+            fs_b2s_failed_r(r, 1),
+            fs_b2s_failed_cached_1(r, 1, cached_1)
+          )
+        )
+      )
+      else
+      (
+        event FsReceiveRejected(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          t,
+          frame
+        );
+ out(c, fs_strong_reply(call_label, frame, false));
+        Next(
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          associated_data,
+          receive_material_1,
+          receive_material_2,
+          far_anchor,
+          r,
+          cached_1
+        )
+      )
+    )
+    else if t = 1 then
+    (
+
+      let plaintext = open_frame(
+        receive_material_1,
+        associated_data,
+        fs_seq(1),
+        assigned_key_id,
+        frame
+      ) in
+      (
+        
+        event FsReceived(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          1,
+          plaintext
+        );
+        event FsReceivedFrame(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          1,
+          frame
+        );
+ out(c, fs_strong_reply(call_label, frame, true));
+        Next(
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          associated_data,
+          receive_material_1,
+          receive_material_2,
+          far_anchor,
+          1,
+          cached_1
+        )
+      )
+      else
+      (
+        event FsReceiveRejected(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          t,
+          frame
+        );
+ out(c, fs_strong_reply(call_label, frame, false));
+        Failed(
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          associated_data,
+          receive_material_1,
+          receive_material_2,
+          far_anchor,
+          fs_b2s_failed_r(r, 1),
+          fs_b2s_failed_cached_1(r, 1, cached_1)
+        )
+      )
+    )
+    else if t = 2 then
+    (
+      
+      let plaintext = open_frame(
+        receive_material_2,
+        associated_data,
+        fs_seq(2),
+        assigned_key_id,
+        frame
+      ) in
+      (
+        event FsReceived(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          2,
+          plaintext
+        );
+        event FsReceivedFrame(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          2,
+          frame
+        );
+ out(c, fs_strong_reply(call_label, frame, true));
+        if r = 0 then
+          Next(
+            server_identity,
+            beacon_identity,
+            assigned_key_id,
+            root,
+            associated_data,
+            receive_material_1,
+            receive_material_2,
+            far_anchor,
+            2,
+            true
+          )
+        else
+          Next(
+            server_identity,
+            beacon_identity,
+            assigned_key_id,
+            root,
+            associated_data,
+            receive_material_1,
+            receive_material_2,
+            far_anchor,
+            2,
+            cached_1
+          )
+      )
+      else
+      (
+        event FsReceiveRejected(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          t,
+          frame
+        );
+ out(c, fs_strong_reply(call_label, frame, false));
+        Failed(
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          associated_data,
+          receive_material_1,
+          receive_material_2,
+          far_anchor,
+          fs_b2s_failed_r(r, 2),
+          fs_b2s_failed_cached_1(r, 2, cached_1)
+        )
+      )
+    )
+    else
+    (
+      
+      let plaintext = open_frame(
+        ratchet_material(fs_far_chain(far_anchor, t)),
+        associated_data,
+        fs_seq(t),
+        assigned_key_id,
+        frame
+      ) in
+        event FsFarAccepted(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          t
+        ); out(c, fs_strong_reply(call_label, frame, true))
+      else out(c, fs_strong_reply(call_label, frame, false)); Failed(
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          associated_data,
+          receive_material_1,
+          receive_material_2,
+          far_anchor,
+          r,
+          cached_1
+        )
+    )
+  )
+  else
+    out(c, fs_strong_reply(call_label, frame, false));
+    Next(
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      associated_data,
+      receive_material_1,
+      receive_material_2,
+      far_anchor,
+      r,
+      cached_1
+    ).
+}
+
+let FsB2sRecvStop(
+  server_identity: bitstring,
+  beacon_identity: bitstring,
+  assigned_key_id: key_id,
+  root: bitstring,
+  associated_data: bitstring,
+  receive_material_1: bitstring,
+  receive_material_2: bitstring,
+  far_anchor: bitstring,
+  r: nat,
+  cached_1: bool
+) = 0.

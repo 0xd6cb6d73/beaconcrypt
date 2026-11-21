@@ -1,0 +1,19 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-registration bound K_reg = 3: at most three attacker-scheduled inputs
+   per Server object, enough for an accept, a replay rejection and another
+   accept.  Used for the security results (A1, A2, R1, R1', S3). *)
+expand FS_REG_STEP(FsServerReg3, FsServerRegStop).
+expand FS_REG_STEP(FsServerReg2, FsServerReg3).
+expand FS_REG_STEP(FsServerReg1, FsServerReg2).
+
+(* Unbounded Server objects sharing the one honest Server identity (OD2), each
+   starting with the key-ID offset 1 (server_kid + 1) and an empty consumed
+   set; unbounded honest Beacons; attacker identities from the public
+   constructors. *)
+let FsRegistrationMain() =
+  out(c, ed_public(SERVER_IDENTITY_SECRET));
+  (
+    (!(new obj: bitstring; FsServerReg1(obj, 1, fs_no_rid(), fs_no_rid())))
+    | (!FsBeacon())
+  ).

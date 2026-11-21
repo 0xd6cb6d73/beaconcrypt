@@ -1,0 +1,10 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-registration S3 (Beacon form), security result, K_reg = 3 (expected
+   unreachable): the attacker never learns the root of a session an honest
+   Beacon established with its pinned Server key. *)
+query s: bitstring, b: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex, kid: key_id,
+      root: bitstring, ad: bitstring, p: bitstring;
+  event(FsBeaconEstablished(s, b, init, kid, root, ad, p)) && attacker(root).
+
+process FsRegistrationMain()

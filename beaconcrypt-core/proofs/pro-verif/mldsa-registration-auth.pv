@@ -1,0 +1,19 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+query server_ml: bitstring, init_hash: bitstring, response: bitstring;
+  event(MldsaResponseAccepted(server_ml, init_hash, response)) ==>
+  event(MldsaResponseSigned(server_ml, init_hash, response)).
+query event(MldsaRequestAdmitted()).
+query event(MldsaCopiedClassicalAccepted()).
+query event(MldsaHonestResponseVerified()).
+query event(MldsaCompromisedServerAccepted()).
+query event(MldsaAdOpened()).
+query event(MldsaWrongResponseAdOpened()).
+query event(MldsaWrongInitAdOpened()).
+query event(MldsaWrongRoleAccepted()).
+query event(MldsaWrongContextAccepted()).
+query event(MldsaWrongRequestAccepted()).
+
+process
+  MldsaRegistrationProfile() | MldsaCompromiseControl() |
+  MldsaSeparationControl() | MldsaAdControl()

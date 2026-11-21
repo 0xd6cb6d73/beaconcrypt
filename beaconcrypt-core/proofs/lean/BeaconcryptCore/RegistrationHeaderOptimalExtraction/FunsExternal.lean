@@ -1,0 +1,4 @@
+import BeaconcryptCore.RegistrationHeaderOptimalExtraction.Types
+import BeaconcryptCore.RegistrationPrimitiveExtraction.Funs
+
+set_option warningAsError true

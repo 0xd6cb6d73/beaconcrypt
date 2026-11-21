@@ -1,0 +1,6 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Both secrets must be recoverable.
+   These expected failures ensure that the passive-quantum target actually loads both classical recovery rules. *)
+query attacker(QUANTUM_ED_CAPABILITY_SECRET).
+query attacker(QUANTUM_X25519_CAPABILITY_SECRET).

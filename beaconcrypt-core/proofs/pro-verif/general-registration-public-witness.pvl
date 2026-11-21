@@ -1,0 +1,18 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* This public-only network strategy adds no attacker knowledge or cryptographic oracle. *)
+let GeneralPublicAdmissionWitness(expected: sequence) =
+  in(c, response: bitstring) [precise];
+  let kex_response(identity, ephemeral, kem_ciphertext, initial_frame, assigned) = response in
+  (
+    out(c, response)
+    | out(c, initial_frame)
+    | out(c, general_use_cached())
+    | !out(c, registration_payload(
+        beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(sender_id_le64(SERVER_KEY_ID)),
+        general_nonempty(sender_id_le64(SERVER_KEY_ID))))
+    | (
+        in(c, frame: bitstring) [precise];
+        let crypto_frame(ciphertext, tag, commitment, =expected, =SERVER_KEY_ID) = frame in
+        out(c, kex_response(identity, ephemeral, kem_ciphertext, frame, SERVER_KEY_ID))
+      )
+  ).

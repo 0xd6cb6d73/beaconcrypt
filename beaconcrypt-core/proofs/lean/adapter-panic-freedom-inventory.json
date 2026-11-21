@@ -1,0 +1,1821 @@
+{
+  "interpreter_lifts": {
+    "AdapterAuthenticationRequestExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "BeaconcryptCore.Refinement.AdapterAuthenticationRequestExtraction.authenticate"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "652ebf11c25d626b6513d57843e854a14e4edef0450a3098d3f7e7c79f1daa20"
+    },
+    "AdapterBeaconConstructorRequestExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "BeaconcryptCore.Refinement.AdapterBeaconConstructorRequestMonad.Operations",
+        "BeaconcryptCore.Refinement.AdapterBeaconConstructorRequestMonad.rustOperations",
+        "beaconcrypt_constructor_request.beacon.Beacon.try_new_with_rng",
+        "beaconcrypt_constructor_request.beacon.Beacon.try_new",
+        "beaconcrypt_constructor_request.beacon.Beacon.new"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "0418d9fe4659a12a4a80563663db1037545db3be9578932580ca94e92ab9c78c"
+    },
+    "AdapterInitAuthenticationRequestExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "BeaconcryptCore.Refinement.AdapterInitAuthenticationRequestExtraction.ed",
+        "BeaconcryptCore.Refinement.AdapterInitAuthenticationRequestExtraction.body"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "18c8bf0ba675bf411f72c5e6f48582e4a99a8dfe65d26f6dba736eba45fbd080"
+    },
+    "AdapterPublicBuildObservedExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "BeaconcryptCore.Refinement.AdapterPublicBuildObservedRequest.run"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "f34d49b03e291f4ac5d3b2e6924bed17795f1f4ad48ed6bc905b302a5487c65d"
+    },
+    "AdapterPublicFinishObservedExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "BeaconcryptCore.Refinement.AdapterPublicFinishObservedRequest.run"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "691b4729ac4d451b85dd77b1abd8708f740c9baf825f82926dc0b981b3859f41"
+    },
+    "AdapterPublicOrdinaryRequestExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "BeaconcryptCore.Refinement.AdapterPublicOrdinaryRequestMonad.Operations",
+        "BeaconcryptCore.Refinement.AdapterPublicOrdinaryRequestMonad.rustOperations",
+        "beaconcrypt_public_ordinary_request.wire.frame_len",
+        "beaconcrypt_public_ordinary_request.ratchet.RatchetKernelSlot.Insts.CoreOpsDerefDerefConcreteRatchetKernel.deref",
+        "beaconcrypt_public_ordinary_request.ratchet.RatchetManager.status",
+        "beaconcrypt_public_ordinary_request.ratchet.RatchetKernelSlot.put",
+        "beaconcrypt_public_ordinary_request.ratchet.RatchetKernelSlot.take",
+        "beaconcrypt_public_ordinary_request.ratchet.RatchetStatus.impl.send_sequence",
+        "beaconcrypt_public_ordinary_request.ratchet.encrypt_with_ratchet",
+        "beaconcrypt_public_ordinary_request.ratchet.encrypt_message_with_ratchet",
+        "beaconcrypt_public_ordinary_request.beacon.Beacon.encrypt_message",
+        "beaconcrypt_public_ordinary_request.ratchet.decrypt_payload_with_ratchet",
+        "beaconcrypt_public_ordinary_request.ratchet.decode_crypto_frame",
+        "beaconcrypt_public_ordinary_request.ratchet.decrypt_message_with_ratchet",
+        "beaconcrypt_public_ordinary_request.beacon.Beacon.decrypt_message",
+        "beaconcrypt_public_ordinary_request.collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13",
+        "beaconcrypt_public_ordinary_request.beaconcrypt_crypto.crypto_sign.PublicKey.Insts.BeaconcryptSharedSignaturePk",
+        "beaconcrypt_public_ordinary_request.ratchet.RatchetManager.send_sequence",
+        "beaconcrypt_public_ordinary_request.ratchet.encrypted_frame_sender",
+        "beaconcrypt_public_ordinary_request.server.ReceiveTransition.into_option",
+        "beaconcrypt_public_ordinary_request.server.Server.identity_key_kid",
+        "beaconcrypt_public_ordinary_request.shared.EstablishedRemote.ratchet_mut",
+        "beaconcrypt_public_ordinary_request.server.Server.ratchet_manager_mut",
+        "beaconcrypt_public_ordinary_request.shared.EstablishedRemote.binding",
+        "beaconcrypt_public_ordinary_request.server.Server.associated_data",
+        "beaconcrypt_public_ordinary_request.server.Server.encrypt_message",
+        "beaconcrypt_public_ordinary_request.server.Server.decrypt_message_transition",
+        "beaconcrypt_public_ordinary_request.server.Server.decrypt_message"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "5e67a7a01c37b39179c15b8f9ab94e821096b4906414ee4e40c1aa4e8daa6928"
+    },
+    "AdapterPublicServerEntryRequestExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "beaconcrypt_public_request.server.Server.get_shared_secret_with_rng"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "ad9d42b2d2a60f9527f3bcc6272d0a87ddd32127e48f0af2eb2210e67d8b5b40"
+    },
+    "AdapterPublicWrapperRequestExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "beaconcrypt_public_request.auth.server_pin",
+        "beaconcrypt_public_request.beacon.Beacon.identity_pk",
+        "beaconcrypt_public_request.beacon.Beacon.identity_sk",
+        "beaconcrypt_public_request.beacon._proof_beacon_init_ready_loop.body",
+        "beaconcrypt_public_request.beacon._proof_beacon_init_ready_loop",
+        "beaconcrypt_public_request.beacon._proof_beacon_init_ready",
+        "beaconcrypt_public_request.beacon.Beacon.get_registration_bundle_with_rng",
+        "beaconcrypt_public_request.ratchet.RatchetKernelSlot.new",
+        "beaconcrypt_public_request.ratchet.RatchetManager.from_kernel",
+        "beaconcrypt_public_request.pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError",
+        "beaconcrypt_public_request.pqxdh.NoEntropy.Insts.Rand_coreTryCryptoRngCryptoError",
+        "beaconcrypt_public_request.pqxdh.execute_agreement.closure_8.Insts.CoreOpsFunctionFnTupleOptionArrayU832.call",
+        "beaconcrypt_public_request.pqxdh.execute_agreement.closure_7.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832.call_once",
+        "beaconcrypt_public_request.pqxdh.execute_agreement.closure_7.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832",
+        "beaconcrypt_public_request.pqxdh.execute_agreement.closure_6.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832.call_once",
+        "beaconcrypt_public_request.pqxdh.execute_agreement.closure_6.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832",
+        "beaconcrypt_public_request.pqxdh.execute_agreement.closure_5.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairOptionArrayU832.call_once",
+        "beaconcrypt_public_request.pqxdh.execute_agreement.closure_5.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairOptionArrayU832",
+        "beaconcrypt_public_request.pqxdh.execute_agreement.closure_4.Insts.CoreOpsFunctionFnOnceTupleSharedZeroizingArrayU832OptionArrayU832.call_once",
+        "beaconcrypt_public_request.pqxdh.execute_agreement.closure_4.Insts.CoreOpsFunctionFnOnceTupleSharedZeroizingArrayU832OptionArrayU832",
+        "beaconcrypt_public_request.pqxdh.execute_agreement.closure_3.Insts.CoreOpsFunctionFnTupleOptionArrayU832.call",
+        "beaconcrypt_public_request.pqxdh.execute_agreement.closure_2.Insts.CoreOpsFunctionFnMutTupleOptionPairArrayU81088ArrayU832.call_mut",
+        "beaconcrypt_public_request.pqxdh.execute_agreement.closure_1.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairArrayU832.call_once",
+        "beaconcrypt_public_request.pqxdh.execute_agreement.closure_1.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairArrayU832",
+        "beaconcrypt_public_request.pqxdh.execute_agreement.closure.Insts.CoreOpsFunctionFnOnceTuplePublicKeyOptionArrayU832.call_once",
+        "beaconcrypt_public_request.pqxdh.execute_agreement.closure.Insts.CoreOpsFunctionFnOnceTuplePublicKeyOptionArrayU832",
+        "beaconcrypt_public_request.pqxdh.execute_agreement_loop.body",
+        "beaconcrypt_public_request.pqxdh.execute_agreement_loop",
+        "beaconcrypt_public_request.pqxdh.execute_agreement",
+        "beaconcrypt_public_request.pqxdh.execute_beacon_agreement",
+        "beaconcrypt_public_request.beacon.ProviderBeaconBeacon.finish_registration.closure.Insts.CoreOpsFunctionFnOnceTuplekexresponseOptionResponsePacket",
+        "beaconcrypt_public_request.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration_loop.body",
+        "beaconcrypt_public_request.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration_loop",
+        "beaconcrypt_public_request.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration",
+        "beaconcrypt_public_request.collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13",
+        "beaconcrypt_public_request.beaconcrypt_crypto.crypto_sign.PublicKey.Insts.BeaconcryptSharedSignaturePk",
+        "beaconcrypt_public_request.server.registration_response_len",
+        "beaconcrypt_public_request.server.Server.mldsa_public_key",
+        "beaconcrypt_public_request.server.Server.identity_pk",
+        "beaconcrypt_public_request.server.Server.identity_key_kid",
+        "beaconcrypt_public_request.server.Server.authentication_pin",
+        "beaconcrypt_public_request.server.Server.identity_sk",
+        "beaconcrypt_public_request.server.Server.authenticate_registration_lookup",
+        "beaconcrypt_public_request.server.Server.get_shared_secret_from_lookup_with_rng",
+        "beaconcrypt_public_request.shared.map_peer_ratchet",
+        "beaconcrypt_public_request.shared.EstablishedRemote.from_peer",
+        "beaconcrypt_public_request.server.ProviderServerServer.build_registration_response.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairVecU8ArrayU816PairSharedSliceU8ArrayU816",
+        "beaconcrypt_public_request.server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "c5c4d9168c57e003d9cc4bbb51cbb1b54243e2a006ee8d89f32db814660bffe5"
+    },
+    "AdapterRecordHelperRequestExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "BeaconcryptCore.Refinement.AdapterRecordHelperRequestExtraction.raw",
+        "BeaconcryptCore.Refinement.AdapterRecordHelperRequestExtraction.frame"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "a0e34b30a62fa9e554e345a6807d1319616fce979ef1abcf2eaabbb7b17d487d"
+    },
+    "AdapterRecordRequestExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "BeaconcryptCore.Refinement.AdapterRecordRequestExtraction.body"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "81117d6786e1ae7b284b18c01a90e97183ff3861d07fb31bee582cc97cd1149f"
+    },
+    "AdapterRecordSendRequestExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "BeaconcryptCore.Refinement.AdapterRecordSendRequestExtraction.execute"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "d46891083165be18e02d750cd3e25b79c69a33ee732a80150aaec91bf604e65a"
+    },
+    "AdapterRegistrationWriterRequestExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestExtraction.encodeInit",
+        "BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestExtraction.encodeResponse"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "ee5bacaf2f19063385690456a4fe7ac209061674978eb9d5b7289dcaf8bf74a6"
+    },
+    "AdapterSealJoinRequestExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "BeaconcryptCore.Refinement.AdapterSealJoinRequestExtraction.join"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "8f46f74c191ef4ead6b9da6e59a5bf3608f6a311d11b544cacd60f081d79d154"
+    },
+    "AdapterSealRequestExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "BeaconcryptCore.Refinement.AdapterSealRequestExtraction.execute"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "e61c43eec58f108dc754861500e08754d493f744318c56722f1ab9d66d6da9e4"
+    },
+    "AdapterServerConstructorRequestExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "beaconcrypt_server_constructor_request.server.Server.try_new_with_rng",
+        "beaconcrypt_server_constructor_request.server.Server.try_new",
+        "beaconcrypt_server_constructor_request.server.Server.new"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "7681a86227e570008e397f630a95b87ac8cce92e4b3d5fac1bc0a6dbdd4b9e53"
+    },
+    "AdapterWireRequestExtraction": {
+      "classification": "interpreter-request-or-observation-lift",
+      "declarations": [
+        "BeaconcryptCore.Refinement.AdapterWireRequestExtraction.encodeRecord"
+      ],
+      "execution_boundary": "normality requires a selected interpreter plus correspondence and execution contracts",
+      "native_RustM_totality_certificate": false,
+      "sha256": "228cd7b2d139ef7176346383b2641e75b820b47325446fe530283b35e43d08f3"
+    }
+  },
+  "native_cohorts": {
+    "AdapterAuthenticationExtraction": {
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt.auth.authenticate_response": {
+          "binders": "(pending : beaconcrypt_core.registration.BeaconPending)\n  (packet : core.option.Option beaconcrypt_core.registration.ResponsePacket)",
+          "monadic": true,
+          "return_type": "RustM (core.result.Result beaconcrypt_core.registration.AuthenticatedResponse\n    beaconcrypt_core.pqxdh.BeaconAborted)",
+          "role": "internal-helper"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "beaconcrypt.auth.Operations",
+            "beaconcrypt.auth.execute_hash",
+            "beaconcrypt.auth.verify_requested"
+          ],
+          "sha256": "d898df0271bb1140fd0eeea86337d4bb5594f68703f4dccc08aab6c33e401d45"
+        },
+        "TypesExternal.lean": {
+          "declarations": [],
+          "sha256": "b09a6f6a9217795d9c5bdbcf4320f89d95675c3d5b4c10878f9ff256a638ae04"
+        }
+      },
+      "extractor": "scripts/extract_adapter_authentication.py",
+      "features": [
+        "beacon",
+        "pqxdh"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "b8fa8c9f866d96fbbc92e8e951dd8d1356f7049afe0dedc394adab5995034c2a",
+        "Types.lean": "0fe2fc42db0b5338f3174d00744fb42c58e3c744631ceeed483cc3d47fc19169"
+      },
+      "instance_parameters": [
+        "[beaconcrypt.auth.Operations]"
+      ],
+      "namespace": "beaconcrypt",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do"
+      ]
+    },
+    "AdapterBeaconConstructorExtraction": {
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt_constructor.beacon.Beacon.new": {
+          "binders": "(server_kid : Std.U64) (server_id_pk : Slice Std.U8)\n  (server_mldsa_pk : Slice Std.U8)",
+          "monadic": true,
+          "return_type": "RustM beacon.Beacon",
+          "role": "intentional-panic"
+        },
+        "beaconcrypt_constructor.beacon.Beacon.try_new": {
+          "binders": "(server_kid : Std.U64) (server_id_pk : Slice Std.U8)\n  (server_mldsa_pk : Slice Std.U8)",
+          "monadic": true,
+          "return_type": "RustM (core.result.Result beacon.Beacon error.KeyGenError)",
+          "role": "production-entry"
+        },
+        "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error) (server_kid : Std.U64)\n  (server_id_pk : Slice Std.U8) (server_mldsa_pk : Slice Std.U8) (rng : R)",
+          "monadic": true,
+          "return_type": "RustM ((core.result.Result beacon.Beacon error.KeyGenError) \u00d7 R)",
+          "role": "production-entry"
+        },
+        "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce\n  (beacon.Beacon.try_new_with_rng.closure R Clause0_Clause0_Error)\n  beaconcrypt_crypto.CryptoError error.KeyGenError",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError.call_once": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (_c : beacon.Beacon.try_new_with_rng.closure R Clause0_Clause0_Error)\n  (_tupled_args : beaconcrypt_crypto.CryptoError)",
+          "monadic": true,
+          "return_type": "RustM error.KeyGenError",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorKeyGenError": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce\n  (beacon.Beacon.try_new_with_rng.closure_1 R Clause0_Clause0_Error)\n  core.array.TryFromSliceError error.KeyGenError",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorKeyGenError.call_once": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (_c : beacon.Beacon.try_new_with_rng.closure_1 R Clause0_Clause0_Error)\n  (_tupled_args : core.array.TryFromSliceError)",
+          "monadic": true,
+          "return_type": "RustM error.KeyGenError",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_2.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce\n  (beacon.Beacon.try_new_with_rng.closure_2 R Clause0_Clause0_Error)\n  beaconcrypt_crypto.CryptoError error.KeyGenError",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_2.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError.call_once": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (_c : beacon.Beacon.try_new_with_rng.closure_2 R Clause0_Clause0_Error)\n  (_tupled_args : beaconcrypt_crypto.CryptoError)",
+          "monadic": true,
+          "return_type": "RustM error.KeyGenError",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_3.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce\n  (beacon.Beacon.try_new_with_rng.closure_3 R Clause0_Clause0_Error)\n  beaconcrypt_crypto.CryptoError error.KeyGenError",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_3.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError.call_once": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (_c : beacon.Beacon.try_new_with_rng.closure_3 R Clause0_Clause0_Error)\n  (_tupled_args : beaconcrypt_crypto.CryptoError)",
+          "monadic": true,
+          "return_type": "RustM error.KeyGenError",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_4.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce\n  (beacon.Beacon.try_new_with_rng.closure_4 R Clause0_Clause0_Error)\n  beaconcrypt_crypto.CryptoError error.KeyGenError",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_4.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError.call_once": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (_c : beacon.Beacon.try_new_with_rng.closure_4 R Clause0_Clause0_Error)\n  (_tupled_args : beaconcrypt_crypto.CryptoError)",
+          "monadic": true,
+          "return_type": "RustM error.KeyGenError",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_constructor.error.KeyGenError.Insts.CoreFmtDebug": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "core.fmt.Debug error.KeyGenError",
+          "role": "pure-instance"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations",
+            "BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard",
+            "beaconcrypt_constructor.auth.server_pin",
+            "beaconcrypt_constructor.error.KeyGenError.Insts.CoreFmtDebug.fmt",
+            "beaconcrypt_crypto.crypto_sign.KeyPair.generate_with_rng",
+            "beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair.generate_with_rng",
+            "beaconcrypt_crypto.OsRng.Insts.Rand_coreTryCryptoRngError"
+          ],
+          "sha256": "f4bd9f1ea31fd264b0865fada7ea698d9debf8bf26a7e25cf495800cd81843a5"
+        },
+        "TypesExternal.lean": {
+          "declarations": [],
+          "sha256": "3343d63056b46225cf7619534f067617574f79a289ee7b3935604823f5868b72"
+        }
+      },
+      "extractor": "scripts/extract_adapter_beacon_constructor.py",
+      "features": [
+        "beacon",
+        "pqxdh",
+        "server",
+        "std"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "b75a7c4e29129825efcead614b5b90bb90917113c415f416527d9da81e45bafb",
+        "Types.lean": "5ba8d94e8503884f8e4cddd306dbcf07f37c2dbe8634bc10fd736c0e09ffaa91"
+      },
+      "instance_parameters": [
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]",
+        "[BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations]",
+        "[BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations]",
+        "[BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard]",
+        "[beaconcrypt.auth.Operations]"
+      ],
+      "namespace": "beaconcrypt_constructor",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do",
+        "beaconcrypt_public_wrapper"
+      ]
+    },
+    "AdapterInitAuthenticationExtraction": {
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt.auth.authenticate_init": {
+          "binders": "(pin : beaconcrypt_core.session.ServerAuthenticationPin)\n  (packet : beaconcrypt_core.registration.InitPacket)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option beaconcrypt_core.registration.AuthenticatedInit)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt.auth.authenticate_init.closure.Insts.CoreOpsFunctionFnMutTupleOptionVecU8": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "core.ops.function.FnMut auth.authenticate_init.closure Unit\n  (core.option.Option (alloc.vec.Vec Std.U8))",
+          "role": "pure-instance"
+        },
+        "beaconcrypt.auth.authenticate_init.closure.Insts.CoreOpsFunctionFnMutTupleOptionVecU8.call_mut": {
+          "binders": "(state : auth.authenticate_init.closure) (adapter_unit_argument : Unit)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option (alloc.vec.Vec Std.U8)) \u00d7\n    auth.authenticate_init.closure)",
+          "role": "closure-helper"
+        },
+        "beaconcrypt.auth.authenticate_init.closure.Insts.CoreOpsFunctionFnOnceTupleOptionVecU8": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce auth.authenticate_init.closure Unit\n  (core.option.Option (alloc.vec.Vec Std.U8))",
+          "role": "pure-instance"
+        },
+        "beaconcrypt.auth.authenticate_init.closure.Insts.CoreOpsFunctionFnOnceTupleOptionVecU8.call_once": {
+          "binders": "(c : auth.authenticate_init.closure) (adapter_unit_argument : Unit)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (alloc.vec.Vec Std.U8))",
+          "role": "closure-helper"
+        },
+        "beaconcrypt.auth.authenticate_init.closure.Insts.CoreOpsFunctionFnTupleOptionVecU8": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "core.ops.function.Fn auth.authenticate_init.closure Unit (core.option.Option\n  (alloc.vec.Vec Std.U8))",
+          "role": "pure-instance"
+        },
+        "beaconcrypt.auth.authenticate_init.closure.Insts.CoreOpsFunctionFnTupleOptionVecU8.call": {
+          "binders": "(c : auth.authenticate_init.closure) (adapter_unit_argument : Unit)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (alloc.vec.Vec Std.U8))",
+          "role": "closure-helper"
+        },
+        "beaconcrypt.auth.authenticate_init_loop": {
+          "binders": "(effect : beaconcrypt_core.registration.InitAuthentication)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option beaconcrypt_core.registration.AuthenticatedInit)",
+          "role": "loop-helper"
+        },
+        "beaconcrypt.auth.authenticate_init_loop.body": {
+          "binders": "(effect : beaconcrypt_core.registration.InitAuthentication)",
+          "monadic": true,
+          "return_type": "RustM (ControlFlow beaconcrypt_core.registration.InitAuthentication\n    (core.option.Option beaconcrypt_core.registration.AuthenticatedInit))",
+          "role": "loop-helper"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations",
+            "beaconcrypt_crypto.crypto_sign.PublicKey",
+            "beaconcrypt_crypto.crypto_sign.PublicKey.from_bytes",
+            "beaconcrypt_crypto.crypto_sign.verify"
+          ],
+          "sha256": "be7980412c80e4aeec8733ea6199a8a2e69474a62c0ff6aac9069d1d2a3f657a"
+        },
+        "TypesExternal.lean": {
+          "declarations": [],
+          "sha256": "cfa042fa660082aeb5695f866b214af8564de9c8eaa2adf5f4fe4ff5293c03d0"
+        }
+      },
+      "extractor": "scripts/extract_adapter_init_authentication.py",
+      "features": [
+        "beacon",
+        "pqxdh",
+        "server"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "e50f57a96cbc7c6d99952362e6acf54a4af0a783071907f64075174eb30e379f",
+        "Types.lean": "3f07bce43b6019e0aa326cf0dc4bc470723c77e81c5a191e34db3b56f07910eb"
+      },
+      "instance_parameters": [
+        "[beaconcrypt.auth.Operations] [BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]"
+      ],
+      "namespace": "beaconcrypt",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do"
+      ]
+    },
+    "AdapterPublicOrdinaryExtraction": {
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt_public_ordinary.beacon.Beacon.decrypt_message": {
+          "binders": "(self : beacon.Beacon) (b : Slice Std.U8)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option shared.Decrypted) \u00d7 beacon.Beacon)",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_ordinary.beacon.Beacon.encrypt_message": {
+          "binders": "(self : beacon.Beacon) (b : Slice Std.U8)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option shared.Encrypted) \u00d7 beacon.Beacon)",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_ordinary.beaconcrypt_crypto.crypto_sign.PublicKey.Insts.BeaconcryptSharedSignaturePk": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "shared.SignaturePk beaconcrypt_crypto.crypto_sign.PublicKey",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_public_ordinary.collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "core.hash.BuildHasher collections.KeyedHasher siphasher.sip.SipHasher13",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_public_ordinary.ratchet.RatchetKernelSlot.Insts.CoreOpsDerefDerefConcreteRatchetKernel.deref": {
+          "binders": "(self : ratchet.RatchetKernelSlot)",
+          "monadic": true,
+          "return_type": "RustM beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_ordinary.ratchet.RatchetKernelSlot.put": {
+          "binders": "(self : ratchet.RatchetKernelSlot)\n  (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)",
+          "monadic": true,
+          "return_type": "RustM ratchet.RatchetKernelSlot",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.ratchet.RatchetKernelSlot.take": {
+          "binders": "(self : ratchet.RatchetKernelSlot)",
+          "monadic": true,
+          "return_type": "RustM (beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel \u00d7\n    ratchet.RatchetKernelSlot)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.ratchet.RatchetManager.send_sequence": {
+          "binders": "(self : ratchet.RatchetManager)",
+          "monadic": true,
+          "return_type": "RustM Std.U64",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.ratchet.RatchetManager.status": {
+          "binders": "(self : ratchet.RatchetManager)",
+          "monadic": true,
+          "return_type": "RustM ratchet.RatchetStatus",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.ratchet.RatchetStatus.impl.send_sequence": {
+          "binders": "(self : ratchet.RatchetStatus)",
+          "monadic": true,
+          "return_type": "RustM Std.U64",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_ordinary.ratchet.decode_crypto_frame": {
+          "binders": "(data : Slice Std.U8)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option beaconcrypt_parse.frame.Frame)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.ratchet.decrypt_message_with_ratchet": {
+          "binders": "(data : Slice Std.U8) (expected_sender_kid : Std.U64)\n  (associated_data : Array Std.U8 151#usize)\n  (ratchet1 : ratchet.RatchetManager)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option shared.Decrypted) \u00d7 ratchet.RatchetManager)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.ratchet.decrypt_payload_with_ratchet": {
+          "binders": "(ciphertext : Slice Std.U8) (key_seq : Std.U64) (kid : Std.U64)\n  (associated_data : Array Std.U8 151#usize)\n  (ratchet1 : ratchet.RatchetManager)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option shared.Decrypted) \u00d7 ratchet.RatchetManager)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.ratchet.encrypt_message_with_ratchet": {
+          "binders": "(bytes : Slice Std.U8) (target_kid : Std.U64) (sender_kid : Std.U64)\n  (associated_data : Array Std.U8 151#usize)\n  (ratchet1 : ratchet.RatchetManager)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option shared.Encrypted) \u00d7 ratchet.RatchetManager)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.ratchet.encrypt_with_ratchet": {
+          "binders": "(bytes : Slice Std.U8) (target_kid : Std.U64) (sender_kid : Std.U64)\n  (associated_data : Array Std.U8 151#usize)\n  (ratchet1 : ratchet.RatchetManager) (frame_encoding : Bool)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option shared.Encrypted) \u00d7 ratchet.RatchetManager)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.ratchet.encrypted_frame_sender": {
+          "binders": "(data : Slice Std.U8)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option Std.U64)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.server.ReceiveTransition.into_option": {
+          "binders": "{T : Type} (self : server.ReceiveTransition T)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option T)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.server.Server.associated_data": {
+          "binders": "(self : server.Server) (k : Std.U64)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (Array Std.U8 151#usize))",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.server.Server.decrypt_message": {
+          "binders": "(self : server.Server) (b : Slice Std.U8)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option shared.Decrypted) \u00d7 server.Server)",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_ordinary.server.Server.decrypt_message_transition": {
+          "binders": "(self : server.Server) (b : Slice Std.U8)",
+          "monadic": true,
+          "return_type": "RustM ((server.ReceiveTransition shared.Decrypted) \u00d7 server.Server)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.server.Server.encrypt_message": {
+          "binders": "(self : server.Server) (b : Slice Std.U8) (k : Std.U64)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option shared.Encrypted) \u00d7 server.Server)",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_ordinary.server.Server.identity_key_kid": {
+          "binders": "(self : server.Server)",
+          "monadic": true,
+          "return_type": "RustM Std.U64",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_ordinary.server.Server.ratchet_manager_mut": {
+          "binders": "(self : server.Server) (k : Std.U64)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option ratchet.RatchetManager) \u00d7 (core.option.Option\n    ratchet.RatchetManager \u2192 server.Server))",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.shared.EstablishedRemote.binding": {
+          "binders": "{PkType : Type} (_SignaturePkInst : shared.SignaturePk PkType)\n  (self : shared.EstablishedRemote PkType)",
+          "monadic": true,
+          "return_type": "RustM beaconcrypt_core.session.SessionBinding",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.shared.EstablishedRemote.ratchet_mut": {
+          "binders": "{PkType : Type} (_SignaturePkInst : shared.SignaturePk PkType)\n  (self : shared.EstablishedRemote PkType)",
+          "monadic": true,
+          "return_type": "RustM (ratchet.RatchetManager \u00d7 (ratchet.RatchetManager \u2192\n    shared.EstablishedRemote PkType))",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_ordinary.wire.frame_len": {
+          "binders": "(plaintext_len : Std.Usize) (sequence : Std.U64) (sender : Std.U64)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option Std.Usize)",
+          "role": "internal-helper"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.assertBool",
+            "BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.associatedData",
+            "BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations",
+            "hashbrown.map.HashMap.get",
+            "hashbrown.map.HashMap.get_mut",
+            "beaconcrypt_parse.decode_frame",
+            "beaconcrypt_public_ordinary.ratchet.execute_record_send",
+            "beaconcrypt_public_ordinary.ratchet.execute_record_receive"
+          ],
+          "sha256": "ad3e0111047fd57a6066c189eccf64429dba839434f25ebdd3b0783dde0a87f6"
+        },
+        "TypesExternal.lean": {
+          "declarations": [],
+          "sha256": "c321c9f323f93e9b9caa148b4b33d74018eec323477cf14aa068f8f2fde460fa"
+        }
+      },
+      "extractor": "scripts/extract_adapter_public_ordinary.py",
+      "features": [
+        "beacon",
+        "pqxdh",
+        "server"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "6d8fb198b50cc1b9ec4842e5041ab300e4ed0a642a927ea3c11afb2ffa62ba13",
+        "Types.lean": "79084fcdca97dd033e313dbf2cc92698f60e1e7913e1f1fbdc5ba9c22dc179ff"
+      },
+      "instance_parameters": [
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]",
+        "[BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]",
+        "[beaconcrypt_record_send.ratchet.Operations]",
+        "[beaconcrypt.ratchet.Operations]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator]",
+        "[BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations]"
+      ],
+      "namespace": "beaconcrypt_public_ordinary",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do",
+        "beaconcrypt_public_wrapper"
+      ]
+    },
+    "AdapterPublicServerEntryExtraction": {
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt_public_server_entry.server.Server.get_shared_secret_with_rng": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error) (self : server.Server)\n  (buffer : Slice Std.U8) (rng : R)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option server.RegistrationOutput) \u00d7 server.Server \u00d7 R)",
+          "role": "production-entry"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "beaconcrypt_public_server_entry.server.Server.get_shared_secret_from_lookup_with_rng",
+            "beaconcrypt_public_server_entry.server.Server.authenticate_registration_lookup"
+          ],
+          "sha256": "bdf536336e045713305c01f56edd0350f91a0c692bc08f557599c301f100177b"
+        },
+        "TypesExternal.lean": {
+          "declarations": [
+            "beaconcrypt_public_server_entry.server.Server",
+            "beaconcrypt_public_server_entry.server.RegistrationOutput"
+          ],
+          "sha256": "49f0a6d409f34778a410bc6803f087cf60fa1907a5ce8bbba5a3fdca45e22e46"
+        }
+      },
+      "extractor": "scripts/extract_adapter_public_server_entry.py",
+      "features": [
+        "beacon",
+        "pqxdh",
+        "server"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "514b755204777a921bde1ec03efc310439170d52293c7003206dd706d736255d",
+        "Types.lean": "28b2a1b4519b1f61ac381c4b44ba35ea05a0a57d2bcb0cfaa44b659acfb29407"
+      },
+      "instance_parameters": [
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]",
+        "[BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Codecs]",
+        "[beaconcrypt.ratchet.Operations]",
+        "[beaconcrypt.auth.Operations]",
+        "[BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations]",
+        "[BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations]"
+      ],
+      "namespace": "beaconcrypt_public_server_entry",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do"
+      ]
+    },
+    "AdapterPublicWrapperExtraction": {
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt_public_wrapper.auth.server_pin": {
+          "binders": "(binding : beaconcrypt_core.pqxdh.ServerBinding)\n  (public_key : Array Std.U8 1952#usize)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option beaconcrypt_core.session.ServerAuthenticationPin)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration": {
+          "binders": "(self : beacon.Beacon) (bytes : Slice Std.U8)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option (alloc.vec.Vec Std.U8)) \u00d7 beacon.Beacon)",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration_loop": {
+          "binders": "(effect : beaconcrypt_core.registration.BeaconInitialOpen) (i : Std.U64)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option (alloc.vec.Vec Std.U8)) \u00d7 Std.U64 \u00d7\n    beacon.BeaconState)",
+          "role": "loop-helper"
+        },
+        "beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration_loop.body": {
+          "binders": "(i : Std.U64) (effect : beaconcrypt_core.registration.BeaconInitialOpen)",
+          "monadic": true,
+          "return_type": "RustM (ControlFlow beaconcrypt_core.registration.BeaconInitialOpen\n    ((core.option.Option (alloc.vec.Vec Std.U8)) \u00d7 Std.U64 \u00d7\n    beacon.BeaconState))",
+          "role": "loop-helper"
+        },
+        "beaconcrypt_public_wrapper.beacon.Beacon.get_registration_bundle_with_rng": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error) (self : beacon.Beacon)\n  (rng : R)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option (alloc.vec.Vec Std.U8)) \u00d7 beacon.Beacon \u00d7 R)",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_wrapper.beacon.Beacon.identity_pk": {
+          "binders": "(self : beacon.Beacon)",
+          "monadic": true,
+          "return_type": "RustM beaconcrypt_crypto.crypto_sign.PublicKey",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_wrapper.beacon.Beacon.identity_sk": {
+          "binders": "(self : beacon.Beacon)",
+          "monadic": true,
+          "return_type": "RustM beaconcrypt_crypto.crypto_sign.SecretKey",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_wrapper.beacon.ProviderBeaconBeacon.finish_registration.closure.Insts.CoreOpsFunctionFnOnceTuplekexresponseOptionResponsePacket": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce\n  beacon.ProviderBeaconBeacon.finish_registration.closure\n  beaconcrypt_parse.transport.kexresponse (core.option.Option\n  beaconcrypt_core.registration.ResponsePacket)",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_public_wrapper.beacon._proof_beacon_init_ready": {
+          "binders": "(beacon1 : beacon.Beacon)\n  (effect : beaconcrypt_core.registration.BeaconInitEffect)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option beaconcrypt_core.registration.BeaconInitReady)",
+          "role": "specialized-extraction-helper"
+        },
+        "beaconcrypt_public_wrapper.beacon._proof_beacon_init_ready_loop": {
+          "binders": "(effect : beaconcrypt_core.registration.BeaconInitEffect)\n  (beacon1 : beacon.Beacon)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option beaconcrypt_core.registration.BeaconInitReady)",
+          "role": "loop-helper"
+        },
+        "beaconcrypt_public_wrapper.beacon._proof_beacon_init_ready_loop.body": {
+          "binders": "(beacon1 : beacon.Beacon)\n  (effect : beaconcrypt_core.registration.BeaconInitEffect)",
+          "monadic": true,
+          "return_type": "RustM (ControlFlow beaconcrypt_core.registration.BeaconInitEffect\n    (core.option.Option beaconcrypt_core.registration.BeaconInitReady))",
+          "role": "loop-helper"
+        },
+        "beaconcrypt_public_wrapper.beaconcrypt_crypto.crypto_sign.PublicKey.Insts.BeaconcryptSharedSignaturePk": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "shared.SignaturePk beaconcrypt_crypto.crypto_sign.PublicKey",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_public_wrapper.collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "core.hash.BuildHasher collections.KeyedHasher siphasher.sip.SipHasher13",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.NoEntropy.Insts.Rand_coreTryCryptoRngCryptoError": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "rand_core.TryCryptoRng pqxdh.NoEntropy beaconcrypt_crypto.CryptoError",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "rand_core.TryRng\n  pqxdh.NoEntropy beaconcrypt_crypto.CryptoError",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (effect : beaconcrypt_core.agreement.AgreementEffect)\n  (keys : pqxdh.RegistrationKeys) (rng : R)",
+          "monadic": true,
+          "return_type": "RustM (beaconcrypt_core.agreement.AgreementEffect \u00d7 R)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure.Insts.CoreOpsFunctionFnOnceTuplePublicKeyOptionArrayU832": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce\n  (pqxdh.execute_agreement.closure R Clause0_Clause0_Error)\n  beaconcrypt_crypto.crypto_sign.PublicKey (core.option.Option (Array Std.U8\n  32#usize))",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure.Insts.CoreOpsFunctionFnOnceTuplePublicKeyOptionArrayU832.call_once": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (_c : pqxdh.execute_agreement.closure R Clause0_Clause0_Error)\n  (tupled_args : beaconcrypt_crypto.crypto_sign.PublicKey)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (Array Std.U8 32#usize))",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_1.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairArrayU832": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce\n  (pqxdh.execute_agreement.closure_1 R Clause0_Clause0_Error)\n  beaconcrypt_crypto.crypto_kx.KeyPair (Array Std.U8 32#usize)",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_1.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairArrayU832.call_once": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (_c : pqxdh.execute_agreement.closure_1 R Clause0_Clause0_Error)\n  (tupled_args : beaconcrypt_crypto.crypto_kx.KeyPair)",
+          "monadic": true,
+          "return_type": "RustM (Array Std.U8 32#usize)",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_2.Insts.CoreOpsFunctionFnMutTupleOptionPairArrayU81088ArrayU832.call_mut": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (c : pqxdh.execute_agreement.closure_2 R Clause0_Clause0_Error) (adapter_unit_argument : Unit)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option ((Array Std.U8 1088#usize) \u00d7 (Array Std.U8\n    32#usize))) \u00d7 (pqxdh.execute_agreement.closure_2 R Clause0_Clause0_Error)\n    \u00d7 (pqxdh.execute_agreement.closure_2 R Clause0_Clause0_Error \u2192\n    pqxdh.execute_agreement.closure_2 R Clause0_Clause0_Error))",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_3.Insts.CoreOpsFunctionFnTupleOptionArrayU832.call": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (c : pqxdh.execute_agreement.closure_3 R Clause0_Clause0_Error) (adapter_unit_argument : Unit)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (Array Std.U8 32#usize))",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_4.Insts.CoreOpsFunctionFnOnceTupleSharedZeroizingArrayU832OptionArrayU832": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce\n  (pqxdh.execute_agreement.closure_4 R Clause0_Clause0_Error)\n  (zeroize.Zeroizing (Array Std.U8 32#usize)) (core.option.Option (Array Std.U8\n  32#usize))",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_4.Insts.CoreOpsFunctionFnOnceTupleSharedZeroizingArrayU832OptionArrayU832.call_once": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (c : pqxdh.execute_agreement.closure_4 R Clause0_Clause0_Error)\n  (tupled_args : zeroize.Zeroizing (Array Std.U8 32#usize))",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (Array Std.U8 32#usize))",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_5.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairOptionArrayU832": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce\n  (pqxdh.execute_agreement.closure_5 R Clause0_Clause0_Error)\n  beaconcrypt_crypto.crypto_kx.KeyPair (core.option.Option (Array Std.U8\n  32#usize))",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_5.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairOptionArrayU832.call_once": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (c : pqxdh.execute_agreement.closure_5 R Clause0_Clause0_Error)\n  (tupled_args : beaconcrypt_crypto.crypto_kx.KeyPair)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (Array Std.U8 32#usize))",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_6.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce\n  (pqxdh.execute_agreement.closure_6 R Clause0_Clause0_Error)\n  beaconcrypt_crypto.crypto_kx.SecretKey (core.option.Option (Array Std.U8\n  32#usize))",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_6.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832.call_once": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (c : pqxdh.execute_agreement.closure_6 R Clause0_Clause0_Error)\n  (tupled_args : beaconcrypt_crypto.crypto_kx.SecretKey)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (Array Std.U8 32#usize))",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_7.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce\n  (pqxdh.execute_agreement.closure_7 R Clause0_Clause0_Error)\n  beaconcrypt_crypto.crypto_kx.SecretKey (core.option.Option (Array Std.U8\n  32#usize))",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_7.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832.call_once": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (c : pqxdh.execute_agreement.closure_7 R Clause0_Clause0_Error)\n  (tupled_args : beaconcrypt_crypto.crypto_kx.SecretKey)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (Array Std.U8 32#usize))",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_8.Insts.CoreOpsFunctionFnTupleOptionArrayU832.call": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (c : pqxdh.execute_agreement.closure_8 R Clause0_Clause0_Error) (adapter_unit_argument : Unit)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (Array Std.U8 32#usize))",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement_loop": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (effect : beaconcrypt_core.agreement.AgreementEffect)\n  (sk : beaconcrypt_crypto.crypto_sign.SecretKey)\n  (o : core.option.Option beaconcrypt_crypto.crypto_kx.SecretKey)\n  (o1 : core.option.Option beaconcrypt_crypto.crypto_kx.SecretKey)\n  (o2 : core.option.Option beaconcrypt_crypto.crypto_kem.mlkem768.SecretKey)\n  (rng : R)\n  (local_identity : core.option.Option (zeroize.Zeroizing (Array Std.U8\n  32#usize)))\n  (server_ephemeral : core.option.Option beaconcrypt_crypto.crypto_kx.KeyPair)",
+          "monadic": true,
+          "return_type": "RustM (beaconcrypt_core.agreement.AgreementEffect \u00d7 R)",
+          "role": "loop-helper"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_agreement_loop.body": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (sk : beaconcrypt_crypto.crypto_sign.SecretKey)\n  (o : core.option.Option beaconcrypt_crypto.crypto_kx.SecretKey)\n  (o1 : core.option.Option beaconcrypt_crypto.crypto_kx.SecretKey)\n  (o2 : core.option.Option beaconcrypt_crypto.crypto_kem.mlkem768.SecretKey)\n  (effect : beaconcrypt_core.agreement.AgreementEffect) (rng : R)\n  (local_identity : core.option.Option (zeroize.Zeroizing (Array Std.U8\n  32#usize)))\n  (server_ephemeral : core.option.Option beaconcrypt_crypto.crypto_kx.KeyPair)",
+          "monadic": true,
+          "return_type": "RustM (ControlFlow (beaconcrypt_core.agreement.AgreementEffect \u00d7 R \u00d7\n    (core.option.Option (zeroize.Zeroizing (Array Std.U8 32#usize))) \u00d7\n    (core.option.Option beaconcrypt_crypto.crypto_kx.KeyPair))\n    (beaconcrypt_core.agreement.AgreementEffect \u00d7 R))",
+          "role": "loop-helper"
+        },
+        "beaconcrypt_public_wrapper.pqxdh.execute_beacon_agreement": {
+          "binders": "(effect : beaconcrypt_core.agreement.AgreementEffect)\n  (keys : pqxdh.RegistrationKeys)",
+          "monadic": true,
+          "return_type": "RustM beaconcrypt_core.agreement.AgreementEffect",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_wrapper.ratchet.RatchetKernelSlot.new": {
+          "binders": "(kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)",
+          "monadic": true,
+          "return_type": "RustM ratchet.RatchetKernelSlot",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_wrapper.ratchet.RatchetManager.from_kernel": {
+          "binders": "(refined : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)",
+          "monadic": true,
+          "return_type": "RustM ratchet.RatchetManager",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_wrapper.server.ProviderServerServer.build_registration_response.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairVecU8ArrayU816PairSharedSliceU8ArrayU816": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce\n  server.ProviderServerServer.build_registration_response.closure\n  ((alloc.vec.Vec Std.U8) \u00d7 (Array Std.U8 16#usize)) ((Slice Std.U8) \u00d7 (Array\n  Std.U8 16#usize))",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_public_wrapper.server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response": {
+          "binders": "(self : server.Server) (reg_out : server.RegistrationOutput)\n  (data : core.option.Option (Slice Std.U8))",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option server.RegResponse) \u00d7 server.Server)",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_wrapper.server.Server.authenticate_registration_lookup": {
+          "binders": "(self : server.Server) (buffer : Slice Std.U8)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option beaconcrypt_core.peer.RegistrationLookup)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_wrapper.server.Server.authentication_pin": {
+          "binders": "(self : server.Server)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option beaconcrypt_core.session.ServerAuthenticationPin)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_wrapper.server.Server.get_shared_secret_from_lookup_with_rng": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error) (self : server.Server)\n  (lookup : beaconcrypt_core.peer.RegistrationLookup) (rng : R)",
+          "monadic": true,
+          "return_type": "RustM ((core.option.Option server.RegistrationOutput) \u00d7 server.Server \u00d7 R)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_wrapper.server.Server.identity_key_kid": {
+          "binders": "(self : server.Server)",
+          "monadic": true,
+          "return_type": "RustM Std.U64",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_wrapper.server.Server.identity_pk": {
+          "binders": "(self : server.Server)",
+          "monadic": true,
+          "return_type": "RustM beaconcrypt_crypto.crypto_sign.PublicKey",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_wrapper.server.Server.identity_sk": {
+          "binders": "(self : server.Server)",
+          "monadic": true,
+          "return_type": "RustM beaconcrypt_crypto.crypto_sign.SecretKey",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_wrapper.server.Server.mldsa_public_key": {
+          "binders": "(self : server.Server)",
+          "monadic": true,
+          "return_type": "RustM (Array Std.U8 1952#usize)",
+          "role": "production-entry"
+        },
+        "beaconcrypt_public_wrapper.server.registration_response_len": {
+          "binders": "(application_len : Std.Usize) (assigned_key_id : Std.U64)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option Std.Usize)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_wrapper.shared.EstablishedRemote.from_peer": {
+          "binders": "{PkType : Type} (_SignaturePkInst : shared.SignaturePk PkType) (pk : PkType)\n  (peer : beaconcrypt_core.peer.Peer\n  beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)",
+          "monadic": true,
+          "return_type": "RustM (shared.EstablishedRemote PkType)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_public_wrapper.shared.map_peer_ratchet": {
+          "binders": "(peer : beaconcrypt_core.peer.Peer\n  beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)",
+          "monadic": true,
+          "return_type": "RustM (beaconcrypt_core.peer.Peer ratchet.RatchetManager)",
+          "role": "internal-helper"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "beaconcrypt_public_wrapper.auth.MldsaIdentity.public_key",
+            "beaconcrypt_public_wrapper.auth.MldsaIdentity.sign_requested",
+            "beaconcrypt_public_wrapper.ratchet.initial_ratchet_hkdf",
+            "beaconcrypt_public_wrapper.collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13.build_hasher",
+            "beaconcrypt_public_wrapper.ratchet.execute_seal_request",
+            "beaconcrypt_public_wrapper.ratchet.execute_write_request",
+            "beaconcrypt_public_wrapper.wire.encode_init",
+            "beaconcrypt_public_wrapper.wire.encode_response",
+            "beaconcrypt_public_wrapper.auth.execute_hash",
+            "beaconcrypt_public_wrapper.auth.authenticate_init",
+            "beaconcrypt_public_wrapper.auth.authenticate_response",
+            "beaconcrypt_public_wrapper.ratchet.execute_open_request",
+            "beaconcrypt_public_wrapper.ratchet.execute_commitment_hash",
+            "beaconcrypt_public_wrapper.ratchet.ratchet_hkdf",
+            "beaconcrypt_public_wrapper.pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError.try_fill_bytes",
+            "beaconcrypt_public_wrapper.pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError.try_next_u32",
+            "beaconcrypt_public_wrapper.pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError.try_next_u64",
+            "beaconcrypt_public_wrapper.server.registration_application_bytes",
+            "beaconcrypt_public_wrapper.beacon.ProviderBeaconBeacon.finish_registration.closure.Insts.CoreOpsFunctionFnOnceTuplekexresponseOptionResponsePacket.call_once",
+            "beaconcrypt_public_wrapper.server.ProviderServerServer.build_registration_response.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairVecU8ArrayU816PairSharedSliceU8ArrayU816.call_once"
+          ],
+          "sha256": "da0aa0e14b68685cda8b4305a48f6d8339bfc8423bdf08010e3e209b74338d07"
+        },
+        "TypesExternal.lean": {
+          "declarations": [
+            "BeaconcryptCore.Refinement.PublicWrapperPlatform.Material",
+            "BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform",
+            "beaconcrypt_crypto.crypto_sign.SecretKey",
+            "beaconcrypt_crypto.crypto_sign.KeyPair",
+            "beaconcrypt_crypto.crypto_kx.PublicKey",
+            "beaconcrypt_crypto.crypto_kx.SecretKey",
+            "beaconcrypt_crypto.crypto_kx.KeyPair",
+            "beaconcrypt_crypto.crypto_kem.mlkem768.PublicKey",
+            "beaconcrypt_crypto.crypto_kem.mlkem768.SecretKey",
+            "beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair",
+            "beaconcrypt_crypto.CryptoError",
+            "beaconcrypt_crypto.crypto_kem.mlkem768.Ciphertext",
+            "beaconcrypt_crypto.crypto_kem.mlkem768.SharedSecret",
+            "beaconcrypt_crypto.crypto_kdf.hkdf.sha512.Prk",
+            "CoreModels.alloc.sync.Arc",
+            "hashbrown.alloc.inner.Global",
+            "hashbrown.map.HashMap",
+            "hashbrown.set.HashSet",
+            "hashbrown.map.OccupiedEntry",
+            "hashbrown.map.VacantEntry",
+            "hashbrown.map.Entry",
+            "siphasher.sip.SipHasher13",
+            "rand_core.TryRng",
+            "rand_core.TryCryptoRng",
+            "beaconcrypt_public_wrapper.auth.MldsaIdentity",
+            "beaconcrypt_public_wrapper.collections.KeyedHasher",
+            "CoreModels.core.hash.BuildHasher",
+            "hashbrown.Equivalent",
+            "hashbrown.Equivalent.Blanket",
+            "BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator",
+            "hashbrown.alloc.inner.Allocator",
+            "hashbrown.alloc.inner.Global.Insts.HashbrownAllocInnerAllocator",
+            "zeroize.Zeroize",
+            "zeroize.Zeroizing",
+            "zeroize.DefaultIsZeroes",
+            "zeroize.U8.Insts.ZeroizeDefaultIsZeroes",
+            "zeroize.Zeroize.Blanket",
+            "zeroize.Array.Insts.ZeroizeZeroize",
+            "zeroize.alloc.vec.Vec.Insts.ZeroizeZeroize",
+            "zeroize.Zeroizing.new",
+            "zeroize.Zeroizing.Insts.CoreOpsDerefDeref.deref"
+          ],
+          "sha256": "d3176270986f85a6d8a41017bae4c4af84f214aca03c5e2498c928245f390b4e"
+        }
+      },
+      "extractor": "scripts/extract_adapter_public_wrappers.py",
+      "features": [
+        "beacon",
+        "pqxdh",
+        "server"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "54370a28a090adf9d2ea380be000a2c4e8afe2e8eb28be875b0f3210808b3eb7",
+        "Types.lean": "034a5834e69790432a82d6e1afed2daad8b089d0a4be882207b5fbd868e1a8a9"
+      },
+      "instance_parameters": [
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]",
+        "[BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Codecs]",
+        "[beaconcrypt.ratchet.Operations]",
+        "[beaconcrypt.auth.Operations]",
+        "[BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations]",
+        "[BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations]"
+      ],
+      "namespace": "beaconcrypt_public_wrapper",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do"
+      ]
+    },
+    "AdapterRatchetKdfExtraction": {
+      "compared_feature_profiles": {
+        "beacon": {
+          "default_features": false,
+          "features": [
+            "beacon",
+            "pqxdh"
+          ],
+          "generated_sha256": {
+            "Funs.lean": "4b5c4ab259d0a521d4ec54e762057b0ac2d1cf8542cb8552b2b597cecfb87af2",
+            "Types.lean": "244e612226b410dbc4f414dbbcf2f397c86d2b057e916c26d4051646fbcf146e"
+          }
+        },
+        "canonical": {
+          "default_features": false,
+          "features": [
+            "beacon",
+            "server",
+            "pqxdh"
+          ],
+          "generated_sha256": {
+            "Funs.lean": "4b5c4ab259d0a521d4ec54e762057b0ac2d1cf8542cb8552b2b597cecfb87af2",
+            "Types.lean": "244e612226b410dbc4f414dbbcf2f397c86d2b057e916c26d4051646fbcf146e"
+          }
+        },
+        "server": {
+          "default_features": false,
+          "features": [
+            "server",
+            "pqxdh"
+          ],
+          "generated_sha256": {
+            "Funs.lean": "4b5c4ab259d0a521d4ec54e762057b0ac2d1cf8542cb8552b2b597cecfb87af2",
+            "Types.lean": "244e612226b410dbc4f414dbbcf2f397c86d2b057e916c26d4051646fbcf146e"
+          }
+        }
+      },
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt_ratchet_kdf.ratchet.initial_ratchet_hkdf": {
+          "binders": "(request : beaconcrypt_core.ratchet.InitialRatchetKdfRequest)",
+          "monadic": true,
+          "return_type": "RustM (Array Std.U8 64#usize)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_ratchet_kdf.ratchet.ratchet_hkdf": {
+          "binders": "(request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest)",
+          "monadic": true,
+          "return_type": "RustM beaconcrypt_core.ratchet.RatchetKdfResponse",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf": {
+          "binders": "(OUTPUT_SIZE : Std.Usize) (input : Array Std.U8 32#usize)\n  (info : Slice Std.U8)",
+          "monadic": true,
+          "return_type": "RustM (Array Std.U8 OUTPUT_SIZE)",
+          "role": "internal-helper"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "beaconcrypt_crypto.crypto_kdf.hkdf.sha512.expand_into",
+            "beaconcrypt_crypto.CryptoError.Insts.CoreFmtDebug",
+            "zeroize.Zeroizing.Insts.CoreOpsDerefDerefMut.deref_mut"
+          ],
+          "sha256": "f567764bb20912fbdb789dd474d5ebf6ebeec230432517e48a2db875b7c58e23"
+        },
+        "TypesExternal.lean": {
+          "declarations": [
+            "BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations"
+          ],
+          "sha256": "40b0f4c16e7782fc9629055c4a8f5d62945100f21f37d8ea298fcaf08b8ea1fd"
+        }
+      },
+      "extractor": "scripts/extract_adapter_ratchet_kdf.py",
+      "features": [
+        "beacon",
+        "pqxdh",
+        "server"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "4b5c4ab259d0a521d4ec54e762057b0ac2d1cf8542cb8552b2b597cecfb87af2",
+        "Types.lean": "244e612226b410dbc4f414dbbcf2f397c86d2b057e916c26d4051646fbcf146e"
+      },
+      "instance_parameters": [
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]",
+        "[BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations]",
+        "[BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]"
+      ],
+      "namespace": "beaconcrypt_ratchet_kdf",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do"
+      ]
+    },
+    "AdapterRecordExtraction": {
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt.ratchet.execute_record_receive": {
+          "binders": "(effect : beaconcrypt_core.record_effects.RecordReceiveEffect)",
+          "monadic": true,
+          "return_type": "RustM (beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel \u00d7\n    (core.option.Option shared.Decrypted))",
+          "role": "internal-helper"
+        },
+        "beaconcrypt.ratchet.execute_record_receive.closure.Insts.CoreOpsFunctionFnOnceTupleOpenedRecordVecU8Decrypted": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce ratchet.execute_record_receive.closure\n  (beaconcrypt_core.record.OpenedRecord (alloc.vec.Vec Std.U8))\n  shared.Decrypted",
+          "role": "pure-instance"
+        },
+        "beaconcrypt.ratchet.execute_record_receive.closure.Insts.CoreOpsFunctionFnOnceTupleOpenedRecordVecU8Decrypted.call_once": {
+          "binders": "(c : ratchet.execute_record_receive.closure)\n  (tupled_args : beaconcrypt_core.record.OpenedRecord (alloc.vec.Vec Std.U8))",
+          "monadic": true,
+          "return_type": "RustM shared.Decrypted",
+          "role": "closure-helper"
+        },
+        "beaconcrypt.ratchet.execute_record_receive_loop": {
+          "binders": "(effect : beaconcrypt_core.record_effects.RecordReceiveEffect)",
+          "monadic": true,
+          "return_type": "RustM (beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel \u00d7\n    (core.option.Option shared.Decrypted))",
+          "role": "loop-helper"
+        },
+        "beaconcrypt.ratchet.execute_record_receive_loop.body": {
+          "binders": "(effect : beaconcrypt_core.record_effects.RecordReceiveEffect)",
+          "monadic": true,
+          "return_type": "RustM (ControlFlow beaconcrypt_core.record_effects.RecordReceiveEffect\n    (beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel \u00d7\n    (core.option.Option shared.Decrypted)))",
+          "role": "loop-helper"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "beaconcrypt.ratchet.Operations",
+            "beaconcrypt.ratchet.ratchet_hkdf",
+            "beaconcrypt.ratchet.execute_commitment_hash",
+            "beaconcrypt.ratchet.execute_open_request",
+            "beaconcrypt_crypto.utils.memcmp"
+          ],
+          "sha256": "67f891b27f9b58a27a3f37a1616c7ffe3316cae057d99317a4c1d190a01c1759"
+        },
+        "TypesExternal.lean": {
+          "declarations": [],
+          "sha256": "ea25a6c6cebec3b11a45151e8d0ab7ba46d774442008af4225efba53a19d25bd"
+        }
+      },
+      "extractor": "scripts/extract_adapter_record.py",
+      "features": [
+        "beacon",
+        "pqxdh"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "fd2e995d850f4092689b2506583856faff58168f907088ad0c9ec7c07a215efe",
+        "Types.lean": "357423d7a8e17ddd6dbad50d75cbedf6ebbbbd2f40838207b524a949457113cf"
+      },
+      "instance_parameters": [
+        "[beaconcrypt.ratchet.Operations]"
+      ],
+      "namespace": "beaconcrypt",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do"
+      ]
+    },
+    "AdapterRecordHelpersExtraction": {
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt_record_helpers.ratchet._proof_join_record_three": {
+          "binders": "(parts : Array (Slice Std.U8) 3#usize)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (alloc.vec.Vec Std.U8))",
+          "role": "specialized-extraction-helper"
+        },
+        "beaconcrypt_record_helpers.wire._proof_encode_frame_three": {
+          "binders": "(sequence : Std.U64) (sender : Std.U64)\n  (parts : Array (Slice Std.U8) 3#usize)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (alloc.vec.Vec Std.U8))",
+          "role": "specialized-extraction-helper"
+        },
+        "beaconcrypt_record_helpers.wire._proof_encode_frame_three.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "BeaconcryptCore.Refinement.AdapterWirePrimitive.Serializer wire._proof_encode_frame_three.closure",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_record_helpers.wire._proof_encode_frame_three.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize.call_once": {
+          "binders": "(c : wire._proof_encode_frame_three.closure) (tupled_args : Slice Std.U8)",
+          "monadic": true,
+          "return_type": "RustM (Std.Usize \u00d7 (Slice Std.U8))",
+          "role": "closure-helper"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "beaconcrypt_record_helpers.wire.encode_record",
+            "beaconcrypt_parse.encode_frame_parts"
+          ],
+          "sha256": "5b4f5d26402ed9378995474922404f0314eb20925b0d1d84f282be73f4c15471"
+        },
+        "TypesExternal.lean": {
+          "declarations": [],
+          "sha256": "436e686a533815d6b52093bdafb6de155c49e8fb0b4ff2e623ea976153ea574f"
+        }
+      },
+      "extractor": "scripts/extract_adapter_record_helpers.py",
+      "features": [
+        "beacon",
+        "pqxdh",
+        "server"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "3f4351353ff89fb0315cf53907dabd3f4088b60337d2ce32770b2702349ac66c",
+        "Types.lean": "4fb576fe0877023495dc1957a65aa0f316e3b944af66aab4b8f9d865af93bffa"
+      },
+      "instance_parameters": [
+        "[BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations]",
+        "[BeaconcryptCore.Refinement.FrameDispatchFallback.Operations]"
+      ],
+      "namespace": "beaconcrypt_record_helpers",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do"
+      ]
+    },
+    "AdapterRecordRoutingExtraction": {
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt_record_routing.ratchet.execute_write_request": {
+          "binders": "(request : beaconcrypt_core.record_effects.RecordWriteRequest)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (alloc.vec.Vec Std.U8))",
+          "role": "internal-helper"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "BeaconcryptCore.Refinement.RecordRoutingCallbacks.Operations",
+            "beaconcrypt_record_routing.ratchet.join_record_parts",
+            "beaconcrypt_record_routing.wire.encode_frame_parts"
+          ],
+          "sha256": "8d1b6f31db830086c575ccbfa79dcce3999780927675404bcfcaf335d1274cab"
+        },
+        "TypesExternal.lean": {
+          "declarations": [],
+          "sha256": "a0f987992025193afbc57337a0cbb8bbc6f2a25f3665fbb6b11b45166c656881"
+        }
+      },
+      "extractor": "scripts/extract_adapter_record_routing.py",
+      "features": [
+        "beacon",
+        "pqxdh",
+        "server"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "7fafd312dc836a97aaee92892fac7dc89e0ab233d53ff7209993c0cd314ead65",
+        "Types.lean": "d636b669d4bc0a91f8afec20509843542a096f6a75c7a96f9cfa17942400c489"
+      },
+      "instance_parameters": [
+        "[BeaconcryptCore.Refinement.RecordRoutingCallbacks.Operations]"
+      ],
+      "namespace": "beaconcrypt_record_routing",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do"
+      ]
+    },
+    "AdapterRecordSendExtraction": {
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt_record_send.ratchet.execute_record_send": {
+          "binders": "(kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)\n  (context : beaconcrypt_core.record_effects.SealFrameContext)",
+          "monadic": true,
+          "return_type": "RustM (beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel \u00d7\n    (core.option.Option shared.Encrypted))",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_record_send.ratchet.execute_record_send.closure.Insts.CoreOpsFunctionFnOnceTupleSealedRecordVecU8Encrypted": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce ratchet.execute_record_send.closure\n  (beaconcrypt_core.record_effects.SealedRecord (alloc.vec.Vec Std.U8))\n  shared.Encrypted",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_record_send.ratchet.execute_record_send.closure.Insts.CoreOpsFunctionFnOnceTupleSealedRecordVecU8Encrypted.call_once": {
+          "binders": "(_c : ratchet.execute_record_send.closure)\n  (tupled_args : beaconcrypt_core.record_effects.SealedRecord (alloc.vec.Vec\n  Std.U8))",
+          "monadic": true,
+          "return_type": "RustM shared.Encrypted",
+          "role": "closure-helper"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "beaconcrypt_record_send.ratchet.Operations",
+            "beaconcrypt_record_send.ratchet.ratchet_hkdf",
+            "beaconcrypt_record_send.ratchet.execute_seal_request",
+            "beaconcrypt_record_send.ratchet.execute_commitment_hash",
+            "beaconcrypt_record_send.ratchet.execute_write_request"
+          ],
+          "sha256": "705af4f17473a1844db1dfcdebd651c75fd1d9156af01d9b8c7315797b9dc410"
+        },
+        "TypesExternal.lean": {
+          "declarations": [],
+          "sha256": "dc0e1b55fd1beeb1c394ba8d24159be34bd0eb6decb4bd41380c308c454c0a57"
+        }
+      },
+      "extractor": "scripts/extract_adapter_record_send.py",
+      "features": [
+        "beacon",
+        "pqxdh"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "2e0290b1bf5babe81dc3d2734e77f4a2799864e8bd9e6742447904d68515b907",
+        "Types.lean": "4a637e66b1cdc1335004d201e04379c12bc1675b784eeb00cb53789eb57077a3"
+      },
+      "instance_parameters": [
+        "[beaconcrypt_record_send.ratchet.Operations]"
+      ],
+      "namespace": "beaconcrypt_record_send",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do"
+      ]
+    },
+    "AdapterRegistrationWriterExtraction": {
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt_registration_writer.wire.encode_init": {
+          "binders": "(init : beaconcrypt_parse.transport.initkex)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (alloc.vec.Vec Std.U8))",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_registration_writer.wire.encode_init.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "BeaconcryptCore.Refinement.AdapterWirePrimitive.Serializer wire.encode_init.closure",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_registration_writer.wire.encode_init.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize.call_once": {
+          "binders": "(c : wire.encode_init.closure) (tupled_args : Slice Std.U8)",
+          "monadic": true,
+          "return_type": "RustM (Std.Usize \u00d7 (Slice Std.U8))",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_registration_writer.wire.encode_response": {
+          "binders": "(response : beaconcrypt_parse.transport.kexresponse)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (alloc.vec.Vec Std.U8))",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_registration_writer.wire.encode_response.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "BeaconcryptCore.Refinement.AdapterWirePrimitive.Serializer wire.encode_response.closure",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_registration_writer.wire.encode_response.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize.call_once": {
+          "binders": "(c : wire.encode_response.closure) (tupled_args : Slice Std.U8)",
+          "monadic": true,
+          "return_type": "RustM (Std.Usize \u00d7 (Slice Std.U8))",
+          "role": "closure-helper"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "beaconcrypt_registration_writer.wire.encode_record",
+            "beaconcrypt_parse.encode_init",
+            "beaconcrypt_parse.encode_response"
+          ],
+          "sha256": "197462035401c72108c54d6b91f6b915f2b6ea9ecce13af43b1e50baa74c2d0f"
+        },
+        "TypesExternal.lean": {
+          "declarations": [
+            "BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations"
+          ],
+          "sha256": "b98d2579b61fc15b5ab92fc4b187a0fc7414def3c43248a4f5c8f750c8e15253"
+        }
+      },
+      "extractor": "scripts/extract_adapter_registration_writer.py",
+      "features": [
+        "beacon",
+        "pqxdh",
+        "server"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "f269274f063fc823d730e267757887efdb8fda8c2321879b6dad61ac9372a24d",
+        "Types.lean": "523a0503ca4fe1b0dbd21ae29e8eae7372805f85c432feb50a536f4599492e19"
+      },
+      "instance_parameters": [
+        "[BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations]",
+        "[BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations]"
+      ],
+      "namespace": "beaconcrypt_registration_writer",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do"
+      ]
+    },
+    "AdapterSealExtraction": {
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt_seal.ratchet.execute_seal_request": {
+          "binders": "(request : beaconcrypt_core.record_effects.AeadSealRequest)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option ((alloc.vec.Vec Std.U8) \u00d7 (Array Std.U8\n    16#usize)))",
+          "role": "internal-helper"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "BeaconcryptCore.Refinement.AdapterSealJoinCallbacks.Operations",
+            "beaconcrypt_crypto.crypto_aead.chacha20poly1305_ietf.Key.Insts.CoreConvertFromArrayU832",
+            "beaconcrypt_crypto.crypto_aead.chacha20poly1305_ietf.Nonce.Insts.CoreConvertFromArrayU812",
+            "beaconcrypt_crypto.crypto_aead.chacha20poly1305_ietf.encrypt_detached",
+            "beaconcrypt_seal.ratchet.join_record_parts"
+          ],
+          "sha256": "6ecd51855d35810d1b0a9c491969d508c7c1ad1a9ff5e75036d181e0415c31a0"
+        },
+        "TypesExternal.lean": {
+          "declarations": [
+            "beaconcrypt_crypto.crypto_aead.chacha20poly1305_ietf.Key",
+            "beaconcrypt_crypto.crypto_aead.chacha20poly1305_ietf.Nonce"
+          ],
+          "sha256": "dcd8468321fc74250710d4be2107cf8b367fe4810ec38fb03bf4d09a70c3e4bc"
+        }
+      },
+      "extractor": "scripts/extract_adapter_seal.py",
+      "features": [
+        "beacon",
+        "pqxdh",
+        "server"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "272e32d556079a09fbcfce9fb23911d3e1fa1235d7c0f60ef93b8bf2d5d5ae4a",
+        "Types.lean": "0c5ce67d386789492e486536063b625125d3cc96232ee9805433c30139471a2d"
+      },
+      "instance_parameters": [
+        "[BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations]",
+        "[BeaconcryptCore.Refinement.AdapterSealJoinCallbacks.Operations]"
+      ],
+      "namespace": "beaconcrypt_seal",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do"
+      ]
+    },
+    "AdapterSealJoinExtraction": {
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt_seal_join.ratchet._proof_join_seal_two": {
+          "binders": "(parts : Array (Slice Std.U8) 2#usize)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (alloc.vec.Vec Std.U8))",
+          "role": "specialized-extraction-helper"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [],
+          "sha256": "ab5de7ba0d1e9aaed6a4e31f4b0689b776949cebaf35fbbdfb4bba1b43ff2f3c"
+        },
+        "TypesExternal.lean": {
+          "declarations": [],
+          "sha256": "ab5de7ba0d1e9aaed6a4e31f4b0689b776949cebaf35fbbdfb4bba1b43ff2f3c"
+        }
+      },
+      "extractor": "scripts/extract_adapter_seal_join.py",
+      "features": [
+        "beacon",
+        "pqxdh",
+        "server"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "ab4e352dae7b2b70bee57afeba8cd1d47d7258aec0a4e4ee1dad5dc81154935c",
+        "Types.lean": "ba871bb5ba30991f410bf176dcf7b6d82df97136cae568b20640a7e4cd10a35b"
+      },
+      "instance_parameters": [
+        "[BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations]"
+      ],
+      "namespace": "beaconcrypt_seal_join",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do"
+      ]
+    },
+    "AdapterServerConstructorExtraction": {
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt_server_constructor.error.KeyGenError.Insts.CoreFmtDebug": {
+          "binders": "",
+          "monadic": false,
+          "return_type": "core.fmt.Debug error.KeyGenError",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_server_constructor.server.Server.new": {
+          "binders": "(server_kid : Std.U64) (id_seed : core.option.Option (Slice Std.U8))\n  (mldsa_seed : core.option.Option (Slice Std.U8))",
+          "monadic": true,
+          "return_type": "RustM server.Server",
+          "role": "intentional-panic"
+        },
+        "beaconcrypt_server_constructor.server.Server.try_new": {
+          "binders": "(server_kid : Std.U64) (id_seed : core.option.Option (Slice Std.U8))\n  (mldsa_seed : core.option.Option (Slice Std.U8))",
+          "monadic": true,
+          "return_type": "RustM (core.result.Result server.Server error.KeyGenError)",
+          "role": "production-entry"
+        },
+        "beaconcrypt_server_constructor.server.Server.try_new_with_rng": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error) (server_kid : Std.U64)\n  (id_seed : core.option.Option (Slice Std.U8))\n  (mldsa_seed : core.option.Option (Slice Std.U8)) (rng : R)",
+          "monadic": true,
+          "return_type": "RustM ((core.result.Result server.Server error.KeyGenError) \u00d7 R)",
+          "role": "production-entry"
+        },
+        "beaconcrypt_server_constructor.server.Server.try_new_with_rng.closure.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce\n  (server.Server.try_new_with_rng.closure R Clause0_Clause0_Error)\n  beaconcrypt_crypto.CryptoError error.KeyGenError",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_server_constructor.server.Server.try_new_with_rng.closure.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError.call_once": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (_c : server.Server.try_new_with_rng.closure R Clause0_Clause0_Error)\n  (_tupled_args : beaconcrypt_crypto.CryptoError)",
+          "monadic": true,
+          "return_type": "RustM error.KeyGenError",
+          "role": "closure-helper"
+        },
+        "beaconcrypt_server_constructor.server.Server.try_new_with_rng.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorKeyGenError": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)",
+          "monadic": false,
+          "return_type": "core.ops.function.FnOnce\n  (server.Server.try_new_with_rng.closure_1 R Clause0_Clause0_Error)\n  core.array.TryFromSliceError error.KeyGenError",
+          "role": "pure-instance"
+        },
+        "beaconcrypt_server_constructor.server.Server.try_new_with_rng.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorKeyGenError.call_once": {
+          "binders": "{R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :\n  rand_core.TryCryptoRng R Clause0_Clause0_Error)\n  (_c : server.Server.try_new_with_rng.closure_1 R Clause0_Clause0_Error)\n  (_tupled_args : core.array.TryFromSliceError)",
+          "monadic": true,
+          "return_type": "RustM error.KeyGenError",
+          "role": "closure-helper"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "BeaconcryptCore.Refinement.AdapterServerConstructorPrimitive.Standard",
+            "beaconcrypt_server_constructor.auth.MldsaIdentity.generate_with_rng",
+            "beaconcrypt_server_constructor.auth.MldsaIdentity.from_seed",
+            "beaconcrypt_server_constructor.collections.map_with_key",
+            "beaconcrypt_server_constructor.collections.set_with_key",
+            "beaconcrypt_server_constructor.error.KeyGenError.Insts.CoreFmtDebug.fmt",
+            "beaconcrypt_crypto.crypto_sign.KeyPair.from_seed",
+            "beaconcrypt_crypto.crypto_sign.SecretKey.as_bytes",
+            "CoreModels.alloc.sync.Arc.new"
+          ],
+          "sha256": "9afb50d4dd637207f3a64ea21439e8b2f89cbbda7162a12a1751476343416b44"
+        },
+        "TypesExternal.lean": {
+          "declarations": [],
+          "sha256": "3343d63056b46225cf7619534f067617574f79a289ee7b3935604823f5868b72"
+        }
+      },
+      "extractor": "scripts/extract_adapter_server_constructor.py",
+      "features": [
+        "beacon",
+        "pqxdh",
+        "server",
+        "std"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "37b0fd655b6f292aae63a1cac92635d209f720216f2de9ddf184f01fca317e9d",
+        "Types.lean": "7196979fe666d07a00b93cc664ae482b01c7a634b16e3590ea560cf894b702e4"
+      },
+      "instance_parameters": [
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]",
+        "[BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]",
+        "[BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations]",
+        "[BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard]",
+        "[BeaconcryptCore.Refinement.AdapterServerConstructorPrimitive.Standard]"
+      ],
+      "namespace": "beaconcrypt_server_constructor",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do",
+        "beaconcrypt_public_wrapper"
+      ]
+    },
+    "AdapterWireExtraction": {
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt.wire.encode_record": {
+          "binders": "{T0 : Type} (coreopsfunctionFnOnceT0TupleMutSliceU8UsizeInst :\n  BeaconcryptCore.Refinement.AdapterWirePrimitive.Serializer T0) (capacity : Std.Usize)\n  (serialize : T0)",
+          "monadic": true,
+          "return_type": "RustM (core.option.Option (alloc.vec.Vec Std.U8))",
+          "role": "internal-helper"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "BeaconcryptCore.Refinement.AdapterWirePrimitive.Serializer",
+            "BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations",
+            "CoreModels.alloc.vec.Vec.try_reserve_exact"
+          ],
+          "sha256": "9822fc8237bc8030f80a44c545a6122390db0f427a26302a0366b537ca2a4406"
+        },
+        "TypesExternal.lean": {
+          "declarations": [],
+          "sha256": "5d568aed82c0d290139a088dd1089c1474967c9f7930940884220add19519bff"
+        }
+      },
+      "extractor": "scripts/extract_adapter_wire.py",
+      "features": [
+        "beacon",
+        "pqxdh",
+        "server"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "f18bac513d0a035754095822efd96644187acc5bcc4a0d104c2049c902e9719e",
+        "Types.lean": "576aad809c9febbdafd88e8411b23d3c3b330d6f49e35571acb5ec06c9cc8692"
+      },
+      "instance_parameters": [
+        "[BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations]"
+      ],
+      "namespace": "beaconcrypt",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do"
+      ]
+    }
+  }
+}

@@ -1,0 +1,3 @@
+(* SPDX-License-Identifier: 0BSD *)
+expand L2_RECV_STEP(L2Recv2,L2RecvStop).
+expand L2_RECV_STEP(L2Recv1,L2Recv2).

@@ -1,0 +1,3 @@
+nounif x:bitstring,y:bitstring; attacker(choice[x25519_public(x),x25519_public(y)]).
+set simplifyProcess = false.
+process S2bMain(false)

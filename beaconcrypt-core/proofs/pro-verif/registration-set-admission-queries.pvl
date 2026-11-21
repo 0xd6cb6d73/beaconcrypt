@@ -1,0 +1,11 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+set preciseActions = true.
+query owner:bitstring, attempt:bitstring, rid:beaconcrypt_core__pqxdh__t_RegistrationId;
+ event(RegistrationSetReturned(owner,attempt,rid)) ==> event(RegistrationSetConsumed(owner,attempt,rid)).
+query owner:bitstring, attempt:bitstring, rid:beaconcrypt_core__pqxdh__t_RegistrationId;
+ event(RegistrationSetConsumed(owner,attempt,rid)) ==> event(RegistrationSetFresh(owner,attempt,rid)).
+query owner:bitstring, attempt:bitstring, prior:bitstring, rid:beaconcrypt_core__pqxdh__t_RegistrationId;
+ event(RegistrationSetReplay(owner,attempt,rid)) ==> event(RegistrationSetConsumed(owner,prior,rid)).
+query identity:bitstring, init:beaconcrypt_core__pqxdh__t_InitKex, origin:bitstring;
+ event(RegistrationSetHonestAccepted(identity,init,origin)) ==> event(RegistrationSetHonestSigned(identity,init,origin)).

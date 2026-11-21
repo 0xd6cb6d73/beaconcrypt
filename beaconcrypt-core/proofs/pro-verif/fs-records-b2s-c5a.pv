@@ -1,0 +1,16 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s C5a, witness written as a correspondence (expected FALSE):
+   out-of-order and cached acceptance of an honest Beacon's records.
+   "Sequence 1 is always accepted before sequence 2" is false: a Server peer
+   accepts the Beacon's record at 2, which caches 1, and then accepts its
+   record at 1 from the cache. *)
+query s: bitstring, b: bitstring, kid: key_id, root: bitstring, m1: bitstring, m2: bitstring,
+      i: time, j: time;
+  event(FsReceived(beacon_to_server(), s, b, kid, root, 2, m2))@i
+  && event(FsReceived(beacon_to_server(), s, b, kid, root, 1, m1))@j
+  && event(FsSent(beacon_to_server(), s, b, kid, root, 1, m1))
+  && event(FsSent(beacon_to_server(), s, b, kid, root, 2, m2))
+  ==> j < i.
+
+process FsRecordsB2sMain()

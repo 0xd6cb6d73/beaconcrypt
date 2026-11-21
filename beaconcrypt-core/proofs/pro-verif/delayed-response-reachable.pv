@@ -1,0 +1,2 @@
+query s:bitstring,b:bitstring,init:beaconcrypt_core__pqxdh__t_VerifiedInitKex,root:bitstring,ad:bitstring,p:bitstring; event(FsBeaconEstablished(s,b,init,fs_kid(1),root,ad,p)).
+process A1Main(false)

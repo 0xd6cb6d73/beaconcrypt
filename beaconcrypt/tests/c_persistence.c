@@ -91,10 +91,12 @@ static beaconcrypt_SnapshotStoreCallbacks callbacks(Store *store) {
 int main(void) {
   Store store = {0};
   uint8_t seed[32] = {7};
+  uint8_t mldsa_seed[32] = {8};
   uint8_t lineage[32] = {9};
   uint32_t status = UINT32_MAX;
   beaconcrypt_Server *server = beaconcrypt_server_create_with_store_and_lineage(
-      19, seed, sizeof(seed), callbacks(&store), lineage, sizeof(lineage), &status);
+      19, seed, sizeof(seed), mldsa_seed, sizeof(mldsa_seed), callbacks(&store),
+      lineage, sizeof(lineage), &status);
   assert(server != NULL && status == beaconcrypt_STATUS_OK);
   assert(store.attempts == 1 && store.head.generation == 0);
   beaconcrypt_SnapshotHeadInfo head;
@@ -103,9 +105,13 @@ int main(void) {
   assert(memcmp(head.lineage, lineage, sizeof(lineage)) == 0);
 
   beaconcrypt_Buffer pk = beaconcrypt_server_identity_pk(server);
-  beaconcrypt_Beacon *beacon = beaconcrypt_beacon_new(19, pk.ptr, pk.len);
+  beaconcrypt_Buffer mldsa_pk = beaconcrypt_server_mldsa_public_key(server);
+  assert(pk.len == 32 && mldsa_pk.len == beaconcrypt_MLDSA_PUBLIC_KEY_LEN);
+  beaconcrypt_Beacon *beacon =
+      beaconcrypt_beacon_new(19, pk.ptr, pk.len, mldsa_pk.ptr, mldsa_pk.len);
   assert(beacon != NULL);
   beaconcrypt_free_buffer(pk);
+  beaconcrypt_free_buffer(mldsa_pk);
   beaconcrypt_Buffer registration = beaconcrypt_generate_registration(beacon);
   beaconcrypt_RegistrationResponse response = beaconcrypt_register_beacon(
       server, registration.ptr, registration.len, NULL, 0);
@@ -167,6 +173,40 @@ int main(void) {
   assert(plaintext.ptr == NULL && store.attempts == attempts);
   assert(beaconcrypt_server_last_status(server) == beaconcrypt_STATUS_REJECTED);
   assert(!beaconcrypt_server_is_poisoned(server));
+  beaconcrypt_SendResult rejected = beaconcrypt_encrypt_to_beacon_outcome(
+      server, response.key_id, NULL, 0);
+  assert(rejected.status == beaconcrypt_STATUS_OK);
+  assert(rejected.outcome == beaconcrypt_SEND_OUTCOME_REJECTED);
+  assert(rejected.message.data.ptr == NULL && rejected.message.state.ptr == NULL);
+  assert(rejected.message.key_id == 0 && rejected.message.seq == 0);
+  beaconcrypt_SendResult sent = beaconcrypt_encrypt_and_update_outcome(
+      server, response.key_id, (const uint8_t *)"explicit", 8);
+  assert(sent.status == beaconcrypt_STATUS_OK);
+  assert(sent.outcome == beaconcrypt_SEND_OUTCOME_SENT);
+  assert(sent.message.key_id == response.key_id);
+  assert(sent.message.data.ptr != NULL && sent.message.state.len != 0);
+  plaintext = beaconcrypt_decrypt_server_message(
+      beacon, sent.message.data.ptr, sent.message.data.len);
+  assert(plaintext.len == 8 && memcmp(plaintext.ptr, "explicit", 8) == 0);
+  beaconcrypt_free_buffer(plaintext);
+  beaconcrypt_free_buffer(sent.message.data);
+  beaconcrypt_free_buffer(sent.message.state);
+  sent = beaconcrypt_encrypt_and_update_json_outcome(
+      server, response.key_id, (const uint8_t *)"json", 4);
+  assert(sent.status == beaconcrypt_STATUS_OK);
+  assert(sent.outcome == beaconcrypt_SEND_OUTCOME_SENT);
+  assert(sent.message.data.len != 0 && sent.message.state.ptr == NULL);
+  beaconcrypt_free_buffer(sent.message.data);
+  sent = beaconcrypt_encrypt_to_server_outcome(
+      beacon, (const uint8_t *)"explicit beacon", 15);
+  assert(sent.status == beaconcrypt_STATUS_OK);
+  assert(sent.outcome == beaconcrypt_SEND_OUTCOME_SENT);
+  assert(sent.message.key_id == 19 && sent.message.seq == 2);
+  plaintext = beaconcrypt_decrypt_beacon_message(
+      server, sent.message.data.ptr, sent.message.data.len);
+  assert(plaintext.len == 15 && memcmp(plaintext.ptr, "explicit beacon", 15) == 0);
+  beaconcrypt_free_buffer(plaintext);
+  beaconcrypt_free_buffer(sent.message.data);
   beaconcrypt_free_buffer(inbound);
   beaconcrypt_server_free(server);
   beaconcrypt_beacon_free(beacon);

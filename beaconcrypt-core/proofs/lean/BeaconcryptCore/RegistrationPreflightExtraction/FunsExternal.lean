@@ -1,0 +1,5 @@
+import BeaconcryptCore.RegistrationPreflightExtraction.Types
+import BeaconcryptCore.Extraction.Funs
+import BeaconcryptCore.Refinement.RegistrationCodecStandardSlices
+
+set_option warningAsError true

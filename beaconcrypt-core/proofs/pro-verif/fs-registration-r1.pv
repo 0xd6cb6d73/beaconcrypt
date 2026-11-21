@@ -1,0 +1,13 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-registration R1, security result, K_reg = 3: one Server object never
+   accepts the same registration ID twice.  Also the target of the control
+   C-NOCHECK (K_reg = 2). *)
+query obj: bitstring, s: bitstring, b: bitstring,
+      i1: beaconcrypt_core__pqxdh__t_VerifiedInitKex, i2: beaconcrypt_core__pqxdh__t_VerifiedInitKex, rid: beaconcrypt_core__pqxdh__t_RegistrationId,
+      r1: bitstring, r2: bitstring, i: time, j: time;
+  event(FsServerAccepted(obj, s, b, i1, rid, r1))@i
+  && event(FsServerAccepted(obj, s, b, i2, rid, r2))@j
+  ==> i = j.
+
+process FsRegistrationMain()

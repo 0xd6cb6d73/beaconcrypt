@@ -18,8 +18,8 @@ def register_beacon(
 
 
 def test_json_updates_include_direction_tags_and_payloads():
-    server = BeaconCryptServer(0, None)
-    beacon = BeaconCryptBeacon(0, server.id_pk())
+    server = BeaconCryptServer(0, None, None)
+    beacon = BeaconCryptBeacon(0, server.id_pk(), server.mldsa_public_key())
     beacon_kid = register_beacon(server, beacon)
 
     outbound = b"server to beacon JSON update"
@@ -52,22 +52,26 @@ def test_json_updates_include_direction_tags_and_payloads():
 
 
 def test_json_update_failures_return_none():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
 
     assert server.encrypt_and_update_json(b"message", 2**64 - 1) is None
     assert server.decrypt_and_update_json(b"not a frame") is None
 
 
 def test_full_server_checkpoint_exports_restores_and_continues():
-    server = BeaconCryptServer(0, bytes([0x52]) * 32)
-    beacon = BeaconCryptBeacon(0, server.id_pk())
+    server = BeaconCryptServer(0, bytes([0x52]) * 32, None)
+    beacon = BeaconCryptBeacon(0, server.id_pk(), server.mldsa_public_key())
     beacon_kid = register_beacon(server, beacon)
 
+    ed25519_identity = server.id_pk()
+    mldsa_identity = server.mldsa_public_key()
     checkpoint = server.export_state()
     assert checkpoint.startswith(b"beaconcrypt-snap")
     del server
 
     restored = BeaconCryptServer.from_state(checkpoint)
+    assert restored.id_pk() == ed25519_identity
+    assert restored.mldsa_public_key() == mldsa_identity
     inbound = beacon.encrypt_message_to_server(b"after Python restore")
     assert restored.decrypt_beacon_message(inbound) == b"after Python restore"
 
@@ -75,10 +79,18 @@ def test_full_server_checkpoint_exports_restores_and_continues():
     assert beacon.decrypt_server_message(outbound) == b"restored reply"
     assert restored.export_state() != checkpoint
 
+    new_beacon = BeaconCryptBeacon(0, ed25519_identity, mldsa_identity)
+    new_kid = register_beacon(restored, new_beacon)
+    assert new_kid != beacon_kid
+    new_frame = new_beacon.encrypt_message_to_server(b"new registration after restore")
+    assert (
+        restored.decrypt_beacon_message(new_frame) == b"new registration after restore"
+    )
+
 
 def test_rejected_receive_leaves_binding_checkpoint_unchanged():
-    server = BeaconCryptServer(0, bytes([0x53]) * 32)
-    beacon = BeaconCryptBeacon(0, server.id_pk())
+    server = BeaconCryptServer(0, bytes([0x53]) * 32, None)
+    beacon = BeaconCryptBeacon(0, server.id_pk(), server.mldsa_public_key())
     register_beacon(server, beacon)
     message = bytes([0x5A]) * 32
     authentic = beacon.encrypt_message_to_server(message)

@@ -1,0 +1,9 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-s2b A3, witness (expected reachable): the finish opens a later
+   genuine frame (sequence 2 or 3) before the sequence-one gate aborts it,
+   so the gate is really reached. *)
+query s: bitstring, b: bitstring, t: nat;
+  event(FsBeaconFinishOpenedLater(s, b, t)).
+
+process FsRecordsS2bMain()

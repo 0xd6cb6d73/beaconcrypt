@@ -1,0 +1,5 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* Source comparison: Kr3 *)
+expand S2b_RECV_STEP(S2bRecv3,S2bRecvStop).
+expand S2b_RECV_STEP(S2bRecv2,S2bRecv3).
+expand S2b_RECV_STEP(S2bRecv1,S2bRecv2).

@@ -1,0 +1,4 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Diff-equivalence; exact bounds live in check-active-strong-secrecy.py. *)
+process FsRecordsB2sMainAnyPin()

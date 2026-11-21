@@ -1,0 +1,150 @@
+{
+  "schema": 1,
+  "source_sha256": "37b0fd655b6f292aae63a1cac92635d209f720216f2de9ddf184f01fca317e9d",
+  "definitions": [
+    {
+      "name": "server.Server.try_new_with_rng",
+      "sha256": "ebbaca564332a9cdb169d0a5bc095d1bfa28f74f0405f338b8440d4c26b2bc70",
+      "signature": [
+        {
+          "before": "RustM",
+          "after": "m",
+          "count": 1
+        }
+      ],
+      "body": [
+        {
+          "before": "auth.MldsaIdentity.generate_with_rng",
+          "after": "(BeaconcryptCore.Refinement.AdapterBeaconConstructorRequestMonad.Operations.mldsaGenerate (m := m))",
+          "count": 1
+        },
+        {
+          "before": "beaconcrypt_crypto.crypto_sign.KeyPair.generate_with_rng",
+          "after": "(BeaconcryptCore.Refinement.AdapterBeaconConstructorRequestMonad.Operations.edGenerate (m := m))",
+          "count": 1
+        },
+        {
+          "before": "auth.MldsaIdentity.from_seed",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) auth.MldsaIdentity.from_seed)",
+          "count": 1
+        },
+        {
+          "before": "beaconcrypt_crypto.crypto_sign.KeyPair.from_seed",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_crypto.crypto_sign.KeyPair.from_seed)",
+          "count": 1
+        },
+        {
+          "before": "beaconcrypt_crypto.crypto_sign.SecretKey.as_bytes",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_crypto.crypto_sign.SecretKey.as_bytes)",
+          "count": 2
+        },
+        {
+          "before": "collections.map_with_key",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) collections.map_with_key)",
+          "count": 2
+        },
+        {
+          "before": "collections.set_with_key",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) collections.set_with_key)",
+          "count": 2
+        },
+        {
+          "before": "alloc.sync.Arc.new",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) alloc.sync.Arc.new)",
+          "count": 2
+        },
+        {
+          "before": "beaconcrypt_core.pqxdh.ServerState.new",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.pqxdh.ServerState.new)",
+          "count": 2
+        },
+        {
+          "before": "core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from)",
+          "count": 1
+        },
+        {
+          "before": "core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual",
+          "after": "(fun T conversion residual => BeaconcryptCore.Refinement.AdapterRecordRequestMonad.liftRust (m := m) (core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual T conversion residual))",
+          "count": 3
+        },
+        {
+          "before": "core.result.Result.Insts.CoreOpsTry_traitTry.branch",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.Insts.CoreOpsTry_traitTry.branch)",
+          "count": 3
+        },
+        {
+          "before": "core.result.Result.map_err",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.map_err)",
+          "count": 2
+        },
+        {
+          "before": "lift",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) Aeneas.Std.lift)",
+          "count": 4
+        },
+        {
+          "before": "ok",
+          "after": "pure",
+          "count": 7
+        },
+        {
+          "before": "server.Server.try_new_with_rng.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorKeyGenError",
+          "after": "beaconcrypt_server_constructor.server.Server.try_new_with_rng.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorKeyGenError",
+          "count": 1
+        },
+        {
+          "before": "server.Server.try_new_with_rng.closure.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError",
+          "after": "beaconcrypt_server_constructor.server.Server.try_new_with_rng.closure.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "server.Server.try_new",
+      "sha256": "25f5a4ad8480508043f16d2c990daea6cff2a96130b4a8af5f9c9f58c5b7d597",
+      "signature": [
+        {
+          "before": "RustM",
+          "after": "m",
+          "count": 1
+        }
+      ],
+      "body": [
+        {
+          "before": "server.Server.try_new_with_rng",
+          "after": "(server.Server.try_new_with_rng (m := m))",
+          "count": 1
+        },
+        {
+          "before": "ok",
+          "after": "pure",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "server.Server.new",
+      "sha256": "ffbb6c9109e992acdc19a9e2383292db4366b1525b78b656628dab207f715067",
+      "signature": [
+        {
+          "before": "RustM",
+          "after": "m",
+          "count": 1
+        }
+      ],
+      "body": [
+        {
+          "before": "server.Server.try_new",
+          "after": "(server.Server.try_new (m := m))",
+          "count": 1
+        },
+        {
+          "before": "core.result.Result.expect",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.expect)",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

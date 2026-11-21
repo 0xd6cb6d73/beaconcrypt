@@ -1,0 +1,5 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+query origin: bitstring, owner: bitstring, token: bitstring, next: nat;
+ event(SchedBuilt(origin, owner, token, next)) ==> origin = owner.
+process SchedCrossObjectWitness()

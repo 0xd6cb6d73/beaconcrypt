@@ -48,6 +48,7 @@ fn response_bytes(value: KexResponse<'_>) -> Vec<u8> {
 			value.ephemeral_key.len(),
 			value.kem_cipher_text.len(),
 			value.app_cipher_text.len(),
+			value.signature.len(),
 		],
 		value.key_id,
 	)
@@ -64,6 +65,7 @@ const INIT_PQ: [u8; 1249] = [0x44; 1249];
 const RESPONSE_IDENTITY: [u8; 32] = [0x55; 32];
 const RESPONSE_EPHEMERAL: [u8; 32] = [0x66; 32];
 const RESPONSE_KEM: [u8; 1088] = [0x77; 1088];
+const RESPONSE_SIGNATURE: [u8; 3309] = [0xaa; 3309];
 
 fn valid_init() -> InitKex<'static> {
 	InitKex {
@@ -81,6 +83,7 @@ fn valid_response(app_cipher_text: &[u8], key_id: u64) -> KexResponse<'_> {
 		kem_cipher_text: &RESPONSE_KEM,
 		app_cipher_text,
 		key_id,
+		signature: &RESPONSE_SIGNATURE,
 	}
 }
 
@@ -106,7 +109,7 @@ fn append_bytes(wire: &mut Vec<u8>, bytes: &[u8]) {
 }
 
 fn independent_init(value: InitKex<'_>) -> Vec<u8> {
-	let mut wire = vec![0x86, 1, 0];
+	let mut wire = vec![0x86, 3, 0];
 	for bytes in [
 		value.identity_key,
 		value.pre_key,
@@ -119,7 +122,7 @@ fn independent_init(value: InitKex<'_>) -> Vec<u8> {
 }
 
 fn independent_response(value: KexResponse<'_>) -> Vec<u8> {
-	let mut wire = vec![0x87, 1, 1];
+	let mut wire = vec![0x88, 3, 1];
 	for bytes in [
 		value.identity_key,
 		value.ephemeral_key,
@@ -129,6 +132,7 @@ fn independent_response(value: KexResponse<'_>) -> Vec<u8> {
 		append_bytes(&mut wire, bytes);
 	}
 	append_argument(&mut wire, 0, value.key_id);
+	append_bytes(&mut wire, value.signature);
 	wire
 }
 
@@ -152,7 +156,7 @@ impl Kind {
 		match self {
 			Self::Frame => &[5],
 			Self::Init => &[3, 38, 138, 238],
-			Self::Response => &[3, 37, 71, 1162],
+			Self::Response => &[3, 37, 71, 1162, 1164],
 		}
 	}
 
@@ -160,7 +164,7 @@ impl Kind {
 		match self {
 			Self::Frame => &[(5, 0)],
 			Self::Init => &[(3, 33), (38, 98), (138, 98), (238, 1249)],
-			Self::Response => &[(3, 32), (37, 32), (71, 1088), (1162, 0)],
+			Self::Response => &[(3, 32), (37, 32), (71, 1088), (1162, 0), (1164, 3309)],
 		}
 	}
 
@@ -210,18 +214,20 @@ fn hand_authored_cbor_matches_the_schema_and_encoder() {
 
 	let init = valid_init();
 	let wire = independent_init(init);
-	assert_eq!(&wire[..5], &[0x86, 1, 0, 0x58, 33]);
+	assert_eq!(&wire[..5], &[0x86, 3, 0, 0x58, 33]);
 	assert_eq!(&wire[38..40], &[0x58, 98]);
 	assert_eq!(&wire[138..140], &[0x58, 98]);
 	assert_eq!(&wire[238..241], &[0x59, 4, 0xe1]);
+	assert_eq!(wire.len(), 1490);
 	assert!(decode_init(&wire) == Some(init));
 	assert_eq!(init_bytes(init), wire);
 
 	let response = valid_response(&[0x40], 42);
 	let wire = independent_response(response);
-	assert_eq!(&wire[..5], &[0x87, 1, 1, 0x58, 32]);
+	assert_eq!(&wire[..5], &[0x88, 3, 1, 0x58, 32]);
 	assert_eq!(&wire[71..74], &[0x59, 4, 0x40]);
-	assert_eq!(&wire[1162..], &[0x41, 0x40, 0x18, 42]);
+	assert_eq!(&wire[1162..1169], &[0x41, 0x40, 0x18, 42, 0x59, 0x0c, 0xed]);
+	assert_eq!(&wire[1169..], RESPONSE_SIGNATURE);
 	assert!(decode_response(&wire) == Some(response));
 	assert_eq!(response_bytes(response), wire);
 }
@@ -296,7 +302,7 @@ fn wrong_version_type_arity_and_major_types_are_rejected() {
 	for &kind in KINDS {
 		let fixture = kind.minimal();
 		let wire = fixture.as_slice();
-		kind.reject("unsupported version", &replacing(wire, 1, &[2]));
+		kind.reject("unsupported version", &replacing(wire, 1, &[wire[1] ^ 3]));
 		kind.reject("unknown message type", &replacing(wire, 2, &[3]));
 		for other in KINDS {
 			if other.minimal()[2] != wire[2] {
@@ -331,6 +337,33 @@ fn wrong_version_type_arity_and_major_types_are_rejected() {
 			);
 		}
 	}
+}
+
+#[test]
+fn previous_registration_wire_and_extra_beacon_credentials_are_rejected() {
+	let init = independent_init(valid_init());
+	let response = independent_response(valid_response(&[], 0));
+	for (kind, wire) in [(Kind::Init, &init), (Kind::Response, &response)] {
+		for version in [1, 2] {
+			let mut old = wire.clone();
+			old[1] = version;
+			kind.reject("previous registration version", &old);
+		}
+	}
+	let mut credential = init.clone();
+	credential[0] = 0x88;
+	append_bytes(&mut credential, &[0; 1952]);
+	append_bytes(&mut credential, &[0; 3309]);
+	Kind::Init.reject("removed Beacon credential fields", &credential);
+	credential[1] = 2;
+	Kind::Init.reject("legacy credential-bearing request", &credential);
+	let mut missing_signature = response[..1164].to_vec();
+	missing_signature[0] = 0x87;
+	Kind::Response.reject("response without Server signature", &missing_signature);
+	let mut unexpected_field = response.clone();
+	unexpected_field[0] = 0x89;
+	append_bytes(&mut unexpected_field, &[]);
+	Kind::Response.reject("response with an extra field", &unexpected_field);
 }
 
 #[test]
@@ -494,6 +527,7 @@ fn parsers_borrow_every_byte_string_from_the_input() {
 		value.ephemeral_key,
 		value.kem_cipher_text,
 		value.app_cipher_text,
+		value.signature,
 	] {
 		assert_borrowed(&response, field);
 	}
@@ -532,7 +566,7 @@ fn insufficient_output_capacity_returns_zero_and_exact_capacity_succeeds() {
 
 #[test]
 fn complete_encoded_limit_is_inclusive_and_oversized_encoders_do_not_write() {
-	// Fixed registration requests are always 1490 bytes; variable ciphertext can reach the limit.
+	// All four request fields count toward the complete-message budget.
 	assert_eq!(init_bytes(valid_init()).len(), 1490);
 	let mut wire = vec![0xa5; MAX_MESSAGE_SIZE + 1];
 	for kind in [Kind::Frame, Kind::Response] {
@@ -541,7 +575,7 @@ fn complete_encoded_limit_is_inclusive_and_oversized_encoders_do_not_write() {
 			let (mut prefix, tail) = match kind {
 				Kind::Frame => (vec![0x85, 1, 2, 0, 0, 0x5a], 0),
 				Kind::Response => {
-					let mut prefix = vec![0x87, 1, 1];
+					let mut prefix = vec![0x88, 3, 1];
 					for field in [
 						&RESPONSE_IDENTITY[..],
 						&RESPONSE_EPHEMERAL[..],
@@ -550,15 +584,17 @@ fn complete_encoded_limit_is_inclusive_and_oversized_encoders_do_not_write() {
 						append_bytes(&mut prefix, field);
 					}
 					prefix.push(0x5a);
-					(prefix, 1)
+					(prefix, 1 + 3 + RESPONSE_SIGNATURE.len())
 				}
 				Kind::Init => unreachable!(),
 			};
 			let payload_length = total - prefix.len() - 4 - tail;
 			prefix.extend_from_slice(&(payload_length as u32).to_be_bytes());
 			wire[..prefix.len()].copy_from_slice(&prefix);
-			if tail == 1 {
-				wire[total - 1] = 0;
+			if tail > 0 {
+				let start = total - tail;
+				wire[start..start + 4].copy_from_slice(&[0, 0x59, 0x0c, 0xed]);
+				wire[start + 4..total].copy_from_slice(&RESPONSE_SIGNATURE);
 			}
 			assert_eq!(
 				kind.accepts(&wire[..total]),
@@ -586,7 +622,7 @@ fn complete_encoded_limit_is_inclusive_and_oversized_encoders_do_not_write() {
 				}
 				Kind::Response => {
 					assert_eq!(
-						encoded_response_len([32, 32, 1088, payload_length], 0),
+						encoded_response_len([32, 32, 1088, payload_length, 3309], 0),
 						expected
 					);
 					if oversized {
@@ -643,12 +679,13 @@ fn fixed_registration_field_lengths_reject_one_short_and_one_long_wire_inputs() 
 			);
 		}
 	}
-	for field in 0..3 {
+	for field in 0..4 {
 		for adjustment in [-1isize, 1] {
 			let mut values = [
 				&RESPONSE_IDENTITY[..],
 				&RESPONSE_EPHEMERAL[..],
 				&RESPONSE_KEM[..],
+				&RESPONSE_SIGNATURE[..],
 			];
 			let malformed = vec![0x5a; values[field].len().checked_add_signed(adjustment).unwrap()];
 			values[field] = &malformed;
@@ -658,6 +695,7 @@ fn fixed_registration_field_lengths_reject_one_short_and_one_long_wire_inputs() 
 				kem_cipher_text: values[2],
 				app_cipher_text: &[],
 				key_id: 0,
+				signature: values[3],
 			});
 			assert!(
 				decode_response(&wire).is_none(),
@@ -669,7 +707,9 @@ fn fixed_registration_field_lengths_reject_one_short_and_one_long_wire_inputs() 
 
 #[test]
 fn fixed_registration_field_lengths_reject_one_short_and_one_long_encoder_inputs() {
-	let mut output = [0u8; 2048];
+	let mut output = [0u8; 8192];
+	assert!(encode_init(valid_init(), &mut output) > 0);
+	assert!(encode_response(valid_response(&[], 0), &mut output) > 0);
 	for field in 0..4 {
 		for adjustment in [-1isize, 1] {
 			let mut values = [
@@ -686,7 +726,7 @@ fn fixed_registration_field_lengths_reject_one_short_and_one_long_encoder_inputs
 						identity_key: values[0],
 						pre_key: values[1],
 						one_time_key: values[2],
-						pq_key: values[3]
+						pq_key: values[3],
 					},
 					&mut output
 				),
@@ -695,12 +735,13 @@ fn fixed_registration_field_lengths_reject_one_short_and_one_long_encoder_inputs
 			);
 		}
 	}
-	for field in 0..3 {
+	for field in 0..4 {
 		for adjustment in [-1isize, 1] {
 			let mut values = [
 				&RESPONSE_IDENTITY[..],
 				&RESPONSE_EPHEMERAL[..],
 				&RESPONSE_KEM[..],
+				&RESPONSE_SIGNATURE[..],
 			];
 			let malformed = vec![0x5a; values[field].len().checked_add_signed(adjustment).unwrap()];
 			values[field] = &malformed;
@@ -711,7 +752,8 @@ fn fixed_registration_field_lengths_reject_one_short_and_one_long_encoder_inputs
 						ephemeral_key: values[1],
 						kem_cipher_text: values[2],
 						app_cipher_text: &[],
-						key_id: 0
+						key_id: 0,
+						signature: values[3],
 					},
 					&mut output
 				),

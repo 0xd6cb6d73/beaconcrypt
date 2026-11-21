@@ -1,0 +1,100 @@
+-- SPDX-License-Identifier: 0BSD
+import BeaconcryptCore.Computational.RegistrationNativeOpenKeyStartupSource
+import BeaconcryptCore.Computational.RegistrationNativeOpenKeyKemSource
+import BeaconcryptCore.Computational.RegistrationNativePublicSourceKeyBound
+import BeaconcryptCore.Computational.RegistrationNativeG2Observer
+
+/-! The original generated native ML profile reaches the actual open G2 experiment with the literal private indexed KEM pool and lazy uniform108 table. The ordinary related-input and five key-schedule losses are exactly those already derived for the closed source experiment. The chronological observer is an exact augmentation of that game. No hidden-record origin, role-alias bound or final entropy substitution is assumed here. -/
+open OracleComp OracleSpec CoreModels Aeneas
+open Aeneas.Std hiding namespace core alloc
+open RustM beaconcrypt_core
+set_option autoImplicit false
+set_option backward.isDefEq.respectTransparency false
+namespace BeaconcryptCore.Computational.RegistrationNativeOpenG2Bound
+open PqxdhServerAuthExperiment (Setup Checks)
+variable {n : Nat} {ι KemSK Value : Type} {base : OracleSpec ι}
+
+noncomputable def client (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
+    (route : RawCtxServerRouting.SenderDecoder) (source : RegistrationNativeMldsa.Source)
+    (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKeyId : U64)
+    (selectedOwner selectedAccept : Nat) (bounds : PqxdhDeploymentInterface.FreshBounds)
+    (budget : PqxdhDeploymentInterface.Budget) (claim : Value → Option (Nat × Pqxdh.Bytes))
+    (adversary : RegistrationNativeExperiment.Public → OracleComp (RegistrationNativeInterface.ModeSpec .P) Value) :
+    OracleComp (RegistrationNativeOpenKey.NativeSpec KemSK) Bool :=
+  RegistrationNativeOpenKeyStartup.nativeClient (n := n) setup checks wire route source ensureInit identityIndex serverKeyId
+    selectedOwner selectedAccept bounds .P adversary
+    (RegistrationNativePublicSourceKeyBound.decision setup.source.crypto wire serverKeyId budget selectedOwner claim)
+
+/-- The actual real indexed KEM service and lazy table close to exactly the previously proved global G2 experiment. -/
+theorem normal_eq (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
+    (route : RawCtxServerRouting.SenderDecoder) (source : RegistrationNativeMldsa.Source)
+    (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKeyId : U64)
+    (selectedOwner selectedAccept : Nat) (bounds : PqxdhDeploymentInterface.FreshBounds)
+    (budget : PqxdhDeploymentInterface.Budget) (claim : Value → Option (Nat × Pqxdh.Bytes))
+    (adversary : RegistrationNativeExperiment.Public → OracleComp (RegistrationNativeInterface.ModeSpec .P) Value) :
+    RegistrationNativeOpenKeyKemGame.normal setup.baseImpl setup.kem
+      (client (n := n) setup checks wire route source ensureInit identityIndex serverKeyId selectedOwner selectedAccept bounds budget claim adversary) =
+      RegistrationNativeKeyHybrid.uniform (RegistrationNativePublicKeyExperiment.entryClient (n := n) setup checks wire route source
+        ensureInit identityIndex serverKeyId selectedOwner selectedAccept bounds budget claim adversary) := by
+  unfold client RegistrationNativeOpenKeyStartup.nativeClient RegistrationNativePublicSourceKeyBound.decision
+  rw [RegistrationNativeOpenKeyKemSource.normal_source, RegistrationNativeOpenKeyStartupSource.client_real]
+  rfl
+
+/-- The actual populated native ML source profile incurs its derived related-input and five primitive losses to the same concrete open G2 game used by the KEM/alias observer. -/
+theorem source_distance (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
+    (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
+    (correct : PqxdhFullSecretInputKdf.SourceFullCorrect setup.source setup.hmac)
+    (source : RegistrationNativeMldsa.Source) (ensureInit : StateT Unit ProbComp Bool)
+    (identityIndex : Nat) (serverKeyId : U64) (selectedOwner selectedAccept : Nat)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (budget : PqxdhDeploymentInterface.Budget)
+    (claim : Value → Option (Nat × Pqxdh.Bytes))
+    (adversary : RegistrationNativeExperiment.Public → OracleComp (RegistrationNativeInterface.ModeSpec .P) Value)
+    (bounded : ∀ publicValue, RegistrationNativeInterface.Respects budget (adversary publicValue)) :
+    (RegistrationNativeExperiment.profile (n := n) setup checks wire route representation source ensureInit identityIndex serverKeyId bounds .P
+      adversary (RegistrationNativeSelectedEvents.ceAppOwnerEvent setup.source.crypto wire serverKeyId budget selectedOwner claim)).boolDistance
+      (RegistrationNativeOpenKeyKemGame.normal setup.baseImpl setup.kem
+        (client (n := n) setup checks wire route source ensureInit identityIndex serverKeyId selectedOwner selectedAccept bounds budget claim adversary)) ≤
+      RegistrationNativeRelatedFamily.advantage setup.hmac setup.joint setup.dh
+        (fun publicValue => simulateQ RegistrationNativeRelatedRoot.reduction
+          (RegistrationNativePublicStartup.client (n := n) setup checks wire route source ensureInit identityIndex serverKeyId selectedOwner selectedAccept
+            bounds budget claim adversary publicValue)) +
+      ∑ index ∈ Finset.range (budget.cap 4 + budget.cap 5), RegistrationBoundKeySchedule.keyLoss setup.source setup.hmac
+        (RegistrationNativeKeyHybrid.reduction setup.source setup.hmac
+          (RegistrationNativePublicKeyExperiment.entryClient (n := n) setup checks wire route source ensureInit identityIndex serverKeyId
+            selectedOwner selectedAccept bounds budget claim adversary) index) := by
+  rw [normal_eq]
+  exact RegistrationNativePublicSourceKeyBound.key_distance setup checks wire route representation correct source ensureInit
+    identityIndex serverKeyId selectedOwner selectedAccept bounds budget claim adversary bounded
+
+/-- The actual chronological G2 observer with a ledger-only decision gives precisely this original broad owner-coordinate game. -/
+theorem observer_eq (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
+    (route : RawCtxServerRouting.SenderDecoder) (source : RegistrationNativeMldsa.Source)
+    (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKeyId : U64)
+    (selectedOwner selectedAccept : Nat) (bounds : PqxdhDeploymentInterface.FreshBounds)
+    (budget : PqxdhDeploymentInterface.Budget) (claim : Value → Option (Nat × Pqxdh.Bytes))
+    (adversary : RegistrationNativeExperiment.Public → OracleComp (RegistrationNativeInterface.ModeSpec .P) Value) :
+    RegistrationNativeG2Observer.nativeClient (n := n) setup checks wire route source ensureInit identityIndex serverKeyId
+      selectedOwner selectedAccept bounds .P adversary
+      (fun _ _ result => RegistrationNativePublicSourceKeyBound.decision setup.source.crypto wire serverKeyId budget selectedOwner claim result.1) =
+      client (n := n) setup checks wire route source ensureInit identityIndex serverKeyId selectedOwner selectedAccept bounds budget claim adversary := by
+  unfold RegistrationNativeG2Observer.nativeClient
+  rw [RegistrationNativeG2Observer.client_erase]
+  rfl
+
+end BeaconcryptCore.Computational.RegistrationNativeOpenG2Bound
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeOpenG2Bound.normal_eq' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeOpenG2Bound.normal_eq
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeOpenG2Bound.source_distance' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeOpenG2Bound.source_distance
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeOpenG2Bound.observer_eq' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeOpenG2Bound.observer_eq

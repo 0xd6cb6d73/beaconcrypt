@@ -1,0 +1,10 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s far witness (expected reachable): a Server peer whose
+   identity secret the attacker holds accepts a frame above T_max in the far
+   branch, so the branch is reachable and the corruption condition of C4 is
+   needed. *)
+query s: bitstring, k: bitstring, kid: key_id, root: bitstring, t: nat;
+  event(FsFarAccepted(beacon_to_server(), s, ed_public(k), kid, root, t)) && attacker(k).
+
+process FsRecordsB2sMain()

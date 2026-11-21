@@ -1,0 +1,6 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+query event(HkdfSameInitialLabelPrefix(HKDF_INITIAL_PREFIX_WITNESS)).
+query event(HkdfSameMessageLabelPrefix(HKDF_MESSAGE_PREFIX_WITNESS)).
+query event(HkdfCrossPhaseLeftAlias(HKDF_CROSS_PHASE_LEFT_WITNESS)).
+query event(HkdfCrossPhaseRightAlias(HKDF_CROSS_PHASE_RIGHT_WITNESS)).

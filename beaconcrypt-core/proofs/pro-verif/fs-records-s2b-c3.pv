@@ -1,0 +1,13 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-s2b C3, security result, (K_s, K_r, T_max) = (2, 3, 3): record
+   replay rejection.  A Beacon never accepts the same sequence twice in one
+   session, the finish's sequence 1 included, whatever the plaintexts.
+   Also the target of the controls C-RETAIN and C-STALE. *)
+query d: direction, s: bitstring, b: bitstring, kid: key_id, root: bitstring, t: nat,
+      m1: bitstring, m2: bitstring, i: time, j: time;
+  event(FsReceived(d, s, b, kid, root, t, m1))@i
+  && event(FsReceived(d, s, b, kid, root, t, m2))@j
+  ==> i = j.
+
+process FsRecordsS2bMain()

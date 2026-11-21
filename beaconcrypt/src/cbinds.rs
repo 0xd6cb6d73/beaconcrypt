@@ -5,7 +5,7 @@ use crate::persistence::{
 	SnapshotLineage, SnapshotStore,
 };
 use crate::server::{RecvState, SendState};
-use crate::{Beacon, ProviderBeacon};
+use crate::{Beacon, ProviderBeacon, SendOutcome};
 use std::cell::Cell;
 use std::ffi::c_void;
 use std::mem;
@@ -30,6 +30,9 @@ pub const STATUS_OUTPUT_ENCODING: u32 = 9;
 pub const STATUS_INITIALIZATION: u32 = 10;
 pub const STATUS_DIGEST: u32 = 11;
 pub const STATUS_POISONED: u32 = 12;
+pub const STATUS_STORAGE: u32 = 13;
+// Status 14 belongs to invalid row transaction sessions.
+pub const STATUS_COMMIT_UNKNOWN: u32 = 15;
 
 /// Non-secret identity of one complete server snapshot. Its digest is not an authenticator.
 #[repr(C)]
@@ -65,6 +68,8 @@ impl From<SnapshotHeadInfo> for SnapshotHead {
 /// `load` returns false without calling `sink` for an empty store. Otherwise it calls `sink` synchronously exactly once with nonempty borrowed snapshot bytes and returns true; Rust copies the bytes before `sink` returns. `compare_and_swap` compares the complete current head against `expected` (null means an empty store), validates the successor, and durably stores the exact replacement bytes and head before returning true. The store must protect integrity, provenance and freshness; snapshot bytes and digests do not authenticate themselves.
 ///
 /// Constructors take ownership of `context` immediately, including on failure. `destroy`, when supplied, runs exactly once after the final callback; otherwise the caller manages the context lifetime. All callbacks and borrowed arguments remain valid until they return, must not unwind, retain borrowed pointers, call the sink after `load` returns, or reenter the owning handle. The caller serializes access to the handle and store.
+///
+/// This original callback layout preserves the legacy C ABI. Use `SnapshotStoreCallbacksV2` and the constructors ending in `_v2` to report storage failures separately from absence and comparison rejection.
 #[repr(C)]
 pub struct SnapshotStoreCallbacks {
 	pub context: *mut c_void,
@@ -86,12 +91,37 @@ pub struct SnapshotStoreCallbacks {
 	pub destroy: Option<unsafe extern "C" fn(context: *mut c_void)>,
 }
 
-struct CallbackStore(SnapshotStoreCallbacks);
+/// Versioned snapshot callbacks with storage-error reporting.
+///
+/// `last_error` reports the result of the immediately preceding load or CAS callback: STATUS_OK, STATUS_STORAGE for a definite failure without a commit, or STATUS_COMMIT_UNKNOWN if a CAS may have committed. Reset this status when beginning each callback. A null `last_error` retains the legacy empty-store or conflict interpretation of false. Context ownership and callback lifetime rules are the same as `SnapshotStoreCallbacks`.
+#[repr(C)]
+pub struct SnapshotStoreCallbacksV2 {
+	pub callbacks: SnapshotStoreCallbacks,
+	pub last_error: Option<unsafe extern "C" fn(context: *mut c_void) -> u32>,
+}
+
+struct CallbackStore {
+	callbacks: SnapshotStoreCallbacks,
+	last_error: Option<unsafe extern "C" fn(context: *mut c_void) -> u32>,
+}
+
+impl CallbackStore {
+	fn check_error(&self) -> Result<(), PersistenceError> {
+		let status = self.last_error.map_or(STATUS_OK, |callback| unsafe {
+			callback(self.callbacks.context)
+		});
+		match status {
+			STATUS_OK => Ok(()),
+			STATUS_COMMIT_UNKNOWN => Err(PersistenceError::CommitUnknown),
+			_ => Err(PersistenceError::Storage),
+		}
+	}
+}
 
 impl Drop for CallbackStore {
 	fn drop(&mut self) {
-		if let Some(destroy) = self.0.destroy {
-			unsafe { destroy(self.0.context) };
+		if let Some(destroy) = self.callbacks.destroy {
+			unsafe { destroy(self.callbacks.context) };
 		}
 	}
 }
@@ -119,42 +149,48 @@ unsafe extern "C" fn snapshot_load_sink(context: *mut c_void, bytes: *const u8, 
 }
 
 impl SnapshotStore for CallbackStore {
-	fn load(&self) -> Option<ServerSnapshot> {
+	fn load(&self) -> Result<Option<ServerSnapshot>, PersistenceError> {
 		let mut loaded = SnapshotLoad::default();
 		let present = unsafe {
-			(self.0.load?)(
-				self.0.context,
+			(self.callbacks.load.ok_or(PersistenceError::Storage)?)(
+				self.callbacks.context,
 				(&mut loaded as *mut SnapshotLoad).cast(),
 				snapshot_load_sink,
 			)
 		};
+		self.check_error()?;
 		if !present && loaded.bytes.is_none() && !loaded.invalid {
-			return None;
+			return Ok(None);
 		}
 		if !present || loaded.invalid || loaded.bytes.is_none() {
-			return Some(ServerSnapshot::from_bytes(Vec::new()));
+			return Ok(Some(ServerSnapshot::from_bytes(Vec::new())));
 		}
-		loaded
+		Ok(loaded
 			.bytes
-			.map(|mut bytes| ServerSnapshot::from_bytes(mem::take(&mut *bytes)))
+			.map(|mut bytes| ServerSnapshot::from_bytes(mem::take(&mut *bytes))))
 	}
 
 	fn compare_and_swap(
 		&mut self,
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool {
+	) -> Result<bool, PersistenceError> {
 		let expected = expected.copied().map(SnapshotHeadInfo::from);
-		unsafe {
-			(self.0.compare_and_swap.expect("validated store callback"))(
-				self.0.context,
+		let committed = unsafe {
+			(self
+				.callbacks
+				.compare_and_swap
+				.expect("validated store callback"))(
+				self.callbacks.context,
 				expected
 					.as_ref()
 					.map_or(std::ptr::null(), std::ptr::from_ref),
 				replacement.as_bytes().as_ptr(),
 				replacement.as_bytes().len(),
 			)
-		}
+		};
+		self.check_error()?;
+		Ok(committed)
 	}
 }
 
@@ -170,6 +206,8 @@ fn error_status(error: PersistenceError) -> u32 {
 		PersistenceError::Initialization => STATUS_INITIALIZATION,
 		PersistenceError::Digest => STATUS_DIGEST,
 		PersistenceError::Poisoned => STATUS_POISONED,
+		PersistenceError::Storage => STATUS_STORAGE,
+		PersistenceError::CommitUnknown => STATUS_COMMIT_UNKNOWN,
 	}
 }
 
@@ -220,11 +258,14 @@ fn server_result(
 }
 
 fn callback_store(
-	callbacks: SnapshotStoreCallbacks,
+	callbacks: SnapshotStoreCallbacksV2,
 	status_out: *mut u32,
 ) -> Option<Box<dyn SnapshotStore>> {
-	let store = CallbackStore(callbacks);
-	if store.0.load.is_none() || store.0.compare_and_swap.is_none() {
+	let store = CallbackStore {
+		callbacks: callbacks.callbacks,
+		last_error: callbacks.last_error,
+	};
+	if store.callbacks.load.is_none() || store.callbacks.compare_and_swap.is_none() {
 		set_status_out(status_out, STATUS_INVALID_ARGUMENT);
 		return None;
 	}
@@ -267,7 +308,67 @@ pub struct EncryptState {
 	pub seq: u64,
 }
 
-fn empty_buffer() -> Buffer {
+/// No send key was consumed and no output is available.
+pub const SEND_OUTCOME_REJECTED: u32 = 0;
+/// A send key was consumed and the message contains the successful output.
+pub const SEND_OUTCOME_SENT: u32 = 1;
+/// A send key was consumed, but no output could be constructed.
+pub const SEND_OUTCOME_CONSUMED_WITHOUT_OUTPUT: u32 = 2;
+
+/// Explicit send effect. Inspect `status` first; `outcome` is meaningful only for STATUS_OK. Only SEND_OUTCOME_SENT contains buffers and metadata. Release both message buffers with `beaconcrypt_free_buffer`. A persistent successful outcome is published only after its state commits; persistence errors suppress the outcome and output.
+#[repr(C)]
+pub struct SendResult {
+	pub status: u32,
+	pub outcome: u32,
+	pub message: EncryptState,
+}
+
+pub(crate) fn failed_send_result(status: u32) -> SendResult {
+	SendResult {
+		status,
+		outcome: SEND_OUTCOME_REJECTED,
+		message: empty_encrypt_state(),
+	}
+}
+
+pub(crate) fn send_result<T>(
+	outcome: SendOutcome<T>,
+	sent: impl FnOnce(T) -> EncryptState,
+) -> SendResult {
+	match outcome {
+		SendOutcome::Rejected => failed_send_result(STATUS_OK),
+		SendOutcome::ConsumedWithoutOutput => SendResult {
+			status: STATUS_OK,
+			outcome: SEND_OUTCOME_CONSUMED_WITHOUT_OUTPUT,
+			message: empty_encrypt_state(),
+		},
+		SendOutcome::Sent(value) => SendResult {
+			status: STATUS_OK,
+			outcome: SEND_OUTCOME_SENT,
+			message: sent(value),
+		},
+	}
+}
+
+pub(crate) fn encrypted_state(value: crate::Encrypted) -> EncryptState {
+	EncryptState {
+		data: into_buffer(value.ciphertext),
+		state: empty_buffer(),
+		key_id: value.key_id,
+		seq: value.seq,
+	}
+}
+
+fn outcome_update(value: SendState) -> EncryptState {
+	EncryptState {
+		data: into_buffer(value.data),
+		state: into_buffer(value.state.as_str().as_bytes().to_vec()),
+		key_id: value.kid,
+		seq: value.seq,
+	}
+}
+
+pub(crate) fn empty_buffer() -> Buffer {
 	Buffer {
 		ptr: std::ptr::null_mut(),
 		len: 0,
@@ -275,7 +376,7 @@ fn empty_buffer() -> Buffer {
 	}
 }
 
-fn into_buffer(mut data: Vec<u8>) -> Buffer {
+pub(crate) fn into_buffer(mut data: Vec<u8>) -> Buffer {
 	let buffer = Buffer {
 		ptr: data.as_mut_ptr(),
 		len: data.len(),
@@ -322,6 +423,24 @@ unsafe fn input<'a>(ptr: *const u8, len: usize) -> Option<&'a [u8]> {
 	}
 }
 
+// Optional values preserve presence even when the provided slice is empty.
+unsafe fn optional_input<'a>(ptr: *const u8, len: usize) -> Result<Option<&'a [u8]>, ()> {
+	if len > isize::MAX as usize || (ptr.is_null() && len != 0) {
+		return Err(());
+	}
+	if ptr.is_null() {
+		Ok(None)
+	} else {
+		Ok(Some(unsafe { slice::from_raw_parts(ptr, len) }))
+	}
+}
+
+unsafe fn send_input<'a>(ptr: *const u8, len: usize) -> Option<&'a [u8]> {
+	unsafe { optional_input(ptr, len) }
+		.ok()
+		.map(|input| input.unwrap_or(&[]))
+}
+
 /// Release a byte buffer returned by this API.
 ///
 /// Passing an empty buffer is allowed. The buffer and its pointer must not be used after this call.
@@ -334,20 +453,25 @@ pub extern "C" fn beaconcrypt_free_buffer(buffer: Buffer) {
 	}
 }
 
-/// Create a server with a randomly generated identity key.
+/// Create a server with independently generated Ed25519 and ML-DSA-65 identity keys.
 ///
 /// Returns an owned handle, or null on failure. Release a non-null handle with `beaconcrypt_server_free`.
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_server_new(server_kid: u64) -> *mut Server {
 	server_result(
-		PersistentServer::create(server_kid, None, Box::<BindingSnapshotStore>::default()),
+		PersistentServer::create(
+			server_kid,
+			None,
+			None,
+			Box::<BindingSnapshotStore>::default(),
+		),
 		std::ptr::null_mut(),
 	)
 }
 
-/// Create a server with an optional deterministic identity seed.
+/// Create a server with independent optional Ed25519 and ML-DSA-65 identity seeds.
 ///
-/// A null pointer or zero length selects a random identity key. A non-empty seed must contain exactly `beaconcrypt_ED25519_SEED_SIZE` readable bytes.
+/// Each null pointer or zero length selects an independently generated identity key. Each non-empty seed must contain exactly 32 readable secret bytes.
 ///
 /// Returns an owned handle, or null when creation fails. Release a non-null handle with `beaconcrypt_server_free`.
 #[unsafe(no_mangle)]
@@ -355,31 +479,69 @@ pub extern "C" fn beaconcrypt_server_new_from_seed(
 	server_kid: u64,
 	seed_ptr: *const u8,
 	seed_len: usize,
+	mldsa_seed_ptr: *const u8,
+	mldsa_seed_len: usize,
 ) -> *mut Server {
 	let seed = unsafe { input(seed_ptr, seed_len) };
+	let mldsa_seed = unsafe { input(mldsa_seed_ptr, mldsa_seed_len) };
 	server_result(
-		PersistentServer::create(server_kid, seed, Box::<BindingSnapshotStore>::default()),
+		PersistentServer::create(
+			server_kid,
+			seed,
+			mldsa_seed,
+			Box::<BindingSnapshotStore>::default(),
+		),
 		std::ptr::null_mut(),
 	)
 }
 
 /// Create a server whose results are released only after the store's durable compare-and-swap succeeds.
 ///
-/// The callbacks take ownership of their context even when construction fails. A null seed or zero seed length selects a random identity. `status_out` may be null; otherwise it receives a `beaconcrypt_STATUS_*` code. Returns null on failure.
+/// The callbacks take ownership of their context even when construction fails. Each null seed or zero seed length selects an independently generated identity. `status_out` may be null; otherwise it receives a `beaconcrypt_STATUS_*` code. Returns null on failure.
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_server_create_with_store(
 	server_kid: u64,
 	seed_ptr: *const u8,
 	seed_len: usize,
+	mldsa_seed_ptr: *const u8,
+	mldsa_seed_len: usize,
 	callbacks: SnapshotStoreCallbacks,
+	status_out: *mut u32,
+) -> *mut Server {
+	beaconcrypt_server_create_with_store_v2(
+		server_kid,
+		seed_ptr,
+		seed_len,
+		mldsa_seed_ptr,
+		mldsa_seed_len,
+		SnapshotStoreCallbacksV2 {
+			callbacks,
+			last_error: None,
+		},
+		status_out,
+	)
+}
+
+/// Versioned durable constructor with explicit callback storage-error reporting.
+///
+/// Context ownership and callback lifetime rules match the corresponding legacy constructor.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_server_create_with_store_v2(
+	server_kid: u64,
+	seed_ptr: *const u8,
+	seed_len: usize,
+	mldsa_seed_ptr: *const u8,
+	mldsa_seed_len: usize,
+	callbacks: SnapshotStoreCallbacksV2,
 	status_out: *mut u32,
 ) -> *mut Server {
 	let Some(store) = callback_store(callbacks, status_out) else {
 		return std::ptr::null_mut();
 	};
 	let seed = unsafe { input(seed_ptr, seed_len) };
+	let mldsa_seed = unsafe { input(mldsa_seed_ptr, mldsa_seed_len) };
 	server_result(
-		PersistentServer::create(server_kid, seed, store),
+		PersistentServer::create(server_kid, seed, mldsa_seed, store),
 		status_out,
 	)
 }
@@ -392,7 +554,40 @@ pub extern "C" fn beaconcrypt_server_create_with_store_and_lineage(
 	server_kid: u64,
 	seed_ptr: *const u8,
 	seed_len: usize,
+	mldsa_seed_ptr: *const u8,
+	mldsa_seed_len: usize,
 	callbacks: SnapshotStoreCallbacks,
+	lineage_ptr: *const u8,
+	lineage_len: usize,
+	status_out: *mut u32,
+) -> *mut Server {
+	beaconcrypt_server_create_with_store_and_lineage_v2(
+		server_kid,
+		seed_ptr,
+		seed_len,
+		mldsa_seed_ptr,
+		mldsa_seed_len,
+		SnapshotStoreCallbacksV2 {
+			callbacks,
+			last_error: None,
+		},
+		lineage_ptr,
+		lineage_len,
+		status_out,
+	)
+}
+
+/// Versioned durable constructor with explicit callback storage-error reporting.
+///
+/// Context ownership and callback lifetime rules match the corresponding legacy constructor.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_server_create_with_store_and_lineage_v2(
+	server_kid: u64,
+	seed_ptr: *const u8,
+	seed_len: usize,
+	mldsa_seed_ptr: *const u8,
+	mldsa_seed_len: usize,
+	callbacks: SnapshotStoreCallbacksV2,
 	lineage_ptr: *const u8,
 	lineage_len: usize,
 	status_out: *mut u32,
@@ -407,10 +602,12 @@ pub extern "C" fn beaconcrypt_server_create_with_store_and_lineage(
 		return std::ptr::null_mut();
 	};
 	let seed = unsafe { input(seed_ptr, seed_len) };
+	let mldsa_seed = unsafe { input(mldsa_seed_ptr, mldsa_seed_len) };
 	server_result(
 		PersistentServer::create_with_lineage(
 			server_kid,
 			seed,
+			mldsa_seed,
 			store,
 			SnapshotLineage::from_bytes(lineage),
 		),
@@ -424,6 +621,23 @@ pub extern "C" fn beaconcrypt_server_create_with_store_and_lineage(
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_server_restore_with_store(
 	callbacks: SnapshotStoreCallbacks,
+	status_out: *mut u32,
+) -> *mut Server {
+	beaconcrypt_server_restore_with_store_v2(
+		SnapshotStoreCallbacksV2 {
+			callbacks,
+			last_error: None,
+		},
+		status_out,
+	)
+}
+
+/// Versioned durable constructor with explicit callback storage-error reporting.
+///
+/// Context ownership and callback lifetime rules match the corresponding legacy constructor.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_server_restore_with_store_v2(
+	callbacks: SnapshotStoreCallbacksV2,
 	status_out: *mut u32,
 ) -> *mut Server {
 	let Some(store) = callback_store(callbacks, status_out) else {
@@ -550,9 +764,9 @@ pub extern "C" fn beaconcrypt_server_export_state(handle: *const Server) -> Buff
 		.unwrap_or_else(empty_buffer)
 }
 
-/// Create a beacon bound to a server identity public key.
+/// Create a beacon bound to both server identity public keys.
 ///
-/// `server_pk_ptr` must point to an Ed25519 public key of the length implied by the API constants.
+/// `server_pk_ptr` must point to an Ed25519 public key, and `server_mldsa_pk_ptr` must point to an ML-DSA-65 public key of `beaconcrypt_MLDSA_PUBLIC_KEY_LEN` bytes. Both pins are mandatory.
 ///
 /// Returns an owned handle, or null for absent or incorrectly sized input or a reported initialization/key-generation failure. Release a non-null handle with `beaconcrypt_beacon_free`.
 #[unsafe(no_mangle)]
@@ -560,11 +774,16 @@ pub extern "C" fn beaconcrypt_beacon_new(
 	server_kid: u64,
 	server_pk_ptr: *const u8,
 	server_pk_len: usize,
+	server_mldsa_pk_ptr: *const u8,
+	server_mldsa_pk_len: usize,
 ) -> *mut Beacon {
 	let Some(server_pk) = (unsafe { input(server_pk_ptr, server_pk_len) }) else {
 		return std::ptr::null_mut();
 	};
-	Beacon::try_new(server_kid, server_pk)
+	let Some(server_mldsa_pk) = (unsafe { input(server_mldsa_pk_ptr, server_mldsa_pk_len) }) else {
+		return std::ptr::null_mut();
+	};
+	Beacon::try_new(server_kid, server_pk, server_mldsa_pk)
 		.map(|beacon| Box::into_raw(Box::new(beacon)))
 		.unwrap_or(std::ptr::null_mut())
 }
@@ -611,6 +830,17 @@ pub extern "C" fn beaconcrypt_beacon_identity_pk(handle: *const Beacon) -> Buffe
 	into_buffer(provider.identity_pk().as_ref().to_vec())
 }
 
+/// Copy the server's ML-DSA-65 public key into a caller-owned buffer.
+/// Returns an empty buffer for a null handle and preserves the last operation's status.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_server_mldsa_public_key(handle: *const Server) -> Buffer {
+	if handle.is_null() {
+		return empty_buffer();
+	}
+	let provider = unsafe { &*handle };
+	into_buffer(provider.0.mldsa_public_key().to_vec())
+}
+
 /// Generate the beacon's serialized registration bundle.
 ///
 /// Returns an empty buffer when the handle is invalid or the beacon cannot generate a bundle in its current state.
@@ -628,7 +858,7 @@ pub extern "C" fn beaconcrypt_generate_registration(handle: *mut Beacon) -> Buff
 
 /// Register a beacon and build its initial server response.
 ///
-/// `msg_ptr` may be null when `msg_len` is zero to omit the initial message. On failure, returns an empty response with key identifier zero.
+/// A null `msg_ptr` with zero length omits the initial message. A non-null pointer with zero length explicitly supplies an empty message: acceptance consumes its replay marker, then response construction rejects it. A null pointer with nonzero length is invalid before acceptance. On failure, returns an empty response with key identifier zero.
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_register_beacon(
 	handle: *mut Server,
@@ -651,7 +881,13 @@ pub extern "C" fn beaconcrypt_register_beacon(
 			key_id: 0,
 		};
 	};
-	let message = unsafe { input(msg_ptr, msg_len) };
+	let Ok(message) = (unsafe { optional_input(msg_ptr, msg_len) }) else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return RegistrationResponse {
+			response: empty_buffer(),
+			key_id: 0,
+		};
+	};
 	let Some(secret) = complete_operation(&server.1, server.0.get_shared_secret(registration))
 	else {
 		return RegistrationResponse {
@@ -707,6 +943,115 @@ pub extern "C" fn beaconcrypt_encrypt_to_beacon(
 	len: usize,
 ) -> Buffer {
 	encrypt(handle, ptr, len, key_id)
+}
+
+/// Encrypt a server-to-beacon message and report its exact send effect. Empty plaintext is an unchanged rejection. Invalid pointers or handles report STATUS_INVALID_ARGUMENT. A storage error reports no outcome; confirmed persistent outcomes are released only after commit.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_encrypt_to_beacon_outcome(
+	handle: *mut Server,
+	key_id: u64,
+	ptr: *const u8,
+	len: usize,
+) -> SendResult {
+	let Some(server) = (unsafe { handle.as_mut() }) else {
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	let Some(data) = (unsafe { send_input(ptr, len) }) else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	match server.0.encrypt_message_outcome(data, key_id) {
+		Ok(outcome) => {
+			server.1.set(STATUS_OK);
+			send_result(outcome, encrypted_state)
+		}
+		Err(error) => {
+			let status = error_status(error);
+			server.1.set(status);
+			failed_send_result(status)
+		}
+	}
+}
+
+/// Encrypt a server-to-beacon message with observational metadata and an explicit send effect. Empty plaintext is an unchanged rejection. Free both successful buffers with `beaconcrypt_free_buffer`.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_encrypt_and_update_outcome(
+	handle: *mut Server,
+	key_id: u64,
+	ptr: *const u8,
+	len: usize,
+) -> SendResult {
+	let Some(server) = (unsafe { handle.as_mut() }) else {
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	let Some(data) = (unsafe { send_input(ptr, len) }) else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	match server.0.encrypt_and_update_outcome(data, key_id) {
+		Ok(outcome) => {
+			server.1.set(STATUS_OK);
+			send_result(outcome, outcome_update)
+		}
+		Err(error) => {
+			let status = error_status(error);
+			server.1.set(status);
+			failed_send_result(status)
+		}
+	}
+}
+
+/// Encrypt with an explicit send effect and successful JSON in message.data. message.state is empty; metadata is valid only for SEND_OUTCOME_SENT. Free successful data with `beaconcrypt_free_buffer`.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_encrypt_and_update_json_outcome(
+	handle: *mut Server,
+	key_id: u64,
+	ptr: *const u8,
+	len: usize,
+) -> SendResult {
+	let Some(server) = (unsafe { handle.as_mut() }) else {
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	let Some(data) = (unsafe { send_input(ptr, len) }) else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	match server.0.encrypt_and_update_json_outcome(data, key_id) {
+		Ok(outcome) => {
+			server.1.set(STATUS_OK);
+			let sequence = server
+				.0
+				.ratchet_status(key_id)
+				.map_or(0, |status| status.send_sequence());
+			send_result(outcome, |json| EncryptState {
+				data: into_buffer(json.into_bytes()),
+				state: empty_buffer(),
+				key_id,
+				seq: sequence,
+			})
+		}
+		Err(error) => {
+			let status = error_status(error);
+			server.1.set(status);
+			failed_send_result(status)
+		}
+	}
+}
+
+/// Encrypt a beacon-to-server message with an explicit send effect. Empty plaintext is an unchanged rejection; invalid pointers or handles report STATUS_INVALID_ARGUMENT. Only SEND_OUTCOME_SENT contains output and metadata.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_encrypt_to_server_outcome(
+	handle: *mut Beacon,
+	ptr: *const u8,
+	len: usize,
+) -> SendResult {
+	let Some(beacon) = (unsafe { handle.as_mut() }) else {
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	let Some(data) = (unsafe { send_input(ptr, len) }) else {
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	send_result(beacon.encrypt_message_outcome(data), encrypted_state)
 }
 
 /// Decrypt a beacon-to-server message.
@@ -897,6 +1242,8 @@ mod tests {
 		head: Option<SnapshotHeadInfo>,
 		attempts: usize,
 		fail_next: bool,
+		error_status: u32,
+		post_commit_status: u32,
 	}
 
 	#[derive(Clone, Copy, Default)]
@@ -924,6 +1271,9 @@ mod tests {
 		sink: unsafe extern "C" fn(*mut c_void, *const u8, usize),
 	) -> bool {
 		let context = unsafe { &*context.cast::<StoreContext>() };
+		if context.state.lock().unwrap().error_status != STATUS_OK {
+			return false;
+		}
 		let bytes = context.state.lock().unwrap().bytes.clone();
 		if let Some(barrier) = &context.load_barrier {
 			barrier.wait();
@@ -960,6 +1310,9 @@ mod tests {
 		let context = unsafe { &*context.cast::<StoreContext>() };
 		let mut store = context.state.lock().unwrap();
 		store.attempts += 1;
+		if store.error_status != STATUS_OK {
+			return false;
+		}
 		if store.fail_next {
 			store.fail_next = false;
 			return false;
@@ -982,12 +1335,21 @@ mod tests {
 		}
 		store.bytes = Some(unsafe { slice::from_raw_parts(bytes, len) }.to_vec());
 		store.head = Some(head);
+		if store.post_commit_status != STATUS_OK {
+			store.error_status = mem::take(&mut store.post_commit_status);
+			return false;
+		}
 		true
 	}
 
 	unsafe extern "C" fn destroy_callback(context: *mut c_void) {
 		let context = unsafe { Box::from_raw(context.cast::<StoreContext>()) };
 		context.destroyed.fetch_add(1, Ordering::SeqCst);
+	}
+
+	unsafe extern "C" fn last_error_callback(context: *mut c_void) -> u32 {
+		let context = unsafe { &*context.cast::<StoreContext>() };
+		context.state.lock().unwrap().error_status
 	}
 
 	fn callbacks(
@@ -1010,6 +1372,115 @@ mod tests {
 			compare_and_swap: Some(cas_callback),
 			destroy: Some(destroy_callback),
 		}
+	}
+
+	fn callbacks_v2(
+		state: &Arc<Mutex<StoreState>>,
+		destroyed: &Arc<AtomicUsize>,
+	) -> SnapshotStoreCallbacksV2 {
+		SnapshotStoreCallbacksV2 {
+			callbacks: callbacks(state, destroyed, LoadMode::Normal),
+			last_error: Some(last_error_callback),
+		}
+	}
+
+	#[test]
+	fn legacy_snapshot_callback_layout_remains_four_pointers() {
+		let pointer = mem::size_of::<*mut c_void>();
+		assert_eq!(mem::size_of::<SnapshotStoreCallbacks>(), pointer * 4);
+		assert_eq!(
+			mem::align_of::<SnapshotStoreCallbacks>(),
+			mem::align_of::<*mut c_void>()
+		);
+		assert_eq!(mem::offset_of!(SnapshotStoreCallbacks, context), 0);
+		assert_eq!(mem::offset_of!(SnapshotStoreCallbacks, load), pointer);
+		assert_eq!(
+			mem::offset_of!(SnapshotStoreCallbacks, compare_and_swap),
+			pointer * 2
+		);
+		assert_eq!(
+			mem::offset_of!(SnapshotStoreCallbacks, destroy),
+			pointer * 3
+		);
+		assert_eq!(mem::offset_of!(SnapshotStoreCallbacksV2, callbacks), 0);
+		assert_eq!(
+			mem::offset_of!(SnapshotStoreCallbacksV2, last_error),
+			pointer * 4
+		);
+	}
+
+	#[test]
+	fn versioned_callbacks_report_constructor_errors_and_release_contexts() {
+		for error in [STATUS_STORAGE, STATUS_COMMIT_UNKNOWN] {
+			let state = Arc::new(Mutex::new(StoreState {
+				error_status: error,
+				..StoreState::default()
+			}));
+			let destroyed = Arc::new(AtomicUsize::new(0));
+			let mut status = u32::MAX;
+			let server = beaconcrypt_server_create_with_store_v2(
+				19,
+				[7; 32].as_ptr(),
+				32,
+				[8; 32].as_ptr(),
+				32,
+				callbacks_v2(&state, &destroyed),
+				&mut status,
+			);
+			assert!(server.is_null());
+			assert_eq!(status, error);
+			assert_eq!(destroyed.load(Ordering::SeqCst), 1);
+			let server = beaconcrypt_server_create_with_store_and_lineage_v2(
+				19,
+				[7; 32].as_ptr(),
+				32,
+				[8; 32].as_ptr(),
+				32,
+				callbacks_v2(&state, &destroyed),
+				[9; 32].as_ptr(),
+				32,
+				&mut status,
+			);
+			assert!(server.is_null());
+			assert_eq!(status, error);
+			assert_eq!(destroyed.load(Ordering::SeqCst), 2);
+			let server = beaconcrypt_server_restore_with_store_v2(
+				callbacks_v2(&state, &destroyed),
+				&mut status,
+			);
+			assert!(server.is_null());
+			assert_eq!(status, error);
+			assert_eq!(destroyed.load(Ordering::SeqCst), 3);
+		}
+	}
+
+	#[test]
+	fn callback_errors_are_distinct_from_absence_and_conflict() {
+		let state = Arc::new(Mutex::new(StoreState::default()));
+		let destroyed = Arc::new(AtomicUsize::new(0));
+		let callbacks = callbacks(&state, &destroyed, LoadMode::Normal);
+		let mut store = CallbackStore {
+			callbacks,
+			last_error: Some(last_error_callback),
+		};
+		assert!(store.load().unwrap().is_none());
+		let invalid = ServerSnapshot::from_bytes(Vec::new());
+		assert!(!store.compare_and_swap(None, &invalid).unwrap());
+		state.lock().unwrap().error_status = STATUS_STORAGE;
+		assert!(matches!(store.load(), Err(PersistenceError::Storage)));
+		assert_eq!(
+			store.compare_and_swap(None, &invalid),
+			Err(PersistenceError::Storage)
+		);
+		state.lock().unwrap().error_status = STATUS_COMMIT_UNKNOWN;
+		assert_eq!(
+			store.compare_and_swap(None, &invalid),
+			Err(PersistenceError::CommitUnknown)
+		);
+		state.lock().unwrap().error_status = STATUS_OK;
+		assert!(store.load().unwrap().is_none());
+		drop(store);
+		assert_eq!(destroyed.load(Ordering::SeqCst), 1);
 	}
 
 	struct OwnedServer(*mut Server);
@@ -1038,6 +1509,8 @@ mod tests {
 			19,
 			[7; 32].as_ptr(),
 			32,
+			[8; 32].as_ptr(),
+			32,
 			callbacks(state, destroyed, LoadMode::Normal),
 			[9; 32].as_ptr(),
 			32,
@@ -1057,7 +1530,8 @@ mod tests {
 
 	fn register(server: &OwnedServer) -> (Beacon, u64) {
 		let public_key = copy_buffer(beaconcrypt_server_identity_pk(server.0));
-		let mut beacon = Beacon::new(19, &public_key);
+		let mldsa_key = copy_buffer(beaconcrypt_server_mldsa_public_key(server.0));
+		let mut beacon = Beacon::new(19, &public_key, &mldsa_key);
 		let registration = beacon.get_registration_bundle().unwrap();
 		let response = beaconcrypt_register_beacon(
 			server.0,
@@ -1072,6 +1546,275 @@ mod tests {
 		(beacon, response.key_id)
 	}
 
+	fn assert_no_send_output(result: &SendResult, status: u32, outcome: u32) {
+		assert_eq!(result.status, status);
+		assert_eq!(result.outcome, outcome);
+		assert!(result.message.data.ptr.is_null());
+		assert_eq!(result.message.data.len, 0);
+		assert_eq!(result.message.data.cap, 0);
+		assert!(result.message.state.ptr.is_null());
+		assert_eq!(result.message.state.len, 0);
+		assert_eq!(result.message.state.cap, 0);
+		assert_eq!(result.message.key_id, 0);
+		assert_eq!(result.message.seq, 0);
+	}
+
+	#[test]
+	fn registration_preserves_optional_presence_and_validates_before_acceptance() {
+		let state = Arc::new(Mutex::new(StoreState::default()));
+		let destroyed = Arc::new(AtomicUsize::new(0));
+		let server = create_durable(&state, &destroyed);
+		let public_key = copy_buffer(beaconcrypt_server_identity_pk(server.0));
+		let mldsa_key = copy_buffer(beaconcrypt_server_mldsa_public_key(server.0));
+		let mut beacon = Beacon::new(19, &public_key, &mldsa_key);
+		let bundle = beacon.get_registration_bundle().unwrap();
+		let before = server.head();
+		for (ptr, len) in [
+			(std::ptr::null(), 1),
+			(b"".as_ptr(), isize::MAX as usize + 1),
+		] {
+			let response =
+				beaconcrypt_register_beacon(server.0, bundle.as_ptr(), bundle.len(), ptr, len);
+			assert!(response.response.ptr.is_null());
+			assert_eq!(
+				beaconcrypt_server_last_status(server.0),
+				STATUS_INVALID_ARGUMENT
+			);
+			assert_eq!(server.head(), before);
+		}
+		let response = beaconcrypt_register_beacon(
+			server.0,
+			bundle.as_ptr(),
+			bundle.len(),
+			std::ptr::null(),
+			0,
+		);
+		assert_eq!(beaconcrypt_server_last_status(server.0), STATUS_OK);
+		assert_eq!(
+			beacon
+				.finish_registration(&copy_buffer(response.response))
+				.unwrap(),
+			[0xff]
+		);
+		assert_eq!(server.head().generation, before.generation + 2);
+
+		let mut empty_beacon = Beacon::new(19, &public_key, &mldsa_key);
+		let bundle = empty_beacon.get_registration_bundle().unwrap();
+		let before = server.head();
+		let response =
+			beaconcrypt_register_beacon(server.0, bundle.as_ptr(), bundle.len(), b"".as_ptr(), 0);
+		assert!(response.response.ptr.is_null());
+		assert_eq!(beaconcrypt_server_last_status(server.0), STATUS_REJECTED);
+		assert_eq!(server.head().generation, before.generation + 1);
+		let accepted = server.head();
+		let response = beaconcrypt_register_beacon(
+			server.0,
+			bundle.as_ptr(),
+			bundle.len(),
+			b"retry".as_ptr(),
+			5,
+		);
+		assert!(response.response.ptr.is_null());
+		assert_eq!(server.head(), accepted);
+	}
+
+	#[test]
+	fn send_outcome_abi_preserves_effects_metadata_and_storage_fencing() {
+		type Send = extern "C" fn(*mut Server, u64, *const u8, usize) -> SendResult;
+		let consumed =
+			send_result::<()>(SendOutcome::ConsumedWithoutOutput, |_| panic!("no output"));
+		assert_no_send_output(&consumed, STATUS_OK, SEND_OUTCOME_CONSUMED_WITHOUT_OUTPUT);
+		for (mode, send) in [
+			beaconcrypt_encrypt_to_beacon_outcome as Send,
+			beaconcrypt_encrypt_and_update_outcome,
+			beaconcrypt_encrypt_and_update_json_outcome,
+		]
+		.into_iter()
+		.enumerate()
+		{
+			let state = Arc::new(Mutex::new(StoreState::default()));
+			let destroyed = Arc::new(AtomicUsize::new(0));
+			let server = create_durable(&state, &destroyed);
+			let (mut beacon, kid) = register(&server);
+			assert_no_send_output(
+				&send(std::ptr::null_mut(), kid, b"x".as_ptr(), 1),
+				STATUS_INVALID_ARGUMENT,
+				SEND_OUTCOME_REJECTED,
+			);
+			assert_no_send_output(
+				&send(server.0, kid, std::ptr::null(), 1),
+				STATUS_INVALID_ARGUMENT,
+				SEND_OUTCOME_REJECTED,
+			);
+			assert_eq!(
+				beaconcrypt_server_last_status(server.0),
+				STATUS_INVALID_ARGUMENT
+			);
+			let before = server.head();
+			for (ptr, len, peer) in [
+				(std::ptr::null(), 0, kid),
+				(b"".as_ptr(), 0, kid),
+				(b"x".as_ptr(), 1, u64::MAX),
+			] {
+				assert_no_send_output(
+					&send(server.0, peer, ptr, len),
+					STATUS_OK,
+					SEND_OUTCOME_REJECTED,
+				);
+				assert_eq!(beaconcrypt_server_last_status(server.0), STATUS_OK);
+				assert_eq!(server.head(), before);
+			}
+			let result = send(server.0, kid, b"sent".as_ptr(), 4);
+			assert_eq!(result.status, STATUS_OK);
+			assert_eq!(result.outcome, SEND_OUTCOME_SENT);
+			assert_eq!(result.message.key_id, kid);
+			assert_eq!(result.message.seq, 2);
+			assert_eq!(server.head().generation, before.generation + 1);
+			let data = copy_buffer(result.message.data);
+			let ciphertext = if mode == 2 {
+				let json: serde_json::Value = serde_json::from_slice(&data).unwrap();
+				assert_eq!(json["kid"], kid);
+				assert_eq!(json["seq"], result.message.seq);
+				serde_json::from_value::<Vec<u8>>(json["data"].clone()).unwrap()
+			} else {
+				data
+			};
+			assert_eq!(
+				beacon.decrypt_message(&ciphertext).unwrap().plaintext,
+				b"sent"
+			);
+			if mode == 1 {
+				let state: serde_json::Value =
+					serde_json::from_slice(&copy_buffer(result.message.state)).unwrap();
+				assert!(state.get("send_key").is_some());
+			} else {
+				assert!(result.message.state.ptr.is_null());
+			}
+			state.lock().unwrap().fail_next = true;
+			assert_no_send_output(
+				&send(server.0, kid, b"withheld".as_ptr(), 8),
+				STATUS_STALE_GENERATION,
+				SEND_OUTCOME_REJECTED,
+			);
+			assert_eq!(
+				beaconcrypt_server_last_status(server.0),
+				STATUS_STALE_GENERATION
+			);
+			assert!(beaconcrypt_server_is_poisoned(server.0));
+			assert_no_send_output(
+				&send(server.0, kid, b"again".as_ptr(), 5),
+				STATUS_POISONED,
+				SEND_OUTCOME_REJECTED,
+			);
+			assert_eq!(beaconcrypt_server_last_status(server.0), STATUS_POISONED);
+		}
+	}
+
+	#[test]
+	fn beacon_send_outcome_abi_reports_rejection_and_success() {
+		let state = Arc::new(Mutex::new(StoreState::default()));
+		let destroyed = Arc::new(AtomicUsize::new(0));
+		let server = create_durable(&state, &destroyed);
+		let (mut beacon, _) = register(&server);
+		assert_no_send_output(
+			&beaconcrypt_encrypt_to_server_outcome(std::ptr::null_mut(), b"x".as_ptr(), 1),
+			STATUS_INVALID_ARGUMENT,
+			SEND_OUTCOME_REJECTED,
+		);
+		assert_no_send_output(
+			&beaconcrypt_encrypt_to_server_outcome(&mut beacon, std::ptr::null(), 1),
+			STATUS_INVALID_ARGUMENT,
+			SEND_OUTCOME_REJECTED,
+		);
+		assert_no_send_output(
+			&beaconcrypt_encrypt_to_server_outcome(&mut beacon, std::ptr::null(), 0),
+			STATUS_OK,
+			SEND_OUTCOME_REJECTED,
+		);
+		let result = beaconcrypt_encrypt_to_server_outcome(&mut beacon, b"beacon".as_ptr(), 6);
+		assert_eq!(result.status, STATUS_OK);
+		assert_eq!(result.outcome, SEND_OUTCOME_SENT);
+		assert_eq!(result.message.key_id, 19);
+		assert_eq!(result.message.seq, 1);
+		assert!(result.message.state.ptr.is_null());
+		let frame = copy_buffer(result.message.data);
+		let plaintext = copy_buffer(beaconcrypt_decrypt_beacon_message(
+			server.0,
+			frame.as_ptr(),
+			frame.len(),
+		));
+		assert_eq!(plaintext, b"beacon");
+	}
+
+	#[test]
+	fn versioned_callbacks_fence_failed_receives_and_restore_confirmed_consumption() {
+		for (error, published) in [
+			(STATUS_STORAGE, false),
+			(STATUS_COMMIT_UNKNOWN, false),
+			(STATUS_COMMIT_UNKNOWN, true),
+		] {
+			let state = Arc::new(Mutex::new(StoreState::default()));
+			let destroyed = Arc::new(AtomicUsize::new(0));
+			let mut status = u32::MAX;
+			let handle = beaconcrypt_server_create_with_store_and_lineage_v2(
+				19,
+				[7; 32].as_ptr(),
+				32,
+				[8; 32].as_ptr(),
+				32,
+				callbacks_v2(&state, &destroyed),
+				[9; 32].as_ptr(),
+				32,
+				&mut status,
+			);
+			assert_eq!(status, STATUS_OK);
+			assert!(!handle.is_null());
+			let server = OwnedServer(handle);
+			let (mut beacon, _) = register(&server);
+			let before = server.head();
+			let frame = beacon.encrypt_message(b"withheld plaintext").unwrap();
+			{
+				let mut stored = state.lock().unwrap();
+				if published {
+					stored.post_commit_status = error;
+				} else {
+					stored.error_status = error;
+				}
+			}
+			let output = beaconcrypt_decrypt_beacon_message(server.0, frame.as_ptr(), frame.len());
+			assert!(output.ptr.is_null());
+			assert_eq!(output.len, 0);
+			assert_eq!(beaconcrypt_server_last_status(server.0), error);
+			assert!(beaconcrypt_server_is_poisoned(server.0));
+			assert_eq!(server.head(), before);
+			assert_eq!(
+				state.lock().unwrap().head.unwrap().generation,
+				before.generation + u64::from(published)
+			);
+			drop(server);
+			assert_eq!(destroyed.load(Ordering::SeqCst), 1);
+			state.lock().unwrap().error_status = STATUS_OK;
+			let restored = beaconcrypt_server_restore_with_store_v2(
+				callbacks_v2(&state, &destroyed),
+				&mut status,
+			);
+			assert_eq!(status, STATUS_OK);
+			assert!(!restored.is_null());
+			let restored = OwnedServer(restored);
+			let output =
+				beaconcrypt_decrypt_beacon_message(restored.0, frame.as_ptr(), frame.len());
+			if published {
+				assert!(output.ptr.is_null());
+				assert_eq!(beaconcrypt_server_last_status(restored.0), STATUS_REJECTED);
+			} else {
+				assert_eq!(copy_buffer(output), b"withheld plaintext");
+				assert_eq!(beaconcrypt_server_last_status(restored.0), STATUS_OK);
+			}
+			drop(restored);
+			assert_eq!(destroyed.load(Ordering::SeqCst), 2);
+		}
+	}
+
 	#[test]
 	fn c_durable_callbacks_commit_outputs_before_return_and_restore() {
 		let state = Arc::new(Mutex::new(StoreState::default()));
@@ -1080,6 +1823,10 @@ mod tests {
 		assert_eq!(server.head().lineage, [9; 32]);
 		assert_eq!(server.head().generation, 0);
 		assert_eq!(state.lock().unwrap().head, Some(server.head()));
+		assert_eq!(
+			copy_buffer(beaconcrypt_server_mldsa_public_key(server.0)),
+			crate::MldsaIdentity::from_seed([8; 32]).public_key()
+		);
 		let (mut beacon, kid) = register(&server);
 		assert_eq!(server.head().generation, 2);
 		assert_eq!(state.lock().unwrap().head, Some(server.head()));
@@ -1155,6 +1902,7 @@ mod tests {
 			assert!(beaconcrypt_server_is_poisoned(server.0));
 			assert_eq!(server.head().generation, 2);
 			beaconcrypt_free_buffer(beaconcrypt_server_identity_pk(server.0));
+			beaconcrypt_free_buffer(beaconcrypt_server_mldsa_public_key(server.0));
 			assert_eq!(
 				beaconcrypt_server_last_status(server.0),
 				STATUS_STALE_GENERATION
@@ -1329,6 +2077,8 @@ mod tests {
 				19,
 				std::ptr::null(),
 				0,
+				std::ptr::null(),
+				0,
 				invalid,
 				[9; 31].as_ptr(),
 				31,
@@ -1343,6 +2093,8 @@ mod tests {
 				19,
 				[7; 31].as_ptr(),
 				31,
+				std::ptr::null(),
+				0,
 				callbacks(&state, &destroyed, LoadMode::Normal),
 				&mut status
 			)
@@ -1365,6 +2117,8 @@ mod tests {
 				19,
 				std::ptr::null(),
 				0,
+				std::ptr::null(),
+				0,
 				callbacks(&state, &destroyed, LoadMode::Normal),
 				&mut status
 			)
@@ -1376,8 +2130,16 @@ mod tests {
 		let mut invalid = callbacks(&state, &destroyed, LoadMode::Normal);
 		invalid.compare_and_swap = None;
 		assert!(
-			beaconcrypt_server_create_with_store(19, std::ptr::null(), 0, invalid, &mut status)
-				.is_null()
+			beaconcrypt_server_create_with_store(
+				19,
+				std::ptr::null(),
+				0,
+				std::ptr::null(),
+				0,
+				invalid,
+				&mut status
+			)
+			.is_null()
 		);
 		assert_eq!(status, STATUS_INVALID_ARGUMENT);
 		assert_eq!(destroyed.load(Ordering::SeqCst), 2);
@@ -1386,6 +2148,8 @@ mod tests {
 		borrowed.destroy = None;
 		let server = OwnedServer(beaconcrypt_server_create_with_store(
 			19,
+			std::ptr::null(),
+			0,
 			std::ptr::null(),
 			0,
 			borrowed,
@@ -1481,13 +2245,109 @@ mod tests {
 	}
 
 	#[test]
+	fn c_seeded_mldsa_identity_and_public_key_getters() {
+		let server = OwnedServer(beaconcrypt_server_new_from_seed(
+			19,
+			[7; 32].as_ptr(),
+			32,
+			[8; 32].as_ptr(),
+			32,
+		));
+		assert!(!server.0.is_null());
+		let public_key = copy_buffer(beaconcrypt_server_identity_pk(server.0));
+		let mldsa_key = copy_buffer(beaconcrypt_server_mldsa_public_key(server.0));
+		assert_eq!(
+			mldsa_key,
+			crate::MldsaIdentity::from_seed([8; 32]).public_key()
+		);
+		let beacon = beaconcrypt_beacon_new(
+			19,
+			public_key.as_ptr(),
+			public_key.len(),
+			mldsa_key.as_ptr(),
+			mldsa_key.len(),
+		);
+		assert!(!beacon.is_null());
+		beaconcrypt_beacon_free(beacon);
+	}
+
+	#[test]
 	fn c_constructors_reject_malformed_lengths() {
+		let server = OwnedServer(beaconcrypt_server_new(19));
+		assert!(!server.0.is_null());
+		let public_key = copy_buffer(beaconcrypt_server_identity_pk(server.0));
+		let mldsa_key = copy_buffer(beaconcrypt_server_mldsa_public_key(server.0));
+		assert_eq!(mldsa_key.len(), crate::MLDSA_PUBLIC_KEY_LEN);
 		for length in [1, 31, 33, 64] {
 			let bytes = vec![7; length];
-			assert!(beaconcrypt_beacon_new(19, bytes.as_ptr(), bytes.len()).is_null());
-			assert!(beaconcrypt_server_new_from_seed(19, bytes.as_ptr(), bytes.len()).is_null());
+			assert!(
+				beaconcrypt_beacon_new(
+					19,
+					bytes.as_ptr(),
+					bytes.len(),
+					mldsa_key.as_ptr(),
+					mldsa_key.len()
+				)
+				.is_null()
+			);
+			assert!(
+				beaconcrypt_server_new_from_seed(
+					19,
+					bytes.as_ptr(),
+					bytes.len(),
+					std::ptr::null(),
+					0
+				)
+				.is_null()
+			);
+			assert!(
+				beaconcrypt_server_new_from_seed(
+					19,
+					std::ptr::null(),
+					0,
+					bytes.as_ptr(),
+					bytes.len()
+				)
+				.is_null()
+			);
 		}
-		assert!(beaconcrypt_beacon_new(19, std::ptr::null(), 0).is_null());
+		for length in [
+			0,
+			32,
+			crate::MLDSA_PUBLIC_KEY_LEN - 1,
+			crate::MLDSA_PUBLIC_KEY_LEN + 1,
+		] {
+			let bytes = vec![7; length];
+			assert!(
+				beaconcrypt_beacon_new(
+					19,
+					public_key.as_ptr(),
+					public_key.len(),
+					bytes.as_ptr(),
+					bytes.len()
+				)
+				.is_null()
+			);
+		}
+		assert!(
+			beaconcrypt_beacon_new(
+				19,
+				public_key.as_ptr(),
+				public_key.len(),
+				std::ptr::null(),
+				0
+			)
+			.is_null()
+		);
+		assert!(
+			beaconcrypt_beacon_new(19, std::ptr::null(), 0, mldsa_key.as_ptr(), mldsa_key.len())
+				.is_null()
+		);
+		assert!(
+			beaconcrypt_server_mldsa_public_key(std::ptr::null())
+				.ptr
+				.is_null()
+		);
 		beaconcrypt_free_buffer(empty_buffer());
 		beaconcrypt_free_buffer(into_buffer(Vec::with_capacity(32)));
 		beaconcrypt_free_buffer(into_buffer(vec![7; 48]));

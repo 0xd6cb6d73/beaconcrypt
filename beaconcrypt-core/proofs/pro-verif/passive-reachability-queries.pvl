@@ -1,0 +1,55 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* ProVerif does not classify positive reachability in passive-attacker mode. These active-scheduler controls use the same bounded honest-only process. Every secrecy canary is named explicitly so an unreachable send/receive branch cannot make a passive secrecy result pass vacuously. *)
+query transcript: establishment_transcript_t;
+  event(BeaconCommitted(transcript)).
+
+query session: bitstring, sender: key_id, receiver: key_id;
+  event(MessageReceived(
+    session,
+    server_to_beacon(),
+    first_sequence(),
+    sender,
+    receiver,
+    INITIAL_SECRET
+  )).
+
+query session: bitstring, sender: key_id, receiver: key_id;
+  event(MessageReceived(
+    session,
+    server_to_beacon(),
+    next_sequence(first_sequence()),
+    sender,
+    receiver,
+    CACHED_SECRET
+  )).
+
+query session: bitstring, sender: key_id, receiver: key_id;
+  event(MessageReceived(
+    session,
+    server_to_beacon(),
+    next_sequence(next_sequence(first_sequence())),
+    sender,
+    receiver,
+    ADVANCE_SECRET
+  )).
+
+query session: bitstring, sender: key_id, receiver: key_id;
+  event(MessageReceived(
+    session,
+    server_to_beacon(),
+    next_sequence(next_sequence(next_sequence(first_sequence()))),
+    sender,
+    receiver,
+    FUTURE_SECRET
+  )).
+
+query session: bitstring, sender: key_id, receiver: key_id;
+  event(MessageReceived(
+    session,
+    beacon_to_server(),
+    first_sequence(),
+    sender,
+    receiver,
+    BEACON_RECORD_SECRET
+  )).

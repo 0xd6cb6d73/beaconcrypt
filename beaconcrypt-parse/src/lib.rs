@@ -25,21 +25,23 @@ mod lowstar {
 	}
 }
 
-mod sizing;
-pub use sizing::{MAX_MESSAGE_SIZE, encoded_frame_len, encoded_init_len, encoded_response_len};
-pub use transport::{cryptoframe as CryptoFrame, initkex as InitKex, kexresponse as KexResponse};
+pub use beaconcrypt_core::transport::{
+	MAX_MESSAGE_SIZE, encoded_frame_len, encoded_init_len, encoded_response_len,
+};
+mod frame;
+pub use frame::Frame as CryptoFrame;
+pub use transport::{initkex as InitKex, kexresponse as KexResponse};
 use transport::{
-	option__·Transport_cryptoframe···Pulse_Lib_Slice_slice·uint8_t· as ParsedFrame,
 	option__·Transport_initkex···Pulse_Lib_Slice_slice·uint8_t· as ParsedInit,
 	option__·Transport_kexresponse···Pulse_Lib_Slice_slice·uint8_t· as ParsedResponse,
-	validate_and_parse_cryptoframe, validate_and_parse_initkex, validate_and_parse_kexresponse,
+	validate_and_parse_initkex, validate_and_parse_kexresponse,
 };
 
 // Reject containers before the generic generated validator can scan their contents.
-// Each schema has a fixed prefix and at most five primitive fields; byte strings
+// Each schema has a fixed prefix and at most six primitive fields; byte strings
 // are skipped without inspecting their payload.
 fn preflight(input: &[u8], prefix: &[u8], fields: &[u8]) -> Option<()> {
-	if input.len() > MAX_MESSAGE_SIZE {
+	if !beaconcrypt_core::transport::complete_message_size_admitted(input.len()) {
 		return None;
 	}
 	let mut remaining = input.strip_prefix(prefix)?;
@@ -76,10 +78,12 @@ fn primitive_argument(input: &[u8], major: u8) -> Option<(u64, &[u8])> {
 
 /// Encode a frame, returning zero if its complete encoding exceeds the message limit.
 pub fn encode_frame(frame: CryptoFrame<'_>, output: &mut [u8]) -> usize {
-	if encoded_frame_len(frame.seq, frame.key_id, frame.cipher_text.len()).is_none() {
-		return 0;
-	}
-	transport::serialize_cryptoframe(frame, output)
+	frame::encode_parts(frame.seq, frame.key_id, &[frame.cipher_text], output)
+}
+
+/// Encode borrowed ciphertext parts directly into the final frame buffer. Rejection leaves the output untouched.
+pub fn encode_frame_parts(sequence: u64, key_id: u64, parts: &[&[u8]], output: &mut [u8]) -> usize {
+	frame::encode_parts(sequence, key_id, parts, output)
 }
 
 /// Encode a registration request, returning zero if its complete encoding exceeds the limit.
@@ -105,6 +109,7 @@ pub fn encode_response(response: KexResponse<'_>, output: &mut [u8]) -> usize {
 			response.ephemeral_key.len(),
 			response.kem_cipher_text.len(),
 			response.app_cipher_text.len(),
+			response.signature.len(),
 		],
 		response.key_id,
 	)
@@ -117,16 +122,12 @@ pub fn encode_response(response: KexResponse<'_>, output: &mut [u8]) -> usize {
 
 /// Validate and borrow exactly one frame, before routing or touching any ratchet.
 pub fn decode_frame(input: &[u8]) -> Option<CryptoFrame<'_>> {
-	preflight(input, &[0x85, 1, 2], &[0, 0, 2])?;
-	match validate_and_parse_cryptoframe(input) {
-		ParsedFrame::Some { v: (frame, []) } => Some(frame),
-		_ => None,
-	}
+	frame::decode(input)
 }
 
 /// Validate and borrow exactly one registration request.
 pub fn decode_init(input: &[u8]) -> Option<InitKex<'_>> {
-	preflight(input, &[0x86, 1, 0], &[2, 2, 2, 2])?;
+	preflight(input, &[0x86, 3, 0], &[2, 2, 2, 2])?;
 	match validate_and_parse_initkex(input) {
 		ParsedInit::Some { v: (init, []) } => Some(init),
 		_ => None,
@@ -135,7 +136,7 @@ pub fn decode_init(input: &[u8]) -> Option<InitKex<'_>> {
 
 /// Validate and borrow exactly one registration response.
 pub fn decode_response(input: &[u8]) -> Option<KexResponse<'_>> {
-	preflight(input, &[0x87, 1, 1], &[2, 2, 2, 2, 0])?;
+	preflight(input, &[0x88, 3, 1], &[2, 2, 2, 2, 0, 2])?;
 	match validate_and_parse_kexresponse(input) {
 		ParsedResponse::Some { v: (response, []) } => Some(response),
 		_ => None,
@@ -144,3 +145,6 @@ pub fn decode_response(input: &[u8]) -> Option<KexResponse<'_>> {
 
 #[cfg(test)]
 mod preflight_tests;
+
+#[cfg(test)]
+mod frame_tests;

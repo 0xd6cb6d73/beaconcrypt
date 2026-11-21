@@ -1,0 +1,11 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-registration S3 (Server form), security result, K_reg = 3: the
+   attacker never learns the root of a session a Server object built for an
+   identity whose secret the attacker does not hold. *)
+query obj: bitstring, s: bitstring, k: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex, kid: key_id,
+      root: bitstring, ad: bitstring, p: bitstring;
+  event(FsServerCommitted(obj, s, ed_public(k), init, kid, root, ad, p)) && attacker(root)
+  ==> attacker(k).
+
+process FsRegistrationMain()

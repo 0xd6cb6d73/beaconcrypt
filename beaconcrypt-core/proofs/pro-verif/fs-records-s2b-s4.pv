@@ -1,0 +1,10 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-s2b S4 (Server-to-Beacon half), witness (expected reachable):
+   the attacker learns a tasking that a Server object allocated at sequence
+   2, which by S1 happens only for a peer whose identity secret it holds:
+   the same Server code serves peers that the adversary registered. *)
+query s: bitstring, b: bitstring, kid: key_id, root: bitstring, m: bitstring;
+  event(FsSent(server_to_beacon(), s, b, kid, root, 2, m)) && attacker(m).
+
+process FsRecordsS2bMain()

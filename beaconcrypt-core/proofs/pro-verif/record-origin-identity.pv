@@ -1,0 +1,3 @@
+(* SPDX-License-Identifier: 0BSD *)
+query k:bitstring; event(L2SelectedIdentity(k)) && attacker(k).
+process L2Main(false)

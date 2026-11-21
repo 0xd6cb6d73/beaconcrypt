@@ -1,0 +1,71 @@
+{
+  "charon_sysroot": "default",
+  "generated_transformation": {
+    "insert_after": "namespace beaconcrypt\n",
+    "text": "\nvariable [beaconcrypt.ratchet.Operations]\n"
+  },
+  "installed_sha256": {
+    "Funs.lean": "fd2e995d850f4092689b2506583856faff58168f907088ad0c9ec7c07a215efe",
+    "Types.lean": "357423d7a8e17ddd6dbad50d75cbedf6ebbbbd2f40838207b524a949457113cf",
+    "external-signatures.json": "20c1d2399904f815f3154e6f48554ffae172ac6edb5a71fc79bf5e2d1bcae672"
+  },
+  "lean_namespace": "beaconcrypt",
+  "model_sha256": {
+    "FunsExternal.lean": "67f891b27f9b58a27a3f37a1616c7ffe3316cae057d99317a4c1d190a01c1759",
+    "TypesExternal.lean": "ea25a6c6cebec3b11a45151e8d0ab7ba46d774442008af4225efba53a19d25bd"
+  },
+  "raw_generated_sha256": {
+    "Funs.lean": "e90ec659e94349f5992a2f5de792eb022021f0ec41dce061aea6a7e8bda1a900",
+    "FunsExternal_Template.lean": "b3bd4ec2220a5516f963126b6cc52d0eea3631b55aea022b76f6005e6e80c8c9",
+    "Types.lean": "357423d7a8e17ddd6dbad50d75cbedf6ebbbbd2f40838207b524a949457113cf",
+    "TypesExternal_Template.lean": "8523567a9ec3d2416673fd29f4aa75fe72104a375dba090d9d0746e2e9ca447e"
+  },
+  "rust_start_from": "beaconcrypt::ratchet::execute_record_receive",
+  "rustflags": "--cfg hax_compilation --cfg hax_backend_lean",
+  "source_sha256": {
+    "Cargo.lock": "2f9299d8f9844467ef90c9bbea76cdcacec7e1dffae7025930565ef56906b8e6",
+    "Cargo.toml": "755b24b6a434712ac0b941dcb1cf629321f128555a43b5e574c38dd5bf1b3b53",
+    "beaconcrypt-core/Cargo.toml": "8e41a5e7c6f9715417628967f404745000e89d177902bde70d1969ef00af5f09",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Extraction/Funs.lean": "74ca109a7e8e33723d8edf96002535a12ca5f821b3b19ef8217d03acf952f776",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Extraction/Types.lean": "79472aa24f2b553cc654783be11f2bbb8101cd299a75151c9fe7cc5774b31f09",
+    "beaconcrypt-core/src/agreement.rs": "7abf5bb56eb76ed461d52d0d6efff8bb18f165cc6831417a4f78f6e4d0672fa6",
+    "beaconcrypt-core/src/authentication.rs": "eef28a2a39d5134528173e40d22d02f9846319d2c2d67dc4b0e60d14d6637659",
+    "beaconcrypt-core/src/commitment.rs": "ca2e0a3eb7ce3712b1933a8bc6f548fa9fff5093a677ee6f7fb8bcdf090a162d",
+    "beaconcrypt-core/src/constants.rs": "60cfbabca698e1aeb53166425f589989b17f4b936aa271b102750deaf1d54418",
+    "beaconcrypt-core/src/lib.rs": "2b43ceb71b1b71fa69a69d9f41c2e62de7a54c54198803633412927234c627d6",
+    "beaconcrypt-core/src/peer.rs": "5ace82b81a3e1c191223fd0629be3f00bbd321336baed0b568c9e432df0f9d77",
+    "beaconcrypt-core/src/pqxdh.rs": "0e90604b6537968f73873850ca7626f5019a9482c3225bb333d9a3ff555fde4f",
+    "beaconcrypt-core/src/pqxdh/concrete.rs": "fb8bfbbf3c2a6615540983a4665def830ffd6493a1dfaa9ffad396793bd0c5f0",
+    "beaconcrypt-core/src/ratchet.rs": "ff8981ab40ed42f406e04b1258063b8e5a9418af76cccc9f065f12160fa08f47",
+    "beaconcrypt-core/src/ratchet/concrete.rs": "c9f907f20f23ac2851792ff6eef77565a843e61ff266d21617411100e12e431d",
+    "beaconcrypt-core/src/ratchet/control.rs": "6c17cc0dbe7445be04dc3ab123a60ecbf3d757da6337a7132d5dafd3e06f5639",
+    "beaconcrypt-core/src/ratchet/refined.rs": "ce940e42b1e95bc841121ba80107ce74757fea4f4fcbd771834b93e28cdb459f",
+    "beaconcrypt-core/src/record.rs": "530f820ec1998cb60ce9f2d6666f33feabcfcc597fd06997d1272d3abba9edc0",
+    "beaconcrypt-core/src/record_effects.rs": "dbdf79661a17c8d8c128ff349a7efe906d6713912e5510c9a0476b0c3efad2b5",
+    "beaconcrypt-core/src/registration.rs": "8be65a2c601a151d0ec9d2a570b929d55d72394edceac59599e1b11d741bba83",
+    "beaconcrypt-core/src/session.rs": "4f83234a89c0fe8df60d68753930339f68208e2f14c464849177006af550c15e",
+    "beaconcrypt-core/src/transport.rs": "795012d453a3ed209d6f8815eeedb2ccabaebd9a81d03f932d64f95aea9c3617",
+    "beaconcrypt-crypto/src/crypto_aead.rs": "1b62a128ed169c81a45825ede6853b32ae715ce9ea96f9d53803e7fb461b9bf1",
+    "beaconcrypt-crypto/src/crypto_generichash.rs": "292e806217ff105632f48ac32d89f3e9820b8a2b118810790be06e60104168f3",
+    "beaconcrypt-crypto/src/crypto_kdf.rs": "8fc41159cc32f483a89ee4a273b9ebdf32fd75d23591580c991efb8b8c70cdf2",
+    "beaconcrypt-crypto/src/lib.rs": "5d808be88690164585ab2c5c17f84396789defbf694694ab3150e709b7debc7f",
+    "beaconcrypt/Cargo.toml": "bd72a2dd47102f91b1f927b90666f78674a9e4af91419dffad3ac69d7195a098",
+    "beaconcrypt/src/lib.rs": "59b2239615ff5c4bfa10db7a7162b078db5abdd10f143f9a3624937a6ff4a3ba",
+    "beaconcrypt/src/ratchet.rs": "f9fa5f0b41821cc54fe5f626d18a853489300a7a2cde061efd8f7f0da277370d",
+    "beaconcrypt/src/shared.rs": "98ff9810f5b1a8425a2177dab49c53eda6aa75cf5f78aedb1617712b4da17387",
+    "hax.toml": "5010245f379886dba312f63d3d56f0fa9d3378c927d488106dd096d1bc7206f1",
+    "scripts/extract_adapter_record.py": "8ce5111851d445c8412805bcdbbe513bd40a3457be518e929abd1a62cb09f4ae"
+  },
+  "tool_sha256": {
+    "aeneas": "88bc16127fd3f4ebbb72c9d0620d7b4c0c3b0810f8eebcc46c219ff7bba60727",
+    "charon": "60ac6a5c4bf9151f0d6db961009268b91ea445e3a5c93bdb8dbfe5b48da36ebc"
+  },
+  "tools": {
+    "aeneas": "nightly-2026.09.03-6852e64",
+    "charon": "nightly-2026.09.02"
+  },
+  "versions": {
+    "hax-lean-lib": "174840bf2f633ae3bae955e08f781b3737ffc0b8",
+    "lean": "leanprover/lean4:v4.35.0"
+  }
+}

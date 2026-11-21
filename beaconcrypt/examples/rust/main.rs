@@ -7,8 +7,8 @@ use std::{
 };
 
 use beaconcrypt::{
-	Beacon, ED25519_SEED_SIZE, PersistentServer, ProviderBeacon, ServerSnapshot, SnapshotHead,
-	SnapshotStore,
+	Beacon, ED25519_SEED_SIZE, PersistenceError, PersistentServer, ProviderBeacon, ServerSnapshot,
+	SnapshotHead, SnapshotStore,
 };
 
 const SERVER_KID: u64 = 0;
@@ -24,34 +24,47 @@ struct FileSnapshotStore {
 }
 
 impl SnapshotStore for FileSnapshotStore {
-	fn load(&self) -> Option<ServerSnapshot> {
-		fs::read(&self.path).ok().map(ServerSnapshot::from_bytes)
+	fn load(&self) -> Result<Option<ServerSnapshot>, PersistenceError> {
+		match fs::read(&self.path) {
+			Ok(bytes) => Ok(Some(ServerSnapshot::from_bytes(bytes))),
+			Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+			Err(_) => Err(PersistenceError::Storage),
+		}
 	}
 
 	fn compare_and_swap(
 		&mut self,
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool {
-		let current = match fs::read(&self.path) {
-			Ok(bytes) => match ServerSnapshot::from_bytes(bytes).head() {
-				Ok(head) => Some(head),
-				Err(_) => return false,
-			},
-			Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
-			Err(_) => return false,
-		};
+	) -> Result<bool, PersistenceError> {
+		let current = self.load()?.map(|snapshot| snapshot.head()).transpose()?;
 		if current.as_ref() != expected {
-			return false;
+			return Ok(false);
 		}
 		if replacement.validate_successor(expected).is_err() {
-			return false;
+			return Ok(false);
 		}
-
-		let Ok(mut file) = File::create(&self.path) else {
-			return false;
-		};
-		file.write_all(replacement.as_bytes()).is_ok() && file.sync_all().is_ok()
+		let parent = self
+			.path
+			.parent()
+			.filter(|path| !path.as_os_str().is_empty())
+			.unwrap_or(Path::new("."));
+		let mut temporary =
+			tempfile::NamedTempFile::new_in(parent).map_err(|_| PersistenceError::Storage)?;
+		temporary
+			.write_all(replacement.as_bytes())
+			.map_err(|_| PersistenceError::Storage)?;
+		temporary
+			.as_file()
+			.sync_all()
+			.map_err(|_| PersistenceError::Storage)?;
+		temporary
+			.persist(&self.path)
+			.map_err(|_| PersistenceError::Storage)?;
+		File::open(parent)
+			.and_then(|directory| directory.sync_all())
+			.map_err(|_| PersistenceError::CommitUnknown)?;
+		Ok(true)
 	}
 }
 
@@ -68,19 +81,23 @@ fn deserialize_state_update(serialized: &str) -> StateUpdate {
 }
 
 fn main() {
-	libsodium_rs::ensure_init().expect("failed to initialize libsodium");
-	let server_seed = libsodium_rs::random::bytes(ED25519_SEED_SIZE);
+	beaconcrypt_crypto::ensure_init().expect("failed to initialize cryptography");
+	let server_seed = beaconcrypt_crypto::random::bytes(ED25519_SEED_SIZE);
 	let state_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/rust/server-state.bin");
 	let store = FileSnapshotStore {
 		path: state_path.clone(),
 	};
 	let _ = fs::remove_file(&state_path);
-	let mut server = PersistentServer::create(SERVER_KID, Some(&server_seed), store.clone())
+	let mut server = PersistentServer::create(SERVER_KID, Some(&server_seed), None, store.clone())
 		.expect("failed to create persistent server");
 
 	// It is assumed that the server's public key is compiled into beacons.
-	let mut beacon = Beacon::try_new(SERVER_KID, server.identity_pk().as_bytes())
-		.expect("failed to create beacon");
+	let mut beacon = Beacon::try_new(
+		SERVER_KID,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	)
+	.expect("failed to create beacon");
 	let transport = Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/rust/transport");
 
 	// The beacon is run and registers.
@@ -185,4 +202,36 @@ fn main() {
 
 	fs::remove_file(transport).expect("failed to remove transport file");
 	fs::remove_file(state_path).expect("failed to remove server state file");
+}
+
+#[cfg(all(test, unix))]
+mod tests {
+	use super::*;
+	use std::os::unix::fs::{PermissionsExt, symlink};
+
+	#[test]
+	fn atomic_snapshot_replacement_stays_private_and_ignores_predictable_symlinks() {
+		let directory = tempfile::tempdir().unwrap();
+		let path = directory.path().join("server.snapshot");
+		let store = FileSnapshotStore { path: path.clone() };
+		let server =
+			PersistentServer::create(19, Some(&[7; 32]), Some(&[8; 32]), store.clone()).unwrap();
+		let previous = server.head();
+		drop(server);
+		fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
+		let target = directory.path().join("untouched");
+		fs::write(&target, b"must not be truncated").unwrap();
+		let predictable = path.with_extension("pending");
+		symlink(&target, &predictable).unwrap();
+
+		let restored = PersistentServer::restore(store).unwrap();
+		assert_eq!(restored.head().generation(), previous.generation() + 1);
+		assert_eq!(
+			fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+			0o600
+		);
+		assert_eq!(fs::read(&target).unwrap(), b"must not be truncated");
+		assert_eq!(fs::read_link(&predictable).unwrap(), target);
+		assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 3);
+	}
 }

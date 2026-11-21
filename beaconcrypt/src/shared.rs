@@ -1,25 +1,31 @@
 // SPDX-License-Identifier: 0BSD
 
+use alloc::vec::Vec;
+
 #[cfg(feature = "server")]
 use crate::error::DecodingError;
 #[cfg(any(feature = "server", test))]
 use crate::error::EncodingError;
-use libsodium_rs::utils::memcmp;
-use std::any::TypeId;
-use std::marker::{PhantomData, PhantomPinned};
 #[cfg(any(feature = "server", test))]
-use std::vec;
+use alloc::vec;
+#[cfg(test)]
+use beaconcrypt_crypto::utils::memcmp;
+#[cfg(test)]
+use core::any::TypeId;
+#[cfg(test)]
+use core::marker::{PhantomData, PhantomPinned};
+#[cfg(test)]
 use zeroize::Zeroizing;
 
 use crate::ratchet::KDF_STATE_SIZE;
 #[cfg(any(feature = "server", test))]
-use crate::ratchet::RatchetManager;
+use crate::ratchet::{RatchetKernel, RatchetManager};
 
 #[cfg(test)]
 use crate::ratchet::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, AEAD_TAG_LEN, AeadKey, AeadNonce, COMMITMENT_SIZE,
 	KDF_RATCHET_OUTPUT_LEN, KdfRecvState, KdfSendState, KeyMaterial, MESSAGE_OVERHEAD,
-	RATCHET_MAX_GAP, RatchetKernel, SendChain, build_commitment, decrypt_message_with_ratchet,
+	RATCHET_MAX_GAP, SendChain, build_commitment, decrypt_message_with_ratchet,
 	encrypt_message_with_ratchet, ratchet_hkdf,
 };
 #[cfg(test)]
@@ -27,7 +33,7 @@ use beaconcrypt_core::pqxdh::ASSOCIATED_DATA_SIZE as AD_SIZE;
 #[cfg(test)]
 use beaconcrypt_core::ratchet as verified_ratchet;
 #[cfg(test)]
-use libsodium_rs::crypto_aead;
+use beaconcrypt_crypto::crypto_aead;
 
 #[cfg(feature = "server")]
 #[path = "deser.rs"]
@@ -36,7 +42,7 @@ mod deser;
 #[path = "ser.rs"]
 mod ser;
 #[cfg(feature = "server")]
-pub(crate) use deser::deserialize_server_state;
+pub(crate) use deser::{deserialize_row_peer, deserialize_server_state};
 #[cfg(feature = "server")]
 pub(crate) use ser::serialize_server_state;
 
@@ -47,9 +53,6 @@ const _: () = assert!(KEX_KDF_OUT_LEN == KDF_STATE_SIZE);
 pub const DH_OUT_LEN: usize = 32;
 #[cfg(feature = "pqxdh")]
 pub const ED25519_SEED_SIZE: usize = 32;
-#[cfg(feature = "server")]
-/// Byte sequence used to test successful keychain derivation during registration. Used only if the server doesn't provide an initial message
-pub const REGISTRATION_WITNESS: &[u8; 1] = &[0xFF; 1];
 
 #[repr(u8)]
 #[derive(PartialEq)]
@@ -173,7 +176,7 @@ pub fn decode_kem(encoded_pk: &[u8], expected: KemType) -> Result<Vec<u8>, Decod
 }
 
 pub(crate) mod systems {
-	#[cfg(feature = "pqxdh")]
+	#[cfg(all(test, feature = "pqxdh"))]
 	#[derive(PartialEq)]
 	pub struct X25519;
 	#[cfg(feature = "server")]
@@ -182,6 +185,7 @@ pub(crate) mod systems {
 	#[cfg(any(feature = "server", test))]
 	#[derive(PartialEq)]
 	pub struct HkdfSha512;
+	#[cfg(test)]
 	#[derive(PartialEq)]
 	pub struct Pqxdh;
 	#[cfg(feature = "server")]
@@ -245,6 +249,7 @@ pub(crate) mod systems {
 pub mod roles {
 	#[cfg(feature = "server")]
 	pub trait ChainKey {}
+	#[cfg(test)]
 	#[derive(PartialEq)]
 	pub struct DerivedSecret;
 	#[cfg(any(feature = "server", test))]
@@ -340,6 +345,7 @@ pub mod roles {
 }
 
 // this design is stolen from https://github.com/celabshq/libcrux/issues/1390
+#[cfg(test)]
 pub struct SecretArr<const S: usize, System, Role> {
 	data: Zeroizing<[u8; S]>,
 	// what cryptosystem this is used in (X25519, ML-KEM...)
@@ -349,6 +355,7 @@ pub struct SecretArr<const S: usize, System, Role> {
 	_pin: PhantomPinned,
 }
 
+#[cfg(test)]
 impl<const S: usize, System: 'static, Role: 'static, OtherSystem: 'static, OtherRole: 'static>
 	PartialEq<SecretArr<S, OtherSystem, OtherRole>> for SecretArr<S, System, Role>
 {
@@ -361,6 +368,7 @@ impl<const S: usize, System: 'static, Role: 'static, OtherSystem: 'static, Other
 	}
 }
 
+#[cfg(test)]
 impl<const S: usize, System, Role> From<[u8; S]> for SecretArr<S, System, Role> {
 	fn from(value: [u8; S]) -> Self {
 		SecretArr {
@@ -373,6 +381,7 @@ impl<const S: usize, System, Role> From<[u8; S]> for SecretArr<S, System, Role> 
 }
 
 /// `value` MUST be exactly the size expected by the type
+#[cfg(test)]
 impl<const S: usize, System, Role> From<Vec<u8>> for SecretArr<S, System, Role> {
 	fn from(value: Vec<u8>) -> Self {
 		if value.len() == S {
@@ -388,6 +397,7 @@ impl<const S: usize, System, Role> From<Vec<u8>> for SecretArr<S, System, Role> 
 	}
 }
 
+#[cfg(test)]
 impl<const S: usize, System, Role> Default for SecretArr<S, System, Role> {
 	fn default() -> Self {
 		SecretArr {
@@ -399,6 +409,7 @@ impl<const S: usize, System, Role> Default for SecretArr<S, System, Role> {
 	}
 }
 
+#[cfg(test)]
 impl<const S: usize, System, Role> SecretArr<S, System, Role> {
 	pub fn as_slice(&self) -> &[u8] {
 		self.data.as_slice()
@@ -419,6 +430,7 @@ impl<const S: usize, System, Role> SecretArr<S, System, Role> {
 	}
 }
 
+#[cfg(test)]
 impl<const S: usize, System, Role> Clone for SecretArr<S, System, Role> {
 	fn clone(&self) -> Self {
 		Self {
@@ -430,8 +442,9 @@ impl<const S: usize, System, Role> Clone for SecretArr<S, System, Role> {
 	}
 }
 
-#[cfg(feature = "pqxdh")]
+#[cfg(all(test, feature = "pqxdh"))]
 pub type DhSecret = SecretArr<DH_OUT_LEN, systems::X25519, roles::DerivedSecret>;
+#[cfg(test)]
 pub type KexDerivedSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>;
 
 #[cfg(any(feature = "server", test))]
@@ -440,13 +453,35 @@ pub trait SignaturePk {}
 #[cfg(any(feature = "server", test))]
 pub struct EstablishedRemote<PkType: SignaturePk> {
 	pk: PkType,
-	ratchet: RatchetManager,
+	peer: beaconcrypt_core::peer::Peer<RatchetManager>,
 }
 
 #[cfg(any(feature = "server", test))]
 impl<PkType: SignaturePk> EstablishedRemote<PkType> {
-	pub(crate) fn new(pk: PkType, ratchet: RatchetManager) -> Self {
-		Self { pk, ratchet }
+	pub(crate) fn new(
+		pk: PkType,
+		ratchet: RatchetManager,
+		binding: beaconcrypt_core::session::SessionBinding,
+	) -> Self {
+		Self {
+			pk,
+			peer: beaconcrypt_core::peer::Peer::from_trusted_parts(binding, ratchet),
+		}
+	}
+
+	pub(crate) fn from_peer(pk: PkType, peer: beaconcrypt_core::peer::Peer<RatchetKernel>) -> Self {
+		Self {
+			pk,
+			peer: map_peer_ratchet(peer),
+		}
+	}
+
+	pub(crate) fn session_transcript_hash(&self) -> &[u8; 64] {
+		self.peer.binding().session_transcript_hash()
+	}
+
+	pub(crate) fn binding(&self) -> &beaconcrypt_core::session::SessionBinding {
+		self.peer.binding()
 	}
 
 	pub fn pk(&self) -> &PkType {
@@ -454,12 +489,20 @@ impl<PkType: SignaturePk> EstablishedRemote<PkType> {
 	}
 
 	pub(crate) fn ratchet(&self) -> &RatchetManager {
-		&self.ratchet
+		self.peer.ratchet()
 	}
 
 	pub(crate) fn ratchet_mut(&mut self) -> &mut RatchetManager {
-		&mut self.ratchet
+		self.peer.ratchet_mut()
 	}
+}
+
+#[cfg(any(feature = "server", test))]
+fn map_peer_ratchet(
+	peer: beaconcrypt_core::peer::Peer<RatchetKernel>,
+) -> beaconcrypt_core::peer::Peer<RatchetManager> {
+	let (binding, kernel) = peer.into_parts();
+	beaconcrypt_core::peer::Peer::from_trusted_parts(binding, RatchetManager::from_kernel(kernel))
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -478,7 +521,54 @@ pub struct Encrypted {
 	pub seq: u64,
 }
 
-impl std::ops::Deref for Encrypted {
+/// The operational effect of one send attempt.
+///
+/// A consumed key must not be reused, even when no output could be constructed. Persistent owners release either changed outcome only after committing that consumption.
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[must_use = "a changed send outcome may require persistence even without output"]
+pub enum SendOutcome<T> {
+	/// The send preserved its complete entry state.
+	Rejected,
+	/// The send consumed a key and produced its output.
+	Sent(T),
+	/// The send consumed a key but could not produce its requested output.
+	ConsumedWithoutOutput,
+}
+
+impl<T> SendOutcome<T> {
+	/// Whether this attempt consumed a send key.
+	pub const fn changed(&self) -> bool {
+		!matches!(self, Self::Rejected)
+	}
+
+	/// Transform successful output without losing the send's operational effect.
+	pub fn map<U>(self, map: impl FnOnce(T) -> U) -> SendOutcome<U> {
+		match self {
+			Self::Rejected => SendOutcome::Rejected,
+			Self::Sent(output) => SendOutcome::Sent(map(output)),
+			Self::ConsumedWithoutOutput => SendOutcome::ConsumedWithoutOutput,
+		}
+	}
+
+	/// Project the legacy optional output, discarding the consumed-without-output distinction.
+	pub fn into_option(self) -> Option<T> {
+		match self {
+			Self::Sent(output) => Some(output),
+			Self::Rejected | Self::ConsumedWithoutOutput => None,
+		}
+	}
+
+	#[cfg(any(feature = "beacon", feature = "server", test))]
+	pub(crate) fn from_attempt(output: Option<T>, changed: bool) -> Self {
+		match output {
+			Some(output) => Self::Sent(output),
+			None if changed => Self::ConsumedWithoutOutput,
+			None => Self::Rejected,
+		}
+	}
+}
+
+impl core::ops::Deref for Encrypted {
 	type Target = [u8];
 
 	fn deref(&self) -> &Self::Target {
@@ -486,7 +576,7 @@ impl std::ops::Deref for Encrypted {
 	}
 }
 
-impl std::ops::DerefMut for Encrypted {
+impl core::ops::DerefMut for Encrypted {
 	fn deref_mut(&mut self) -> &mut Self::Target {
 		&mut self.ciphertext
 	}
@@ -842,18 +932,18 @@ mod tests {
 		assert_eq!(
 			key_bytes(first.material().key()),
 			decode_hex::<AEAD_KEY_LEN>(
-				"f57007f1b1c7a62a7d6cdfa5df07538c43d83656906764d607e627401906e42a"
+				"95eef77611289a6d9149cc2d0312298e1ec049fe3680f7d3fd3c067a22553220"
 			)
 		);
 		assert_eq!(
 			nonce_bytes(first.material().nonce()),
-			decode_hex::<AEAD_NONCE_LEN>("43483e81091a393409afbf53")
+			decode_hex::<AEAD_NONCE_LEN>("e84a15a549c16b5ed5f49443")
 		);
 		let (kernel, _) = first.finish(None::<()>);
 		assert_eq!(
 			*kernel.send_chain().as_bytes(),
 			decode_hex::<KDF_STATE_SIZE>(
-				"5936897d8bd06b7daf70bd0d64b2f607a055fd843ddb779051cb975bbb02b1d3"
+				"68077f4476c2e526c51d0d02827617bc420d65bbedab24e5e33393ed6734bf0b"
 			)
 		);
 
@@ -869,18 +959,18 @@ mod tests {
 		assert_eq!(
 			key_bytes(second.material().key()),
 			decode_hex::<AEAD_KEY_LEN>(
-				"f30ee97ccdc39577bb1320268d7fc10d55c53649e879e98a9670d58b9a1539d0"
+				"27163ac8e0647af96d921e8572e47fe674c53e11f58013540a8035505aa42949"
 			)
 		);
 		assert_eq!(
 			nonce_bytes(second.material().nonce()),
-			decode_hex::<AEAD_NONCE_LEN>("d497a96123dfcbe5700b5cc0")
+			decode_hex::<AEAD_NONCE_LEN>("2d144fb1bd113cabd938cb77")
 		);
 		let (kernel, _) = second.finish(None::<()>);
 		assert_eq!(
 			*kernel.send_chain().as_bytes(),
 			decode_hex::<KDF_STATE_SIZE>(
-				"d11e3c43fa3bbfec95a41973521d7e1b4aacddfc96591fe40fa30e9581b5e4e2"
+				"4d31d053bda72c85b3252e8fd300c2438f39832574ef2a9974b369968fd554d7"
 			)
 		);
 	}
@@ -892,7 +982,7 @@ mod tests {
 	/// import hashlib
 	/// key = bytes([0x11]) * 32
 	/// nonce = bytes([0x22]) * 12
-	/// ad = bytes([0x41]) * 153
+	/// ad = bytes([0x41]) * 151
 	/// tag = bytes([0x33]) * 16
 	/// seq = (0x44).to_bytes(8, "little")
 	/// kid = (0x55).to_bytes(8, "little")
@@ -904,8 +994,8 @@ mod tests {
 		let associated_data = [0x41; AD_SIZE];
 		let tag = [0x33; AEAD_TAG_LEN];
 		let expected = decode_hex::<COMMITMENT_SIZE>(
-			"39a3222768c214f7ceb291c4ba7df117a9d537a5ce41a61c33aba27e5f356153\
-			 a4a1090295f03aae7e684e03710fd818217a7c8d1420a4b4a5f81d86893a435d",
+			"d81c457b9a0cb817b75149ef535adfa78ce5b291abfd9ac1a893c141395a752cb\
+			 198aa1408863e49008ab65e799a4b5e92a314f9e76ecff75f130fbf4c35183d",
 		);
 		let key_seq = 0x44u64;
 		let key_id = 0x55u64;
@@ -970,10 +1060,10 @@ mod tests {
 			 92ddbd7f2d778b8c9803aee328091b58fab324e4fad675945585808b4831d7bc\
 			 3ff4def08e4b7a9de576d26586cec64b6116",
 		);
-		let expected_tag = decode_hex::<AEAD_TAG_LEN>("88a5fc9f4d18b9c9d83fefd4f24e5fc4");
+		let expected_tag = decode_hex::<AEAD_TAG_LEN>("924ca595f5af29abc8d3f9c9aa7bb3bb");
 		let expected_commitment = decode_hex::<COMMITMENT_SIZE>(
-			"1ea461abc0b5d491a23c7437f745548e9647a91c8ed34b29b171859a72e33dc5\
-			 82554e0c807220fc0433bedd1f3c4c7353d381683b15fb8d91749c7463cccc1d",
+			"147c1d5ebf8d1a0650f3fa1cfba08b94101db9bb7db7c30788e55f77b85e78fd\
+			 7aa30d60023750d024dcc1902a2468d79d21569b7df5b85edeb0ab8ec35d4418",
 		);
 		let aead_key: AeadKey = key.into();
 		let aead_nonce: AeadNonce = nonce.into();
@@ -1097,7 +1187,7 @@ mod tests {
 			"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
 		);
 		let key_two = decode_hex::<AEAD_KEY_LEN>(
-			"967712731b5091e4e42b5fa6241e3b02108fedc55c561d80af04c2095d3edbe7",
+			"559586cbd11fe2d5b02eee85d19355dc28cdf19dd3a20530c9f30dbbad046e4b",
 		);
 		let nonce = decode_hex::<AEAD_NONCE_LEN>("000102030405060708090a0b");
 		let mut ad_one = [0; AD_SIZE];
@@ -1105,11 +1195,11 @@ mod tests {
 			*byte = index as u8;
 		}
 		let mut ad_two = ad_one;
-		ad_two[..16].copy_from_slice(&decode_hex::<16>("d62e8ca42f6f6e6eb114ca6035df7b24"));
+		ad_two[..16].copy_from_slice(&decode_hex::<16>("010fd10b0825d387f0f6bea280011e46"));
 		let ciphertext = decode_hex::<16>("00112233445566778899aabbccddeeff");
-		let tag = decode_hex::<AEAD_TAG_LEN>("a21c712bf7f8d516c2d0126087060814");
+		let tag = decode_hex::<AEAD_TAG_LEN>("8658cdca66b4af19115ed2cacd108b16");
 		let expected_plaintext_one = decode_hex::<16>("89ea2a336d42c3373f1a954854c0e09c");
-		let expected_plaintext_two = decode_hex::<16>("3c6ab3eb035de373e2b5d4a81a3cd13f");
+		let expected_plaintext_two = decode_hex::<16>("e67265bb4291d1ec9582c8eabcdac109");
 		let aead_key_one: AeadKey = key_one.into();
 		let aead_key_two: AeadKey = key_two.into();
 		let aead_nonce: AeadNonce = nonce.into();
@@ -1137,12 +1227,12 @@ mod tests {
 		let commitment_one = commitment_for_test(key_one, nonce, &ad_one, &tag, 1, 7);
 		let commitment_two = commitment_for_test(key_two, nonce, &ad_two, &tag, 1, 7);
 		let expected_commitment_one = decode_hex::<COMMITMENT_SIZE>(
-			"9cda090561a1140c1e7fdee457c9057be213b87a65e895078564be7fa13360df\
-			 fb48bab92db64d3800fd90ba2fc4d8c174add55cbbf0b0bff98eb74b32c1e06e",
+			"335d85c266d397fd4de866d696bae4f368549735d235361d4ba6ada7b7bae8b4b\
+			 df608d9886de6742a727be65aaf8ff57e63243ed8ace2ae109cbeccb09f8384",
 		);
 		let expected_commitment_two = decode_hex::<COMMITMENT_SIZE>(
-			"f092a14b1da49bad4c64f3bacc67480d7dd367f5ba90fa3f79492aea29cd7707\
-			 49b0aefdc03fa3736dd11ee3c79038a4a4d10a64959042dd97007690a7506bb2",
+			"866da120fb65ba24573e9a202377109a8dc9a992aa27d61191676426d018d695d\
+			 5cbd13246e54b2b5a0cd6544ddf13a133d39f5c068d64a39490071d3b1dca31",
 		);
 		assert_eq!(commitment_one, expected_commitment_one);
 		assert_eq!(commitment_two, expected_commitment_two);
@@ -1673,8 +1763,19 @@ mod tests {
 		struct TestPublicKey([u8; 4]);
 		impl SignaturePk for TestPublicKey {}
 
-		let mut principal =
-			EstablishedRemote::new(TestPublicKey([1, 2, 3, 4]), RatchetManager::default());
+		let mut principal = EstablishedRemote::new(
+			TestPublicKey([1, 2, 3, 4]),
+			RatchetManager::default(),
+			beaconcrypt_core::session::SessionBinding::from_trusted_metadata(
+				beaconcrypt_core::pqxdh::ServerBinding {
+					identity_public_key: [2; 32],
+					identity_key_id: 3,
+				},
+				5,
+				[6; 32],
+				[8; 64],
+			),
+		);
 		assert_eq!(principal.pk().0, [1, 2, 3, 4]);
 		assert!(principal.ratchet().recv_key(1).is_none());
 		assert_eq!(principal.ratchet_mut().ratchet_recv(), Some(1),);

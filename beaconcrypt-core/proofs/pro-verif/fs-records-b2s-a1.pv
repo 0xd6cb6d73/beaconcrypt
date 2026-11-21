@@ -1,0 +1,16 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s A1 (re-proved), security result, (K_s, K_r, T_max) =
+   (2, 3, 2), any Beacon pins: injective registration agreement in runs where
+   the Beacons send records, with adversary-chosen plaintexts, after they
+   finish and the Server objects receive them, and where the attacker chooses
+   the pinned Server key and Server ID of every Beacon.  Every Beacon that
+   pins the honest Server key and finished registration is matched by its
+   own, distinct Server build with the same identities, verified key tuple,
+   assigned key ID, root, associated data and payload. *)
+query obj: bitstring, b: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+      kid: key_id, root: bitstring, ad: bitstring, p: bitstring;
+  inj-event(FsBeaconEstablished(ed_public(SERVER_IDENTITY_SECRET), b, init, kid, root, ad, p))
+  ==> inj-event(FsServerCommitted(obj, ed_public(SERVER_IDENTITY_SECRET), b, init, kid, root, ad, p)).
+
+process FsRecordsB2sMainAnyPin()

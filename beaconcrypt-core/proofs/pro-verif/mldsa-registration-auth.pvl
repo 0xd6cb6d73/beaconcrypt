@@ -1,0 +1,138 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Focused pinned-Server authentication and exact-AD profile. Arbitrary registrations, including copied/recovered classical identities, are admitted after the remaining Ed25519 checks. There is no Beacon ML credential, protected Beacon principal, enrollment or request-origin assertion. Classical keys are public. Only the independent Server ML key remains unexposed in the positive origin query. *)
+free mldsa_channel: channel.
+fun mldsa_server_id(): key_id [data].
+fun mldsa_assigned_id(): key_id [data].
+fun mldsa_bad_context(): bitstring [data].
+fun mldsa_other_role(): bitstring [data].
+fun mldsa_payload(): bitstring [data].
+
+event MldsaRequestAdmitted().
+event MldsaCopiedClassicalAccepted().
+event MldsaResponseSigned(bitstring, bitstring, bitstring).
+event MldsaResponseAccepted(bitstring, bitstring, bitstring).
+event MldsaHonestResponseVerified().
+event MldsaCompromisedServerAccepted().
+event MldsaAdOpened().
+event MldsaWrongResponseAdOpened().
+event MldsaWrongInitAdOpened().
+event MldsaWrongRoleAccepted().
+event MldsaWrongContextAccepted().
+event MldsaWrongRequestAccepted().
+
+let MldsaRegistrationProfile() =
+  new server_ed_secret: bitstring;
+  new beacon_ed_secret: bitstring;
+  new server_ml_secret: bitstring;
+  new prekey_secret: bitstring;
+  new one_time_secret: bitstring;
+  new pq_secret: bitstring;
+  let server_ed = ed_public(server_ed_secret) in
+  let beacon_ed = ed_public(beacon_ed_secret) in
+  let server_ml = mldsa_public(server_ml_secret) in
+  let init = signed_init_kex(
+    tag_ed25519(beacon_ed),
+    sign(tag_x25519_prekey(x25519_public(prekey_secret)), beacon_ed_secret),
+    sign(tag_x25519_one_time(x25519_public(one_time_secret)), beacon_ed_secret),
+    sign(tag_mlkem768(mlkem_public(pq_secret)), beacon_ed_secret)
+  ) in
+  let honest_hash = mldsa_init_hash(mldsa_server_id(), server_ed, server_ml, init) in
+  out(mldsa_channel, (server_ed_secret, beacon_ed_secret, prekey_secret,
+    one_time_secret, server_ml, mlkem_public(pq_secret)));
+  out(mldsa_channel, init);
+  (
+    (!in(mldsa_channel, candidate_init: bitstring);
+      let candidate_hash = mldsa_init_hash(mldsa_server_id(), server_ed, server_ml, candidate_init) in
+      let signed_init_kex(encoded_identity, signed_prekey, signed_one_time, signed_pq) = candidate_init in
+      let tag_ed25519(candidate_ed) = encoded_identity in
+      let tag_mlkem768(candidate_pq) = verify_signature(signed_pq, candidate_ed) in
+      let tag_x25519_prekey(candidate_prekey) = verify_signature(signed_prekey, candidate_ed) in
+      let tag_x25519_one_time(candidate_one_time) = verify_signature(signed_one_time, candidate_ed) in
+      event MldsaRequestAdmitted();
+      ((if candidate_ed = beacon_ed then event MldsaCopiedClassicalAccepted()) |
+       (new ephemeral_secret: bitstring;
+        out(mldsa_channel, ephemeral_secret);
+        new kem_coins: bitstring;
+        new body: bitstring;
+        new tag: bitstring;
+        new commitment: bitstring;
+        let response = mldsa_response_fields(server_ed, x25519_public(ephemeral_secret),
+          mlkem_ciphertext(candidate_pq, kem_coins), mldsa_raw_ctu(body, tag, commitment),
+          mldsa_assigned_id()) in
+        let response_hash = mldsa_response_hash(candidate_hash, response) in
+        let response_signature = mldsa_sign(mldsa_server_input(response_hash),
+          server_ml_secret, mldsa_signing_context()) in
+        event MldsaResponseSigned(server_ml, candidate_hash, response);
+        out(mldsa_channel, mldsa_signed_kex_response(response, response_signature)))))
+    |
+    (!in(mldsa_channel, incoming_response: bitstring);
+      let mldsa_signed_kex_response(candidate_response, response_signature) = incoming_response in
+      let expected_response_hash = mldsa_response_hash(honest_hash, candidate_response) in
+      let verified_response_input = mldsa_verify(response_signature,
+        server_ml, mldsa_signing_context()) in
+      if verified_response_input = mldsa_server_input(expected_response_hash) then
+      event MldsaResponseAccepted(server_ml, honest_hash, candidate_response);
+      event MldsaHonestResponseVerified())
+  ).
+
+let MldsaCompromiseControl() =
+  new server_secret: bitstring;
+  new chosen_hash: bitstring;
+  out(mldsa_channel, (server_secret, chosen_hash));
+  !in(mldsa_channel, server_signature: bitstring);
+  let server_input = mldsa_verify(server_signature,
+    mldsa_public(server_secret), mldsa_signing_context()) in
+  if server_input = mldsa_server_input(chosen_hash) then
+  event MldsaCompromisedServerAccepted().
+
+let MldsaSeparationControl() =
+  new signing_secret: bitstring;
+  new hash: bitstring;
+  new other_hash: bitstring;
+  let signature = mldsa_sign(mldsa_server_input(hash), signing_secret, mldsa_signing_context()) in
+  (
+    (let wrong_role_input = mldsa_verify(signature,
+      mldsa_public(signing_secret), mldsa_signing_context()) in
+      if wrong_role_input = mldsa_signature_input(mldsa_spaces64(), mldsa_other_role(), mldsa_zero(), hash) then event MldsaWrongRoleAccepted())
+    |
+    (let wrong_context_input = mldsa_verify(signature,
+      mldsa_public(signing_secret), mldsa_bad_context()) in
+      if wrong_context_input = mldsa_server_input(hash) then event MldsaWrongContextAccepted())
+    |
+    (let wrong_request_input = mldsa_verify(signature,
+      mldsa_public(signing_secret), mldsa_signing_context()) in
+      if wrong_request_input = mldsa_server_input(other_hash) then event MldsaWrongRequestAccepted())
+  ).
+
+(* Same key, nonce, plaintext and frame under two different valid transcript ADs. This isolates AD use from unrelated-root rejection. *)
+let MldsaAdControl() =
+  new identity: bitstring;
+  new prekey: bitstring;
+  new other_prekey: bitstring;
+  new one_time: bitstring;
+  new pq: bitstring;
+  new server: bitstring;
+  new ephemeral: bitstring;
+  new other_ephemeral: bitstring;
+  new kem: bitstring;
+  new key: bitstring;
+  new nonce: bitstring;
+  let init = signed_init_kex(identity, prekey, one_time, pq) in
+  let different_init = signed_init_kex(identity, other_prekey, one_time, pq) in
+  let ad = mldsa_ad(init, server, ephemeral, kem, mldsa_assigned_id()) in
+  let material = ratchet_key_nonce(key, nonce) in
+  let raw = mldsa_strip(seal_frame(material, ad, first_sequence(), mldsa_server_id(), mldsa_payload())) in
+  let restored = mldsa_restore(raw, mldsa_server_id()) in
+  (
+    (let opened = open_frame(material, ad, first_sequence(), mldsa_server_id(), restored) in
+      if opened = mldsa_payload() then event MldsaAdOpened())
+    |
+    (let wrong_response_opened = open_frame(material, mldsa_ad(init, server, other_ephemeral, kem, mldsa_assigned_id()),
+      first_sequence(), mldsa_server_id(), restored) in
+      if wrong_response_opened = mldsa_payload() then event MldsaWrongResponseAdOpened())
+    |
+    (let wrong_init_opened = open_frame(material, mldsa_ad(different_init, server, ephemeral, kem, mldsa_assigned_id()),
+      first_sequence(), mldsa_server_id(), restored) in
+      if wrong_init_opened = mldsa_payload() then event MldsaWrongInitAdOpened())
+  ).

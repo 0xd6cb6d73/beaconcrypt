@@ -1,0 +1,21 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-registration: how the session binds the Beacon identity.  The root
+   input takes DH2 (ephemeral with the Beacon identity) in its second slot,
+   and the associated data is registration version 3 transcript AD151 over
+   the exact request fields (tagged Beacon identity and the three signed
+   key fields) and the response Server identity, ephemeral key, KEM
+   ciphertext and assigned key ID.  Exactly one of this file and the
+   negative control fs-control-uks.pvl is loaded. *)
+(* @beaconcrypt-fs-fidelity key=binding.root_input src=beaconcrypt-core/src/pqxdh.rs:396-410 anchor=let bytes: [u8; ROOT_KEY_INPUT_SIZE] = core::array::from_fn(|i| { *)
+letfun fs_root_dh2(dh2: bitstring, dh3: bitstring) = dh2.
+
+(* @beaconcrypt-fs-fidelity key=binding.associated_data src=beaconcrypt-core/src/authentication.rs:271-281 anchor=pub fn assemble_associated_data( *)
+letfun fs_associated_data(
+  encoded_identity: bitstring, signed_prekey: bitstring,
+  signed_one_time: bitstring, signed_pq: bitstring,
+  server_identity: bitstring, ephemeral: bitstring,
+  kem: bitstring, assigned: key_id
+) =
+  transcript_associated_data(encoded_identity, signed_prekey, signed_one_time,
+    signed_pq, server_identity, ephemeral, kem, assigned).

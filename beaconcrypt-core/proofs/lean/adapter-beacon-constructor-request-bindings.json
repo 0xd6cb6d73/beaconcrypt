@@ -1,0 +1,155 @@
+{
+  "schema": 1,
+  "source_sha256": "b75a7c4e29129825efcead614b5b90bb90917113c415f416527d9da81e45bafb",
+  "definitions": [
+    {
+      "name": "beacon.Beacon.try_new_with_rng",
+      "sha256": "eb86b414b5c9384f42afb216049d4a9147747e11dbf3ff50a67eb1130efd0086",
+      "signature": [
+        {
+          "before": "RustM",
+          "after": "m",
+          "count": 1
+        }
+      ],
+      "body": [
+        {
+          "before": "auth.server_pin",
+          "after": "(beaconcrypt_public_request.auth.server_pin (m := m))",
+          "count": 1
+        },
+        {
+          "before": "beacon.Beacon.try_new_with_rng.closure.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError",
+          "after": "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError",
+          "count": 1
+        },
+        {
+          "before": "beacon.Beacon.try_new_with_rng.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorKeyGenError",
+          "after": "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorKeyGenError",
+          "count": 1
+        },
+        {
+          "before": "beacon.Beacon.try_new_with_rng.closure_2.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError",
+          "after": "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_2.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError",
+          "count": 1
+        },
+        {
+          "before": "beacon.Beacon.try_new_with_rng.closure_3.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError",
+          "after": "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_3.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError",
+          "count": 1
+        },
+        {
+          "before": "beacon.Beacon.try_new_with_rng.closure_4.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError",
+          "after": "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_4.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError",
+          "count": 1
+        },
+        {
+          "before": "beaconcrypt_core.pqxdh.BeaconFresh.new",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.pqxdh.BeaconFresh.new)",
+          "count": 1
+        },
+        {
+          "before": "beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair.generate_with_rng",
+          "after": "(BeaconcryptCore.Refinement.AdapterBeaconConstructorRequestMonad.Operations.kemGenerate (m := m))",
+          "count": 1
+        },
+        {
+          "before": "beaconcrypt_crypto.crypto_kx.KeyPair.generate_with_rng",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperRequestMonad.CryptoOperations.kxGenerate (m := m))",
+          "count": 1
+        },
+        {
+          "before": "beaconcrypt_crypto.crypto_sign.KeyPair.generate_with_rng",
+          "after": "(BeaconcryptCore.Refinement.AdapterBeaconConstructorRequestMonad.Operations.edGenerate (m := m))",
+          "count": 1
+        },
+        {
+          "before": "beaconcrypt_crypto.crypto_sign.PublicKey.as_bytes",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperRequestMonad.CryptoOperations.edPublicBytes (m := m))",
+          "count": 1
+        },
+        {
+          "before": "beaconcrypt_crypto.crypto_sign.PublicKey.from_bytes",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_crypto.crypto_sign.PublicKey.from_bytes)",
+          "count": 1
+        },
+        {
+          "before": "core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from)",
+          "count": 1
+        },
+        {
+          "before": "core.option.Option.ok_or",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.option.Option.ok_or)",
+          "count": 1
+        },
+        {
+          "before": "core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual",
+          "after": "(fun T conversion residual => BeaconcryptCore.Refinement.AdapterRecordRequestMonad.liftRust (m := m) (core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual T conversion residual))",
+          "count": 6
+        },
+        {
+          "before": "core.result.Result.Insts.CoreOpsTry_traitTry.branch",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.Insts.CoreOpsTry_traitTry.branch)",
+          "count": 6
+        },
+        {
+          "before": "core.result.Result.map_err",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.map_err)",
+          "count": 5
+        },
+        {
+          "before": "ok",
+          "after": "pure",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "name": "beacon.Beacon.try_new",
+      "sha256": "f0c020686f96b54beeb35c90a2b74e8a10621d73958a3afebd5dc015ec74562b",
+      "signature": [
+        {
+          "before": "RustM",
+          "after": "m",
+          "count": 1
+        }
+      ],
+      "body": [
+        {
+          "before": "beacon.Beacon.try_new_with_rng",
+          "after": "(beacon.Beacon.try_new_with_rng (m := m))",
+          "count": 1
+        },
+        {
+          "before": "ok",
+          "after": "pure",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "beacon.Beacon.new",
+      "sha256": "736202bfd9657b43c45a6af1baaade5aa2cdbfe863a63c4a1d29804e21c6547e",
+      "signature": [
+        {
+          "before": "RustM",
+          "after": "m",
+          "count": 1
+        }
+      ],
+      "body": [
+        {
+          "before": "beacon.Beacon.try_new",
+          "after": "(beacon.Beacon.try_new (m := m))",
+          "count": 1
+        },
+        {
+          "before": "core.result.Result.expect",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.expect)",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

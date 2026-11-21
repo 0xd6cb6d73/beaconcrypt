@@ -1,0 +1,30 @@
+name = "BeaconcryptCore"
+version = "0.1.0"
+defaultTargets = ["BeaconcryptCore"]
+
+[[lean_lib]]
+name = "BeaconcryptCore"
+# Build the maintained root and every project module.
+# The explicit submodule glob prevents a new proof file from being silently omitted if its root import is missed.
+globs = ["BeaconcryptCore", "BeaconcryptCore.*"]
+
+[[require]]
+name = "aeneas"
+git = "https://github.com/cryspen/aeneas"
+rev = "6852e6474ec508930acba4df79977b3483a10d10"
+subDir = "backends/lean"
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "v4.35.0"
+
+[[require]]
+name = "Hax"
+git = { url = "https://github.com/cryspen/hax-lean" }
+rev = "174840bf2f633ae3bae955e08f781b3737ffc0b8"
+
+[[require]]
+name = "VCVio"
+git = "https://github.com/Verified-zkEVM/VCVio.git"
+rev = "88efe9715a9fa9e7d89635c38cf70259836766c2"

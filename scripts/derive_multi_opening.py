@@ -7,7 +7,7 @@ ChaCha20 and Poly1305 definitions in RFC 8439.  Independent implementations
 then verify the resulting fixture in:
 
 * scripts/generate_kat_vectors.py (PyCryptodome)
-* scripts/generate_kat_vectors.go (golang.org/x/crypto)
+* go/scripts/generate_kat_vectors.go (golang.org/x/crypto)
 * beaconcrypt/src/shared.rs (libsodium-rs)
 
 The accompanying algebra and verification procedure are documented in
@@ -23,7 +23,7 @@ POLY1305_P = (1 << 130) - 5
 UINT128_MODULUS = 1 << 128
 UINT32_MASK = (1 << 32) - 1
 POLY1305_R_MASK = 0x0FFFFFFC0FFFFFFC0FFFFFFC0FFFFFFF
-AD_SIZE = 153
+AD_SIZE = 151
 
 
 def rotate_left_32(value: int, shift: int) -> int:
@@ -201,7 +201,7 @@ def print_integer(name: str, value: int) -> None:
 def main() -> None:
     key_one = bytes(range(32))
     nonce = bytes(range(12))
-    associated_data_one = bytes(range(AD_SIZE))
+    associated_data_one = bytes(index % 256 for index in range(AD_SIZE))
     ciphertext = bytes.fromhex("00112233445566778899aabbccddeeff")
     plaintext_one = chacha20_xor(ciphertext, key_one, nonce)
     tag = aead_tag(key_one, nonce, associated_data_one, ciphertext)
@@ -238,13 +238,13 @@ def main() -> None:
     assert commitment_one != commitment_two
 
     # Detect accidental drift from the checked-in Rust fixture.
-    assert attempt == 1
-    assert carry == 2
-    assert associated_data_two[:16].hex() == "d62e8ca42f6f6e6eb114ca6035df7b24"
+    assert attempt == 2
+    assert carry == 0
+    assert associated_data_two[:16].hex() == "010fd10b0825d387f0f6bea280011e46"
     assert associated_data_two[16:] == associated_data_one[16:]
     assert plaintext_one.hex() == "89ea2a336d42c3373f1a954854c0e09c"
-    assert plaintext_two.hex() == "3c6ab3eb035de373e2b5d4a81a3cd13f"
-    assert tag.hex() == "a21c712bf7f8d516c2d0126087060814"
+    assert plaintext_two.hex() == "e67265bb4291d1ec9582c8eabcdac109"
+    assert tag.hex() == "8658cdca66b4af19115ed2cacd108b16"
 
     print("[chacha20poly1305-multi-opening-derivation]")
     print_value("attempt", attempt)

@@ -16,6 +16,7 @@ pub fn encode_response(response: KexResponse<'_>) -> Vec<u8> {
 		response.ephemeral_key.len(),
 		response.kem_cipher_text.len(),
 		response.app_cipher_text.len(),
+		response.signature.len(),
 	]
 	.into_iter()
 	.try_fold(64usize, usize::checked_add)
@@ -29,7 +30,7 @@ pub fn encode_response(response: KexResponse<'_>) -> Vec<u8> {
 
 // Hand-author canonical CBOR so malformed-length fixtures bypass the strict encoders.
 pub fn encode_unchecked_init(init: InitKex<'_>) -> Vec<u8> {
-	let mut output = vec![0x86, 1, 0];
+	let mut output = vec![0x86, 3, 0];
 	for field in [
 		init.identity_key,
 		init.pre_key,
@@ -42,7 +43,7 @@ pub fn encode_unchecked_init(init: InitKex<'_>) -> Vec<u8> {
 }
 
 pub fn encode_unchecked_response(response: KexResponse<'_>) -> Vec<u8> {
-	let mut output = vec![0x87, 1, 1];
+	let mut output = vec![0x88, 3, 1];
 	for field in [
 		response.identity_key,
 		response.ephemeral_key,
@@ -52,6 +53,7 @@ pub fn encode_unchecked_response(response: KexResponse<'_>) -> Vec<u8> {
 		append_byte_string(&mut output, field);
 	}
 	append_argument(&mut output, 0, response.key_id);
+	append_byte_string(&mut output, response.signature);
 	output
 }
 
@@ -73,4 +75,11 @@ fn append_argument(output: &mut Vec<u8>, major: u8, value: u64) {
 	};
 	output.push(major << 5 | information);
 	output.extend_from_slice(&value.to_be_bytes()[8 - width..]);
+}
+
+pub fn decode_init(bytes: &[u8]) -> Option<InitKex<'_>> {
+	beaconcrypt_parse::decode_init(bytes)
+}
+pub fn decode_response(bytes: &[u8]) -> Option<KexResponse<'_>> {
+	beaconcrypt_parse::decode_response(bytes)
 }

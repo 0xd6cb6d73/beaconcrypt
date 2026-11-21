@@ -1,0 +1,69 @@
+{
+  "charon_sysroot": "default",
+  "generated_transformation": {
+    "binders": "variable [BeaconcryptCore.Refinement.RecordRoutingCallbacks.Operations]\n",
+    "body_rewrites": [],
+    "mutable_serializers": [],
+    "namespace": [
+      "beaconcrypt",
+      "beaconcrypt_record_routing"
+    ],
+    "warning_header": [
+      "dupNamespace",
+      "hashCommand",
+      "unusedVariables",
+      "style.whitespace",
+      "style.setOption",
+      "style.longLine"
+    ]
+  },
+  "installed_sha256": {
+    "Funs.lean": "7fafd312dc836a97aaee92892fac7dc89e0ab233d53ff7209993c0cd314ead65",
+    "Types.lean": "d636b669d4bc0a91f8afec20509843542a096f6a75c7a96f9cfa17942400c489",
+    "external-signatures.json": "4ecd580b56ecb3619277cfa02a23156c7f18e88297c9d48315e9c9b750a45628"
+  },
+  "model_sha256": {
+    "FunsExternal.lean": "8d1b6f31db830086c575ccbfa79dcce3999780927675404bcfcaf335d1274cab",
+    "TypesExternal.lean": "a0f987992025193afbc57337a0cbb8bbc6f2a25f3665fbb6b11b45166c656881"
+  },
+  "raw_generated_sha256": {
+    "Funs.lean": "5259c6bf3ed7287d898eee5abdd77b449dd83035e1f03534e2783a3e16102745",
+    "FunsExternal_Template.lean": "7d2db123c3188eb908de561ff3f8caea90bcef464a398fb3660d7c0fb6df7026",
+    "Types.lean": "7874063516e266c31a3a86f4f0e5ee98fd7f477a4546f2e3d9e2f1ec9817cf96",
+    "TypesExternal_Template.lean": "8523567a9ec3d2416673fd29f4aa75fe72104a375dba090d9d0746e2e9ca447e"
+  },
+  "rust_start_from": [
+    "beaconcrypt::ratchet::execute_write_request"
+  ],
+  "rustflags": "--cfg hax_compilation --cfg hax_backend_lean",
+  "source_sha256": {
+    "Cargo.lock": "2f9299d8f9844467ef90c9bbea76cdcacec7e1dffae7025930565ef56906b8e6",
+    "Cargo.toml": "755b24b6a434712ac0b941dcb1cf629321f128555a43b5e574c38dd5bf1b3b53",
+    "beaconcrypt-core/Cargo.toml": "8e41a5e7c6f9715417628967f404745000e89d177902bde70d1969ef00af5f09",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterWireExtraction/Funs.lean": "f18bac513d0a035754095822efd96644187acc5bcc4a0d104c2049c902e9719e",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterWireExtraction/FunsExternal.lean": "9822fc8237bc8030f80a44c545a6122390db0f427a26302a0366b537ca2a4406",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Extraction/Funs.lean": "74ca109a7e8e33723d8edf96002535a12ca5f821b3b19ef8217d03acf952f776",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/RegistrationPrimitiveExtraction/Types.lean": "953c3ff6fb0cbdc01ebb4adf78c2b843b8c4bf237f903c023da4e4b77d0a3027",
+    "beaconcrypt-crypto/Cargo.toml": "dc34ba30e7cfbe1c17e27be5ffe2e49f151c9ba170fed7e42baf5bc09cec4560",
+    "beaconcrypt-parse/Cargo.toml": "58af4e0cdf2b2dec9cb607cbfc14fafdb1f56db59f95016171504dd83392676e",
+    "beaconcrypt/Cargo.toml": "bd72a2dd47102f91b1f927b90666f78674a9e4af91419dffad3ac69d7195a098",
+    "beaconcrypt/src/lib.rs": "59b2239615ff5c4bfa10db7a7162b078db5abdd10f143f9a3624937a6ff4a3ba",
+    "beaconcrypt/src/ratchet.rs": "f9fa5f0b41821cc54fe5f626d18a853489300a7a2cde061efd8f7f0da277370d",
+    "beaconcrypt/src/wire.rs": "74acbaed761b8c7d4d492ac8acc4cc4c9374852ffb278ca5b948e092f6b0aa74",
+    "hax.toml": "5010245f379886dba312f63d3d56f0fa9d3378c927d488106dd096d1bc7206f1",
+    "scripts/extract_adapter_record.py": "8ce5111851d445c8412805bcdbbe513bd40a3457be518e929abd1a62cb09f4ae",
+    "scripts/extract_adapter_record_routing.py": "7df114ae6695b463ae2de9ae58f8cc7a7e10eb622ecfc5d06860db217488712e"
+  },
+  "tool_sha256": {
+    "aeneas": "88bc16127fd3f4ebbb72c9d0620d7b4c0c3b0810f8eebcc46c219ff7bba60727",
+    "charon": "60ac6a5c4bf9151f0d6db961009268b91ea445e3a5c93bdb8dbfe5b48da36ebc"
+  },
+  "tools": {
+    "aeneas": "nightly-2026.09.03-6852e64",
+    "charon": "nightly-2026.09.02"
+  },
+  "versions": {
+    "hax-lean-lib": "174840bf2f633ae3bae955e08f781b3737ffc0b8",
+    "lean": "leanprover/lean4:v4.35.0"
+  }
+}

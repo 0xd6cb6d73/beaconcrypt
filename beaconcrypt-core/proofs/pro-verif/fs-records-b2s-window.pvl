@@ -1,0 +1,15 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s: how a Server peer receive attempt changes the receive
+   state (r, cached_1) after a successful cached open and after a failed open
+   at a target t <= T_max.  A successful cached open swap-removes the key,
+   and a failed open returns the exact entry state.  Exactly one of this file
+   and the negative controls fs-control-b2s-retain.pvl and
+   fs-control-b2s-stale.pvl is loaded. *)
+(* @beaconcrypt-fs-fidelity key=window.cached_removal src=beaconcrypt-core/src/ratchet/refined.rs:700-721 anchor=pub(super) fn publish_cached_receive<SendChain, ReceiveChain, Material>( *)
+letfun fs_b2s_cached_after_success(cached_1: bool) = false.
+
+(* @beaconcrypt-fs-fidelity key=window.failure_keeps_entry src=beaconcrypt-core/src/ratchet/concrete.rs:436-443 anchor=pub fn finish<Plaintext>( *)
+letfun fs_b2s_failed_r(r: nat, target: nat) = r.
+
+letfun fs_b2s_failed_cached_1(r: nat, target: nat, cached_1: bool) = cached_1.

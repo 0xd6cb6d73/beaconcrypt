@@ -1,0 +1,11 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Every legitimate parse and confusion attempt must be reachable in both theories; only the two acceptance queries distinguish production encodings from the weakened controls. *)
+query event(PkAlgorithmMlkemLegitimateParsed(PK_ALGORITHM_MLKEM_PARSE_WITNESS)).
+query event(PkAlgorithmX25519LegitimateParsed(PK_ALGORITHM_X25519_PARSE_WITNESS)).
+query event(PkAlgorithmConfusionAttempted(PK_ALGORITHM_CONFUSION_WITNESS)).
+query event(PkAlgorithmConfusionAccepted(PK_ALGORITHM_CONFUSION_WITNESS)).
+query event(PkRolePrekeyLegitimateParsed(PK_ROLE_PREKEY_PARSE_WITNESS)).
+query event(PkRoleOneTimeLegitimateParsed(PK_ROLE_ONE_TIME_PARSE_WITNESS)).
+query event(PkRoleConfusionAttempted(PK_ROLE_CONFUSION_WITNESS)).
+query event(PkRoleConfusionAccepted(PK_ROLE_CONFUSION_WITNESS)).

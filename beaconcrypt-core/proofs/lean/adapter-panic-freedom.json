@@ -1,0 +1,689 @@
+{
+  "beaconcrypt.auth.authenticate_init": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterInitAuthentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterInitAuthentication.authenticate_init_total"
+  },
+  "beaconcrypt.auth.authenticate_init.closure.Insts.CoreOpsFunctionFnMutTupleOptionVecU8.call_mut": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterInitAuthentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterInitAuthentication.closure_call_mut_total"
+  },
+  "beaconcrypt.auth.authenticate_init.closure.Insts.CoreOpsFunctionFnOnceTupleOptionVecU8.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterInitAuthentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterInitAuthentication.closure_call_once_total"
+  },
+  "beaconcrypt.auth.authenticate_init.closure.Insts.CoreOpsFunctionFnTupleOptionVecU8.call": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterInitAuthentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterInitAuthentication.closure_call_total"
+  },
+  "beaconcrypt.auth.authenticate_init_loop": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterInitAuthentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterInitAuthentication.authenticate_init_loop_total"
+  },
+  "beaconcrypt.auth.authenticate_init_loop.body": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterInitAuthentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterInitAuthentication.authenticate_init_loop_body_total"
+  },
+  "beaconcrypt.auth.authenticate_response": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterResponseAuthentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterResponseAuthentication.authenticate_response_total"
+  },
+  "beaconcrypt.ratchet.execute_record_receive": {
+    "form": "exists",
+    "kdf_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.execute_record_receive_total"
+    },
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRecordReceive",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRecordReceive.execute_record_receive_total"
+  },
+  "beaconcrypt.ratchet.execute_record_receive.closure.Insts.CoreOpsFunctionFnOnceTupleOpenedRecordVecU8Decrypted.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRecordReceive",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRecordReceive.output_call_once_total"
+  },
+  "beaconcrypt.ratchet.execute_record_receive_loop": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRecordReceive",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRecordReceive.execute_record_receive_loop_total"
+  },
+  "beaconcrypt.ratchet.execute_record_receive_loop.body": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRecordReceive",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRecordReceive.execute_record_receive_loop_body_total"
+  },
+  "beaconcrypt.wire.encode_record": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterWire",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterWire.encode_record_total"
+  },
+  "beaconcrypt_constructor.beacon.Beacon.try_new": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterConstructors",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterConstructorValidity",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructorValidity.beacon_try_new_valid"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructors.beacon_try_new_total"
+  },
+  "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterConstructors",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterConstructorValidity",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructorValidity.beacon_try_new_with_rng_valid"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructors.beacon_try_new_with_rng_total"
+  },
+  "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterConstructors",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructors.beacon_closure_0_total"
+  },
+  "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorKeyGenError.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterConstructors",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructors.beacon_closure_1_total"
+  },
+  "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_2.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterConstructors",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructors.beacon_closure_2_total"
+  },
+  "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_3.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterConstructors",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructors.beacon_closure_3_total"
+  },
+  "beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_4.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterConstructors",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructors.beacon_closure_4_total"
+  },
+  "beaconcrypt_public_ordinary.beacon.Beacon.decrypt_message": {
+    "form": "exists",
+    "kdf_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource",
+      "preservation": {
+        "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource",
+        "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.beacon_decrypt_message_preserves"
+      },
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.beacon_decrypt_message_total"
+    },
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.beacon_decrypt_message_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.beacon_decrypt_message_total"
+  },
+  "beaconcrypt_public_ordinary.beacon.Beacon.encrypt_message": {
+    "form": "exists",
+    "kdf_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource",
+      "preservation": {
+        "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource",
+        "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.beacon_encrypt_message_preserves"
+      },
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.beacon_encrypt_message_total"
+    },
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.beacon_encrypt_message_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.beacon_encrypt_message_total"
+  },
+  "beaconcrypt_public_ordinary.ratchet.RatchetKernelSlot.Insts.CoreOpsDerefDerefConcreteRatchetKernel.deref": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.slot_deref_total"
+  },
+  "beaconcrypt_public_ordinary.ratchet.RatchetKernelSlot.put": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.slot_put_total"
+  },
+  "beaconcrypt_public_ordinary.ratchet.RatchetKernelSlot.take": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.slot_take_total"
+  },
+  "beaconcrypt_public_ordinary.ratchet.RatchetManager.send_sequence": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.send_sequence_total"
+  },
+  "beaconcrypt_public_ordinary.ratchet.RatchetManager.status": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.status_total"
+  },
+  "beaconcrypt_public_ordinary.ratchet.RatchetStatus.impl.send_sequence": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.status_send_sequence_total"
+  },
+  "beaconcrypt_public_ordinary.ratchet.decode_crypto_frame": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.decode_crypto_frame_total"
+  },
+  "beaconcrypt_public_ordinary.ratchet.decrypt_message_with_ratchet": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.decrypt_message_with_ratchet_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.decrypt_message_with_ratchet_total"
+  },
+  "beaconcrypt_public_ordinary.ratchet.decrypt_payload_with_ratchet": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.decrypt_payload_with_ratchet_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.decrypt_payload_with_ratchet_total"
+  },
+  "beaconcrypt_public_ordinary.ratchet.encrypt_message_with_ratchet": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.encrypt_message_with_ratchet_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.encrypt_message_with_ratchet_total"
+  },
+  "beaconcrypt_public_ordinary.ratchet.encrypt_with_ratchet": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.encrypt_with_ratchet_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.encrypt_with_ratchet_total"
+  },
+  "beaconcrypt_public_ordinary.ratchet.encrypted_frame_sender": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.encrypted_frame_sender_total"
+  },
+  "beaconcrypt_public_ordinary.server.ReceiveTransition.into_option": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.receive_transition_into_option_total"
+  },
+  "beaconcrypt_public_ordinary.server.Server.associated_data": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.associated_data_total"
+  },
+  "beaconcrypt_public_ordinary.server.Server.decrypt_message": {
+    "form": "exists",
+    "kdf_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource",
+      "preservation": {
+        "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource",
+        "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.server_decrypt_message_preserves"
+      },
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.server_decrypt_message_total"
+    },
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.server_decrypt_message_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.server_decrypt_message_total"
+  },
+  "beaconcrypt_public_ordinary.server.Server.decrypt_message_transition": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.server_decrypt_message_transition_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.server_decrypt_message_transition_total"
+  },
+  "beaconcrypt_public_ordinary.server.Server.encrypt_message": {
+    "form": "exists",
+    "kdf_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource",
+      "preservation": {
+        "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource",
+        "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.server_encrypt_message_preserves"
+      },
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.server_encrypt_message_total"
+    },
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.server_encrypt_message_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.server_encrypt_message_total"
+  },
+  "beaconcrypt_public_ordinary.server.Server.identity_key_kid": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.ordinary_server_identity_key_kid_total"
+  },
+  "beaconcrypt_public_ordinary.server.Server.ratchet_manager_mut": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ratchet_manager_mut_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ratchet_manager_mut_total"
+  },
+  "beaconcrypt_public_ordinary.shared.EstablishedRemote.binding": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.established_remote_binding_total"
+  },
+  "beaconcrypt_public_ordinary.shared.EstablishedRemote.ratchet_mut": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.established_remote_ratchet_mut_total"
+  },
+  "beaconcrypt_public_ordinary.wire.frame_len": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.frame_len_total"
+  },
+  "beaconcrypt_public_server_entry.server.Server.get_shared_secret_with_rng": {
+    "decoder_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource",
+      "preservation": {
+        "module": "BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource",
+        "theorem": "BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.get_shared_secret_with_rng_preserves"
+      },
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.get_shared_secret_with_rng_total"
+    },
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicServerAccept",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicServerAccept",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicServerAccept.get_shared_secret_with_rng_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicServerAccept.get_shared_secret_with_rng_total"
+  },
+  "beaconcrypt_public_wrapper.auth.server_pin": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.server_pin_total"
+  },
+  "beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration": {
+    "decoder_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource",
+      "preservation": {
+        "module": "BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource",
+        "theorem": "BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.finish_registration_preserves"
+      },
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.finish_registration_total"
+    },
+    "form": "exists",
+    "kdf_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource",
+      "preservation": {
+        "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource",
+        "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.finish_registration_preserves"
+      },
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.finish_registration_total"
+    },
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicBeaconFinish",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicBeaconFinish",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicBeaconFinish.finish_registration_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicBeaconFinish.finish_registration_total"
+  },
+  "beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration_loop": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicFinishSafety",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicFinishSafety",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicFinishSafety.finish_loop_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicFinishSafety.finish_loop_total"
+  },
+  "beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration_loop.body": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicFinishSafety",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicFinishSafety",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicFinishSafety.finish_body_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicFinishSafety.finish_body_total"
+  },
+  "beaconcrypt_public_wrapper.beacon.Beacon.get_registration_bundle_with_rng": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicBeacon",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicBeacon",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicBeacon.get_registration_bundle_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicBeacon.get_registration_bundle_total",
+    "writer_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource",
+      "preservation": {
+        "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource",
+        "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource.get_registration_bundle_preserves"
+      },
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource.get_registration_bundle_total"
+    }
+  },
+  "beaconcrypt_public_wrapper.beacon.Beacon.identity_pk": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.beacon_identity_pk_total"
+  },
+  "beaconcrypt_public_wrapper.beacon.Beacon.identity_sk": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.beacon_identity_sk_total"
+  },
+  "beaconcrypt_public_wrapper.beacon._proof_beacon_init_ready": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.init_ready_total"
+  },
+  "beaconcrypt_public_wrapper.beacon._proof_beacon_init_ready_loop": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.init_ready_loop_total"
+  },
+  "beaconcrypt_public_wrapper.beacon._proof_beacon_init_ready_loop.body": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.init_ready_body_total"
+  },
+  "beaconcrypt_public_wrapper.pqxdh.execute_agreement": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicAgreementSafety",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicAgreementSafety.execute_agreement_total"
+  },
+  "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure.Insts.CoreOpsFunctionFnOnceTuplePublicKeyOptionArrayU832.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.agreement_closure_total"
+  },
+  "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_1.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairArrayU832.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.agreement_closure_1_total"
+  },
+  "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_2.Insts.CoreOpsFunctionFnMutTupleOptionPairArrayU81088ArrayU832.call_mut": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.agreement_closure_2_total"
+  },
+  "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_3.Insts.CoreOpsFunctionFnTupleOptionArrayU832.call": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.agreement_closure_3_total"
+  },
+  "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_4.Insts.CoreOpsFunctionFnOnceTupleSharedZeroizingArrayU832OptionArrayU832.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.agreement_closure_4_total"
+  },
+  "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_5.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairOptionArrayU832.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.agreement_closure_5_total"
+  },
+  "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_6.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.agreement_closure_6_total"
+  },
+  "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_7.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.agreement_closure_7_total"
+  },
+  "beaconcrypt_public_wrapper.pqxdh.execute_agreement.closure_8.Insts.CoreOpsFunctionFnTupleOptionArrayU832.call": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.agreement_root_closure_total"
+  },
+  "beaconcrypt_public_wrapper.pqxdh.execute_agreement_loop": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicAgreementSafety",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicAgreementSafety.execute_agreement_loop_total"
+  },
+  "beaconcrypt_public_wrapper.pqxdh.execute_agreement_loop.body": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicAgreementSafety",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicAgreementSafety.agreement_body_total"
+  },
+  "beaconcrypt_public_wrapper.pqxdh.execute_beacon_agreement": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicAgreementSafety",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicAgreementSafety.execute_beacon_agreement_total"
+  },
+  "beaconcrypt_public_wrapper.ratchet.RatchetKernelSlot.new": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.slot_new_total"
+  },
+  "beaconcrypt_public_wrapper.ratchet.RatchetManager.from_kernel": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.manager_from_kernel_total"
+  },
+  "beaconcrypt_public_wrapper.server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response": {
+    "form": "exists",
+    "kdf_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource",
+      "preservation": {
+        "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource",
+        "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.build_registration_response_preserves"
+      },
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.build_registration_response_total"
+    },
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicServerBuild",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildState",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildState.build_registration_response_preserves"
+    },
+    "source_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildSource",
+      "preservation": {
+        "module": "BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildSource",
+        "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildSource.build_registration_response_preserves"
+      },
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildSource.build_registration_response_total"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicServerBuild.build_registration_response_total",
+    "writer_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource",
+      "preservation": {
+        "module": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource",
+        "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource.build_registration_response_preserves"
+      },
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource.build_registration_response_total"
+    }
+  },
+  "beaconcrypt_public_wrapper.server.Server.authenticate_registration_lookup": {
+    "decoder_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.authenticate_registration_lookup_total"
+    },
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicServer",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicServer.authenticate_registration_lookup_total"
+  },
+  "beaconcrypt_public_wrapper.server.Server.authentication_pin": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.server_authentication_pin_total"
+  },
+  "beaconcrypt_public_wrapper.server.Server.get_shared_secret_from_lookup_with_rng": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicServerAccept",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterPublicServerAccept",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicServerAccept.get_shared_secret_from_lookup_with_rng_preserves"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicServerAccept.get_shared_secret_from_lookup_with_rng_total"
+  },
+  "beaconcrypt_public_wrapper.server.Server.identity_key_kid": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.server_identity_key_kid_total"
+  },
+  "beaconcrypt_public_wrapper.server.Server.identity_pk": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.server_identity_pk_total"
+  },
+  "beaconcrypt_public_wrapper.server.Server.identity_sk": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.server_identity_sk_total"
+  },
+  "beaconcrypt_public_wrapper.server.Server.mldsa_public_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.server_mldsa_public_key_total"
+  },
+  "beaconcrypt_public_wrapper.server.registration_response_len": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicServerBuild",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicServerBuild.registration_response_len_total"
+  },
+  "beaconcrypt_public_wrapper.shared.EstablishedRemote.from_peer": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.established_remote_from_peer_total"
+  },
+  "beaconcrypt_public_wrapper.shared.map_peer_ratchet": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.map_peer_ratchet_total"
+  },
+  "beaconcrypt_ratchet_kdf.ratchet.initial_ratchet_hkdf": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdf",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.initial_ratchet_hkdf_total"
+  },
+  "beaconcrypt_ratchet_kdf.ratchet.ratchet_hkdf": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdf",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.ratchet_hkdf_total"
+  },
+  "beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdf",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.symmetric_ratchet_hkdf_total"
+  },
+  "beaconcrypt_record_helpers.ratchet._proof_join_record_three": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRecordHelpers",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRecordHelpers.join_total"
+  },
+  "beaconcrypt_record_helpers.wire._proof_encode_frame_three": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRecordHelpers",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRecordHelpers.encode_frame_total"
+  },
+  "beaconcrypt_record_helpers.wire._proof_encode_frame_three.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRecordHelpers",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRecordHelpers.encode_frame_closure_total"
+  },
+  "beaconcrypt_record_routing.ratchet.execute_write_request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRecordRouting",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRecordRouting.execute_write_request_total"
+  },
+  "beaconcrypt_record_send.ratchet.execute_record_send": {
+    "form": "exists",
+    "kdf_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.execute_record_send_total"
+    },
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRecordSend",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRecordSend.execute_record_send_total"
+  },
+  "beaconcrypt_record_send.ratchet.execute_record_send.closure.Insts.CoreOpsFunctionFnOnceTupleSealedRecordVecU8Encrypted.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRecordSend",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRecordSend.output_call_once_total"
+  },
+  "beaconcrypt_registration_writer.wire.encode_init": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter.encode_init_total",
+    "writer_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterRegistrationWriterSource",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterRegistrationWriterSource.init_total"
+    }
+  },
+  "beaconcrypt_registration_writer.wire.encode_init.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter.encode_init_closure_total"
+  },
+  "beaconcrypt_registration_writer.wire.encode_response": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter.encode_response_total",
+    "writer_composition": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterRegistrationWriterSource",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterRegistrationWriterSource.response_total"
+    }
+  },
+  "beaconcrypt_registration_writer.wire.encode_response.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter.encode_response_closure_total"
+  },
+  "beaconcrypt_seal.ratchet.execute_seal_request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterSeal",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterSeal.execute_seal_request_total"
+  },
+  "beaconcrypt_seal_join.ratchet._proof_join_seal_two": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterSealJoin",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterSealJoin.join_total"
+  },
+  "beaconcrypt_server_constructor.server.Server.try_new": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterConstructors",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterConstructorValidity",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructorValidity.server_try_new_valid"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructors.server_try_new_total"
+  },
+  "beaconcrypt_server_constructor.server.Server.try_new_with_rng": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterConstructors",
+    "preservation": {
+      "module": "BeaconcryptCore.PanicFreedom.AdapterConstructorValidity",
+      "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructorValidity.server_try_new_with_rng_valid"
+    },
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructors.server_try_new_with_rng_total"
+  },
+  "beaconcrypt_server_constructor.server.Server.try_new_with_rng.closure.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterConstructors",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructors.server_closure_0_total"
+  },
+  "beaconcrypt_server_constructor.server.Server.try_new_with_rng.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorKeyGenError.call_once": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.AdapterConstructors",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructors.server_closure_1_total"
+  }
+}

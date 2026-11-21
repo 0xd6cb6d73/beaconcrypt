@@ -1,0 +1,6 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* E21: K_r = 3, with a failed open ending the worker. The reviewed argument in doc/impl/proverif-failstop-trace-simulation.md transfers only the existing chosen-message C2/C4 formulas to failure-interleaving. It deletes failed opens, preserving all ten worker parameters, honest outputs, attacker knowledge and non-rejection events; receive-input consumption and call labels are outside the projection. Parse/routing failures and rejected old targets still continue. No optional-reply/source-global equivalence is claimed. *)
+expand FS_B2S_RECV_STEP(FsB2sRecv3, FsB2sRecvStop, FsB2sRecvStop).
+expand FS_B2S_RECV_STEP(FsB2sRecv2, FsB2sRecv3, FsB2sRecvStop).
+expand FS_B2S_RECV_STEP(FsB2sRecv1, FsB2sRecv2, FsB2sRecvStop).

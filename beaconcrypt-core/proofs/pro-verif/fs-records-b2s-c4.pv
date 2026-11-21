@@ -1,0 +1,14 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s C4, security result (abstraction witness), (K_s, K_r,
+   T_max) = (2, 3, 2), any Beacon pins: a Server peer accepts a frame above
+   T_max only if the attacker holds the identity secret of the peer, so the
+   far branch never fires for a peer registered by an honest Beacon, whose
+   sends stay at or below T_max.  Run in the process in which the attacker
+   chooses the pinned Server key and Server ID of every Beacon, with
+   adversary-chosen record plaintexts and the fail-stop receive form
+   (E21). *)
+query s: bitstring, k: bitstring, kid: key_id, root: bitstring, t: nat;
+  event(FsFarAccepted(beacon_to_server(), s, ed_public(k), kid, root, t)) ==> attacker(k).
+
+process FsRecordsB2sMainAnyPin()
