@@ -125,6 +125,18 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install pinned standard-library source toolchain
+        # check-inventory fingerprints the pinned nightly's rust-src component
+        # at ~/.rustup/toolchains/nightly-2026-08-18-x86_64-unknown-linux-gnu;
+        # the runner image points RUSTUP_HOME elsewhere, so force the exact
+        # location the source gates read. Run before Nix so a missing or
+        # pruned nightly fails fast without paying the proof-shell build.
+        if: matrix.target == 'check-inventory'
+        run: |
+          RUSTUP_HOME="$HOME/.rustup" \
+            rustup toolchain install nightly-2026-08-18 \
+              --profile minimal --component rust-src
+
       - name: Install Nix
         uses: DeterminateSystems/determinate-nix-action@92957199488000b908fdad19f63711000965d8f3 # v3.24.1
         with:
