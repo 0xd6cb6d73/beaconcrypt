@@ -764,3 +764,46 @@ proptest! {
 		}
 	}
 }
+
+#[test]
+fn retirement_by_another_owner_invalidates_a_warm_cached_peer() {
+	let directory = tempfile::tempdir().unwrap();
+	let path = directory.path().join("state.sqlite");
+	let mut owner = create(&path);
+	let (mut beacon, kid) = register(&mut owner);
+	let lineage = owner.lineage();
+	let (mut cached, _) = cached(&path, lineage, 2);
+	let frame = cached.encrypt_message(b"warm", kid).unwrap().unwrap();
+	assert_eq!(
+		beacon.decrypt_message(&frame.ciphertext).unwrap().plaintext,
+		b"warm"
+	);
+	assert_eq!(cached.cached_peer_count(), 1);
+
+	let mut other =
+		RowServer::open(OptimisticSqliteRowStore::open(&path).unwrap(), lineage).unwrap();
+	assert_eq!(other.retire_peer(kid), Ok(true));
+
+	// The warm copy no longer matches the authoritative row, so it is discarded, never used.
+	assert_eq!(
+		cached.encrypt_message(b"stale", kid).err(),
+		Some(RowError::Conflict)
+	);
+	assert_eq!(cached.cached_peer_count(), 0);
+	assert!(cached.encrypt_message(b"refused", kid).unwrap().is_none());
+	let inbound = beacon.encrypt_message(b"refused").unwrap().ciphertext;
+	assert!(cached.decrypt_message(&inbound).unwrap().is_none());
+
+	// Retiring through the cached owner itself drops its cache entry.
+	let (_, second) = register(&mut other);
+	assert!(cached.encrypt_message(b"warm", second).unwrap().is_some());
+	assert_eq!(cached.cached_peer_count(), 1);
+	assert_eq!(cached.retire_peer(second), Ok(true));
+	assert_eq!(cached.cached_peer_count(), 0);
+	assert!(
+		cached
+			.encrypt_message(b"refused", second)
+			.unwrap()
+			.is_none()
+	);
+}

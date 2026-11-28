@@ -24,6 +24,7 @@ pub(crate) fn error_status(error: PersistenceError) -> u32 {
 		PersistenceError::Poisoned => 12,
 		PersistenceError::Storage => 13,
 		PersistenceError::CommitUnknown => 15,
+		PersistenceError::CapacityExceeded => 16,
 	}
 }
 

@@ -36,6 +36,7 @@ fn persistence_error(py: Python<'_>, error: NativePersistenceError, cause: Optio
 		NativePersistenceError::Poisoned => "poisoned",
 		NativePersistenceError::Storage => "storage",
 		NativePersistenceError::CommitUnknown => "commit_unknown",
+		NativePersistenceError::CapacityExceeded => "capacity_exceeded",
 	};
 	let exception = PersistenceError::new_err(error.to_string());
 	if let Err(attribute_error) = exception.value(py).setattr("code", code) {

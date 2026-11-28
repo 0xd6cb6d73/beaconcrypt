@@ -364,6 +364,20 @@ impl Server {
 	pub fn pk_by_kid(&self, k: u64) -> Option<&crypto_sign::PublicKey> {
 		self.known_ids.get(&k).map(EstablishedRemote::pk)
 	}
+	/// Retire an established peer: erase its ratchet so its frames and sends are refused like an
+	/// unknown identifier's. Its registration replay marker is kept, and identifiers only
+	/// increase, so the identifier is never reassigned. Returns whether a peer was removed.
+	pub fn retire_peer(&mut self, kid: u64) -> bool {
+		self.known_ids.remove(&kid).is_some()
+	}
+	/// The number of established peers held in memory.
+	pub fn peer_count(&self) -> usize {
+		self.known_ids.len()
+	}
+	/// The number of accepted registrations whose replay markers are retained.
+	pub fn registration_marker_count(&self) -> usize {
+		self.consumed_registrations.len()
+	}
 	pub fn ratchet_status(&self, k: u64) -> Option<RatchetStatus> {
 		Some(self.ratchet_manager(k)?.status())
 	}

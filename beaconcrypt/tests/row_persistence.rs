@@ -1171,3 +1171,96 @@ fn consumed_registration_stays_rejected_after_v2_reopen_and_old_rows_never_reset
 	);
 	assert_eq!(register(&mut server).1, response.kid + 1);
 }
+
+#[test]
+fn retired_row_peer_becomes_a_tombstone_and_its_identifier_is_never_reused() {
+	let directory = tempfile::tempdir().unwrap();
+	let path = directory.path().join("state.sqlite");
+	let mut server = create(&path);
+	let mut retired_beacon = beacon(&server);
+	let bundle = retired_beacon.get_registration_bundle().unwrap();
+	let retired = server.register_beacon(&bundle, None).unwrap().unwrap();
+	retired_beacon
+		.finish_registration(&retired.serialized)
+		.unwrap();
+	let (mut kept, kept_kid) = register(&mut server);
+	let inbound = retired_beacon
+		.encrypt_message(b"after retirement")
+		.unwrap()
+		.ciphertext;
+	let before = rows(&path);
+
+	assert_eq!(server.retire_peer(retired.kid), Ok(true));
+	let after = rows(&path);
+	assert_eq!(changed_rows(&before, &after), 1);
+	let (key, tombstone) = after
+		.iter()
+		.find(|(key, value)| before.get(*key) != Some(*value))
+		.unwrap();
+	// The tombstone keeps the bound header and key but carries no peer state.
+	assert!(tombstone.ends_with(key));
+	assert!(tombstone.len() < before[key].len());
+
+	// Refusals write nothing, and retiring again is a no-op.
+	assert!(server.decrypt_message(&inbound).unwrap().is_none());
+	assert!(
+		server
+			.encrypt_message(b"tasking", retired.kid)
+			.unwrap()
+			.is_none()
+	);
+	assert_eq!(server.retire_peer(retired.kid), Ok(false));
+	assert_eq!(server.retire_peer(9_999), Ok(false));
+	assert_eq!(rows(&path), after);
+
+	// The replay marker survives a restart, and new registrations skip the retired identifier.
+	let mut reopened = open(&path);
+	assert!(reopened.register_beacon(&bundle, None).unwrap().is_none());
+	assert!(reopened.decrypt_message(&inbound).unwrap().is_none());
+	let (_, next_kid) = register(&mut reopened);
+	assert!(next_kid > kept_kid && next_kid != retired.kid);
+	let frame = reopened
+		.encrypt_message(b"kept", kept_kid)
+		.unwrap()
+		.unwrap();
+	assert_eq!(
+		kept.decrypt_message(&frame.ciphertext).unwrap().plaintext,
+		b"kept"
+	);
+}
+
+#[test]
+fn retirement_is_a_native_operation_composed_with_application_rows() {
+	let directory = tempfile::tempdir().unwrap();
+	let path = directory.path().join("state.sqlite");
+	let mut server = create(&path);
+	let (_, kid) = register(&mut server);
+	let retired = server
+		.transaction(|session| {
+			session.store_application(b"audit", b"retired")?;
+			let retired = session.retire_peer(kid)?;
+			// A session allows one native operation; a second one aborts the transaction.
+			assert_eq!(session.retire_peer(kid), Err(RowError::InvalidSession));
+			Ok(retired)
+		})
+		.unwrap_err();
+	assert_eq!(retired, RowError::InvalidSession);
+	assert!(
+		server
+			.encrypt_message(b"still live", kid)
+			.unwrap()
+			.is_some()
+	);
+	let retired = server
+		.transaction(|session| {
+			session.store_application(b"audit", b"retired")?;
+			session.retire_peer(kid)
+		})
+		.unwrap();
+	assert!(retired);
+	assert!(server.encrypt_message(b"refused", kid).unwrap().is_none());
+	let audit = server
+		.transaction(|session| session.load_application(b"audit"))
+		.unwrap();
+	assert_eq!(audit.as_deref().map(Vec::as_slice), Some(&b"retired"[..]));
+}

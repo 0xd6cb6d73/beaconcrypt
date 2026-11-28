@@ -576,6 +576,11 @@ impl<S: RowStore> CachedRowServer<S> {
 			seq: message.sequence,
 		}))
 	}
+
+	/// Retire an established peer in its own durable transaction. See [`RowSession::retire_peer`].
+	pub fn retire_peer(&mut self, kid: u64) -> Result<bool, RowError> {
+		self.transaction(|session| session.retire_peer(kid))
+	}
 }
 
 impl<S: RowStore> RowServer<S> {
@@ -868,6 +873,11 @@ impl<S: RowStore> RowServer<S> {
 			seq: message.sequence,
 		}))
 	}
+
+	/// Retire an established peer in its own durable transaction. See [`RowSession::retire_peer`].
+	pub fn retire_peer(&mut self, kid: u64) -> Result<bool, RowError> {
+		self.transaction(|session| session.retire_peer(kid))
+	}
 }
 
 fn send_input_fits(bytes: &[u8], sender: u64) -> bool {
@@ -1002,6 +1012,39 @@ impl<'a> RowSession<'a> {
 		})
 	}
 
+	/// Retire an established peer in this transaction, as the session's native operation.
+	///
+	/// The peer row becomes a tombstone (the same bound row header with an empty payload, at the
+	/// next generation), so later frames and sends for the identifier are refused like an
+	/// unknown one's. The registration marker is kept and identifiers are never reassigned.
+	/// Returns whether a live peer was retired; a missing or already retired peer writes nothing.
+	pub fn retire_peer(&mut self, kid: u64) -> Result<bool, RowError> {
+		self.checked(|session| {
+			session.begin_native(SessionPhase::Message)?;
+			if let Some(cache) = session.cache.as_mut() {
+				cache.peers.remove(&kid);
+			}
+			let key = storage_key(session.lineage, PEER, &kid.to_le_bytes());
+			let Some(bytes) = session.transaction.load(&key)? else {
+				return Ok(false);
+			};
+			let bytes = Zeroizing::new(bytes);
+			let row = bound_row(&key, &bytes, session.identity_digest)?;
+			if row.payload.is_empty() {
+				return Ok(false);
+			}
+			// Report a corrupt row instead of silently replacing it.
+			decode_peer(session.identity, kid, row.payload)?;
+			let generation = row
+				.generation
+				.checked_add(1)
+				.ok_or(RowError::GenerationExhausted)?;
+			let tombstone = encode_row(&key, generation, session.identity_digest, &[]);
+			session.transaction.store(&key, &tombstone)?;
+			Ok(true)
+		})
+	}
+
 	/// Accept once in the first registration phase; the private token cannot leave this session.
 	#[cfg(feature = "std")]
 	pub fn accept_registration(&mut self, bytes: &[u8]) -> Result<bool, RowError> {
@@ -1078,6 +1121,10 @@ impl<'a> RowSession<'a> {
 				};
 				let bytes = Zeroizing::new(bytes);
 				let row = bound_row(&key, &bytes, self.identity_digest)?;
+				if row.payload.is_empty() {
+					// A retired peer's tombstone; it is refused like an unknown identifier.
+					return Ok(RowTransition::unchanged());
+				}
 				let generation = row.generation;
 				let peer = decode_peer(self.identity, kid, row.payload)?;
 				(bytes, generation, peer)

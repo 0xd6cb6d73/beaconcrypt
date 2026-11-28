@@ -100,6 +100,8 @@ pub const STATUS_POISONED: u32 = 12;
 pub const STATUS_STORAGE: u32 = 13;
 // Status 14 belongs to invalid row transaction sessions.
 pub const STATUS_COMMIT_UNKNOWN: u32 = 15;
+/// The configured peer limit is reached; nothing was committed and the handle remains usable.
+pub const STATUS_CAPACITY: u32 = 16;
 
 /// Non-secret identity of one complete server snapshot. Its digest is not an authenticator.
 #[repr(C)]
@@ -275,6 +277,7 @@ fn error_status(error: PersistenceError) -> u32 {
 		PersistenceError::Poisoned => STATUS_POISONED,
 		PersistenceError::Storage => STATUS_STORAGE,
 		PersistenceError::CommitUnknown => STATUS_COMMIT_UNKNOWN,
+		PersistenceError::CapacityExceeded => STATUS_CAPACITY,
 	}
 }
 
