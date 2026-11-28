@@ -16,7 +16,7 @@ static bool go_store_load(void *context, void *sink_context, void (*sink)(void *
 }
 
 static bool go_store_compare_and_swap(void *context, const beaconcrypt_SnapshotHeadInfo *expected, const uint8_t *bytes, uintptr_t len) {
-	return beaconcryptGoStoreCompareAndSwap((uintptr_t)context, (beaconcrypt_SnapshotHeadInfo *)expected, (uint8_t *)bytes, len);
+	return beaconcryptGoStoreCompareAndSwap((uintptr_t)context, (beaconcrypt_SnapshotHeadInfo *)expected, len == 0 ? NULL : (uint8_t *)bytes, len);
 }
 
 static void go_store_destroy(void *context) {

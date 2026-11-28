@@ -9,16 +9,20 @@ typedef struct {
 	void *context;
 } row_delivery;
 
+// Defence in depth: Go aborts if a small non-null address reaches a pointer-typed stack slot,
+// so never forward a zero-length slice's address. Presence travels separately where it matters.
+static uint8_t *go_bytes(const uint8_t *bytes, uintptr_t len) { return len == 0 ? NULL : (uint8_t *)bytes; }
+
 static bool row_begin(void *context) { return beaconcryptGoRowBegin((uintptr_t)context); }
 static bool row_commit(void *context) { return beaconcryptGoRowCommit((uintptr_t)context); }
 static void row_rollback(void *context) { beaconcryptGoRowRollback((uintptr_t)context); }
 static void row_destroy(void *context) { beaconcryptGoRowDestroy((uintptr_t)context); }
 static int32_t row_load(void *context, const uint8_t *key, uintptr_t len, void *sink_context, void (*sink)(void *, const uint8_t *, uintptr_t)) {
 	row_delivery delivery = {sink, sink_context};
-	return beaconcryptGoRowLoad((uintptr_t)context, (uint8_t *)key, len, &delivery);
+	return beaconcryptGoRowLoad((uintptr_t)context, go_bytes(key, len), len, &delivery);
 }
 static bool row_store(void *context, const uint8_t *key, uintptr_t key_len, const uint8_t *value, uintptr_t value_len) {
-	return beaconcryptGoRowStore((uintptr_t)context, (uint8_t *)key, key_len, (uint8_t *)value, value_len);
+	return beaconcryptGoRowStore((uintptr_t)context, go_bytes(key, key_len), key_len, go_bytes(value, value_len), value_len);
 }
 static beaconcrypt_RowStoreCallbacks callbacks(uintptr_t token) {
 	beaconcrypt_RowStoreCallbacks result = {(void *)token, row_begin, row_load, row_store, row_commit, row_rollback, row_destroy};
@@ -45,7 +49,7 @@ static int32_t row_acceptance(void *context, beaconcrypt_RowSessionHandle *sessi
 }
 static bool row_completion(void *context, beaconcrypt_RowSessionHandle *session, const uint8_t *accepted, uintptr_t accepted_len, void *sink_context, void (*sink)(void *, const uint8_t *, uintptr_t)) {
 	row_delivery delivery = {sink, sink_context};
-	return beaconcryptGoRowCompletion((uintptr_t)context, session, (uint8_t *)accepted, accepted_len, &delivery);
+	return beaconcryptGoRowCompletion((uintptr_t)context, session, go_bytes(accepted, accepted_len), accepted_len, &delivery);
 }
 beaconcrypt_Buffer beaconcrypt_go_row_transaction(beaconcrypt_RowServerHandle *server, uintptr_t token) {
 	return beaconcrypt_row_server_transaction(server, (void *)token, row_transaction);
@@ -55,7 +59,7 @@ beaconcrypt_Buffer beaconcrypt_go_row_registration_transaction(beaconcrypt_RowSe
 }
 
 static int32_t row_expect(void *context, const uint8_t *key, uintptr_t key_len, const uint8_t *expected, uintptr_t expected_len, bool present) {
-    return beaconcryptGoRowExpect((uintptr_t)context, (uint8_t *)key, key_len, (uint8_t *)expected, expected_len, present);
+    return beaconcryptGoRowExpect((uintptr_t)context, go_bytes(key, key_len), key_len, go_bytes(expected, expected_len), expected_len, present);
 }
 static beaconcrypt_CachedRowStoreCallbacks cached_callbacks(uintptr_t token, bool expect) {
     beaconcrypt_CachedRowStoreCallbacks result = {callbacks(token), expect ? row_expect : NULL};

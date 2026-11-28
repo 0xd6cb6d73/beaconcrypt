@@ -139,11 +139,11 @@ typedef struct beaconcrypt_Server beaconcrypt_Server;
 /**
  * Heap-allocated byte buffer returned by the C API.
  *
- * A non-empty buffer must be released exactly once with `beaconcrypt_free_buffer`. An empty buffer has a null `ptr` and indicates either empty output or failure, depending on the called function.
+ * A buffer with a non-null `ptr` must be released exactly once with `beaconcrypt_free_buffer`. A null `ptr` indicates either empty output or failure, depending on the called function. Where a function distinguishes absence from a present empty value, the present empty value is a non-null buffer with zero `len`; it owns a real allocation and is released like any other buffer. No buffer, and no byte pointer passed to a callback, carries a dangling address: a zero-length callback slice is null or points to a valid static byte, which must not be read or written.
  */
 typedef struct beaconcrypt_Buffer {
   /**
-   * Pointer to the first byte, or null when the buffer is empty.
+   * Pointer to the first byte, null for no output, or a valid allocation when a present value is empty.
    */
   uint8_t *ptr;
   /**

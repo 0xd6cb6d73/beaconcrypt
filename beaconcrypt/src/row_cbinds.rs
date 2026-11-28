@@ -7,7 +7,7 @@ use crate::cbinds::{
 	Buffer, RegistrationResponse, STATUS_ENCODING, STATUS_GENERATION_EXHAUSTED,
 	STATUS_INITIALIZATION, STATUS_INVALID_ARGUMENT, STATUS_INVALID_SNAPSHOT,
 	STATUS_MISSING_SNAPSHOT, STATUS_OK, STATUS_REJECTED, STATUS_STALE_GENERATION, SendResult,
-	empty_buffer, encrypted_state, failed_send_result, into_buffer, send_result,
+	abi_ptr, empty_buffer, encrypted_state, failed_send_result, into_buffer, send_result,
 };
 use crate::row_binding_server::BindingRowServer;
 use crate::{
@@ -112,7 +112,7 @@ impl RowTransaction for CallbackStore {
 		let status = unsafe {
 			self.0.load.expect("validated callback")(
 				self.0.context,
-				key.as_ptr(),
+				abi_ptr(key),
 				key.len(),
 				(&mut loaded as *mut Loaded).cast(),
 				load_sink,
@@ -131,9 +131,9 @@ impl RowTransaction for CallbackStore {
 			match unsafe {
 				callback(
 					self.0.context,
-					key.as_ptr(),
+					abi_ptr(key),
 					key.len(),
-					bytes.as_ptr(),
+					abi_ptr(bytes),
 					bytes.len(),
 					expected.is_some(),
 				)
@@ -156,9 +156,9 @@ impl RowTransaction for CallbackStore {
 		if unsafe {
 			self.0.store.expect("validated callback")(
 				self.0.context,
-				key.as_ptr(),
+				abi_ptr(key),
 				key.len(),
-				value.as_ptr(),
+				abi_ptr(value),
 				value.len(),
 			)
 		} {
@@ -766,7 +766,7 @@ pub extern "C" fn beaconcrypt_row_server_registration_transaction(
 				finish(
 					context,
 					&mut handle,
-					accepted.as_ptr(),
+					abi_ptr(&accepted),
 					accepted.len(),
 					(&mut output as *mut Loaded).cast(),
 					load_sink,
@@ -1163,5 +1163,263 @@ mod composition_tests {
 			session_callback_output(&handle, output, true).err(),
 			Some(RowError::InvalidSession)
 		);
+	}
+}
+
+#[cfg(test)]
+mod abi_pointer_tests {
+	use super::*;
+	use crate::cbinds::beaconcrypt_free_buffer;
+	use crate::{Beacon, ProviderBeacon};
+	use std::collections::BTreeMap;
+
+	// Foreign runtimes such as Go abort on small non-null addresses in pointer slots.
+	fn dangling(pointer: *const u8) -> bool {
+		!pointer.is_null() && pointer.addr() < 4096
+	}
+
+	#[derive(Default)]
+	struct Database {
+		rows: BTreeMap<Vec<u8>, Vec<u8>>,
+		pending: Option<BTreeMap<Vec<u8>, Vec<u8>>>,
+		received: Vec<(*const u8, usize)>,
+	}
+
+	unsafe fn database<'a>(context: *mut c_void) -> &'a mut Database {
+		unsafe { &mut *context.cast::<Database>() }
+	}
+	unsafe fn view<'a>(pointer: *const u8, len: usize) -> &'a [u8] {
+		if len == 0 {
+			&[]
+		} else {
+			unsafe { slice::from_raw_parts(pointer, len) }
+		}
+	}
+	unsafe extern "C" fn begin(context: *mut c_void) -> bool {
+		let database = unsafe { database(context) };
+		database.pending = Some(database.rows.clone());
+		true
+	}
+	unsafe extern "C" fn load(
+		context: *mut c_void,
+		key: *const u8,
+		key_len: usize,
+		sink_context: *mut c_void,
+		sink: unsafe extern "C" fn(*mut c_void, *const u8, usize),
+	) -> i32 {
+		let database = unsafe { database(context) };
+		database.received.push((key, key_len));
+		let key = unsafe { view(key, key_len) };
+		match database.pending.as_ref().unwrap().get(key) {
+			Some(value) => {
+				unsafe { sink(sink_context, value.as_ptr(), value.len()) };
+				1
+			}
+			None => 0,
+		}
+	}
+	unsafe extern "C" fn store(
+		context: *mut c_void,
+		key: *const u8,
+		key_len: usize,
+		value: *const u8,
+		value_len: usize,
+	) -> bool {
+		let database = unsafe { database(context) };
+		database
+			.received
+			.extend([(key, key_len), (value, value_len)]);
+		let (key, value) = unsafe { (view(key, key_len), view(value, value_len)) };
+		database
+			.pending
+			.as_mut()
+			.unwrap()
+			.insert(key.to_vec(), value.to_vec());
+		true
+	}
+	unsafe extern "C" fn expect(
+		context: *mut c_void,
+		key: *const u8,
+		key_len: usize,
+		expected: *const u8,
+		expected_len: usize,
+		present: bool,
+	) -> i32 {
+		let database = unsafe { database(context) };
+		database
+			.received
+			.extend([(key, key_len), (expected, expected_len)]);
+		let (key, expected) = unsafe { (view(key, key_len), view(expected, expected_len)) };
+		let actual = database.pending.as_ref().unwrap().get(key);
+		i32::from(actual.map(Vec::as_slice) == present.then_some(expected))
+	}
+	unsafe extern "C" fn commit(context: *mut c_void) -> bool {
+		let database = unsafe { database(context) };
+		database.rows = database.pending.take().unwrap();
+		true
+	}
+	unsafe extern "C" fn rollback(context: *mut c_void) {
+		unsafe { database(context) }.pending = None;
+	}
+
+	unsafe extern "C" fn store_empty(
+		_: *mut c_void,
+		session: *mut RowSessionHandle,
+		sink_context: *mut c_void,
+		sink: unsafe extern "C" fn(*mut c_void, *const u8, usize),
+	) -> bool {
+		assert!(beaconcrypt_row_session_store(
+			session,
+			b"empty".as_ptr(),
+			5,
+			std::ptr::null(),
+			0
+		));
+		unsafe { sink(sink_context, std::ptr::null(), 0) };
+		true
+	}
+	unsafe extern "C" fn load_empty(
+		_: *mut c_void,
+		session: *mut RowSessionHandle,
+		sink_context: *mut c_void,
+		sink: unsafe extern "C" fn(*mut c_void, *const u8, usize),
+	) -> bool {
+		let value = beaconcrypt_row_session_load(session, b"empty".as_ptr(), 5);
+		// A present empty value is a non-null, freeable, non-dangling buffer.
+		assert!(!value.ptr.is_null() && !dangling(value.ptr) && value.len == 0);
+		beaconcrypt_free_buffer(value);
+		unsafe { sink(sink_context, std::ptr::null(), 0) };
+		true
+	}
+
+	struct Registration {
+		bundle: Vec<u8>,
+		accepted: Option<(*const u8, usize)>,
+		kid: u64,
+	}
+	unsafe extern "C" fn accept(
+		context: *mut c_void,
+		session: *mut RowSessionHandle,
+		sink_context: *mut c_void,
+		sink: unsafe extern "C" fn(*mut c_void, *const u8, usize),
+	) -> i32 {
+		let registration = unsafe { &mut *context.cast::<Registration>() };
+		let bundle = &registration.bundle;
+		assert!(beaconcrypt_row_session_accept_registration(
+			session,
+			bundle.as_ptr(),
+			bundle.len()
+		));
+		unsafe { sink(sink_context, std::ptr::null(), 0) };
+		1
+	}
+	unsafe extern "C" fn finish(
+		context: *mut c_void,
+		session: *mut RowSessionHandle,
+		accepted: *const u8,
+		accepted_len: usize,
+		sink_context: *mut c_void,
+		sink: unsafe extern "C" fn(*mut c_void, *const u8, usize),
+	) -> bool {
+		let registration = unsafe { &mut *context.cast::<Registration>() };
+		registration.accepted = Some((accepted, accepted_len));
+		let response = beaconcrypt_row_session_complete_registration(session, std::ptr::null(), 0);
+		let data = response.message.data;
+		assert!(!data.ptr.is_null());
+		registration.kid = response.message.key_id;
+		unsafe { sink(sink_context, data.ptr, data.len) };
+		beaconcrypt_free_buffer(data);
+		true
+	}
+
+	#[test]
+	fn empty_values_never_cross_the_abi_as_dangling_pointers() {
+		let empty = crate::cbinds::into_buffer(Vec::new());
+		assert!(!empty.ptr.is_null() && !dangling(empty.ptr) && empty.len == 0 && empty.cap >= 1);
+		beaconcrypt_free_buffer(empty);
+		assert!(!dangling(abi_ptr(&[])) && !abi_ptr(&[]).is_null());
+		assert_eq!(abi_ptr(b"x"), b"x".as_ptr());
+
+		let database = Box::leak(Box::new(Database::default()));
+		let context = (database as *mut Database).cast::<c_void>();
+		let callbacks = CachedRowStoreCallbacks {
+			store: RowStoreCallbacks {
+				context,
+				begin: Some(begin),
+				load: Some(load),
+				store: Some(store),
+				commit: Some(commit),
+				rollback: Some(rollback),
+				destroy: None,
+			},
+			expect: Some(expect),
+		};
+		let lineage = [5; 32];
+		let mut status = u32::MAX;
+		let handle = beaconcrypt_cached_row_server_create(
+			19,
+			[7; 32].as_ptr(),
+			32,
+			[8; 32].as_ptr(),
+			32,
+			callbacks,
+			lineage.as_ptr(),
+			32,
+			2,
+			&mut status,
+		);
+		assert_eq!(status, STATUS_OK);
+
+		for callback in [store_empty, load_empty] {
+			let output =
+				beaconcrypt_row_server_transaction(handle, std::ptr::null_mut(), Some(callback));
+			assert_eq!(beaconcrypt_row_server_last_status(handle), STATUS_OK);
+			assert!(!output.ptr.is_null() && !dangling(output.ptr) && output.len == 0);
+			beaconcrypt_free_buffer(output);
+		}
+
+		let server = unsafe { &(*handle).0 };
+		let mut beacon = Beacon::new(
+			19,
+			server.identity_pk().as_bytes(),
+			&server.mldsa_public_key(),
+		);
+		let mut registration = Registration {
+			bundle: beacon.get_registration_bundle().unwrap(),
+			accepted: None,
+			kid: 0,
+		};
+		let mut phase = u32::MAX;
+		let output = beaconcrypt_row_server_registration_transaction(
+			handle,
+			(&mut registration as *mut Registration).cast(),
+			Some(accept),
+			Some(finish),
+			&mut phase,
+		);
+		assert_eq!(beaconcrypt_row_server_last_status(handle), STATUS_OK);
+		let (accepted, accepted_len) = registration.accepted.unwrap();
+		assert!(!accepted.is_null() && !dangling(accepted) && accepted_len == 0);
+		let response = unsafe { view(output.ptr, output.len) };
+		beacon.finish_registration(response).unwrap();
+		beaconcrypt_free_buffer(output);
+
+		// A warm cached peer is validated through the expectation callback.
+		let kid = registration.kid;
+		assert_eq!(kid, beacon.identity_key_kid());
+		for _ in 0..2 {
+			let sent = beaconcrypt_row_server_encrypt(handle, b"task".as_ptr(), 4, kid);
+			assert_eq!(beaconcrypt_row_server_last_status(handle), STATUS_OK);
+			beaconcrypt_free_buffer(sent);
+		}
+
+		assert!(database.received.iter().any(|&(_, len)| len == 0));
+		for &(pointer, len) in &database.received {
+			assert!(
+				!dangling(pointer),
+				"dangling callback pointer for {len} bytes"
+			);
+		}
+		beaconcrypt_row_server_free(handle);
 	}
 }

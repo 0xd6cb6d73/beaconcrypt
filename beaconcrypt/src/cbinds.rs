@@ -185,7 +185,7 @@ impl SnapshotStore for CallbackStore {
 				expected
 					.as_ref()
 					.map_or(std::ptr::null(), std::ptr::from_ref),
-				replacement.as_bytes().as_ptr(),
+				abi_ptr(replacement.as_bytes()),
 				replacement.as_bytes().len(),
 			)
 		};
@@ -274,10 +274,10 @@ fn callback_store(
 
 /// Heap-allocated byte buffer returned by the C API.
 ///
-/// A non-empty buffer must be released exactly once with `beaconcrypt_free_buffer`. An empty buffer has a null `ptr` and indicates either empty output or failure, depending on the called function.
+/// A buffer with a non-null `ptr` must be released exactly once with `beaconcrypt_free_buffer`. A null `ptr` indicates either empty output or failure, depending on the called function. Where a function distinguishes absence from a present empty value, the present empty value is a non-null buffer with zero `len`; it owns a real allocation and is released like any other buffer. No buffer, and no byte pointer passed to a callback, carries a dangling address: a zero-length callback slice is null or points to a valid static byte, which must not be read or written.
 #[repr(C)]
 pub struct Buffer {
-	/// Pointer to the first byte, or null when the buffer is empty.
+	/// Pointer to the first byte, null for no output, or a valid allocation when a present value is empty.
 	pub ptr: *mut u8,
 	/// Number of initialized bytes available through `ptr`.
 	pub len: usize,
@@ -376,7 +376,25 @@ pub(crate) fn empty_buffer() -> Buffer {
 	}
 }
 
+// Rust represents empty slices and unallocated vectors with a dangling address such as 0x1.
+// Foreign runtimes may treat such a value in a pointer-typed slot as corruption (Go aborts
+// when it copies a stack holding one), so no dangling address may cross this ABI.
+static EMPTY_BYTES: u8 = 0;
+
+/// The address passed to foreign callbacks for `bytes`: a valid static address when empty.
+pub(crate) fn abi_ptr(bytes: &[u8]) -> *const u8 {
+	if bytes.is_empty() {
+		&raw const EMPTY_BYTES
+	} else {
+		bytes.as_ptr()
+	}
+}
+
 pub(crate) fn into_buffer(mut data: Vec<u8>) -> Buffer {
+	// A present empty buffer owns a real allocation, so its non-null pointer stays freeable.
+	if data.capacity() == 0 {
+		data.reserve_exact(1);
+	}
 	let buffer = Buffer {
 		ptr: data.as_mut_ptr(),
 		len: data.len(),
