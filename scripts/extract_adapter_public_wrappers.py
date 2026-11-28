@@ -345,7 +345,9 @@ SUPPORT = (
 )
 
 
-CONTROL_SHA256 = "ed0b8a9c43e688f55b032dcb932a78437a9712dd7928d3821350f81de39a6d51"
+# Refreshed after the security-review fixes added adapter types: the certificate equals its
+# predecessor up to a monotone bijective renumbering of 350 interned type ids.
+CONTROL_SHA256 = "3df9e741f9041ee3c141a5fffa474c352bdac3c1575818e9e2a44dcf6a23b564"
 
 
 def digest(contents: bytes) -> str:
