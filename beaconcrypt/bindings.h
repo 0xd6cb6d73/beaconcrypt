@@ -117,7 +117,7 @@
 typedef struct beaconcrypt_Beacon beaconcrypt_Beacon;
 
 /**
- * A database-backed row server. Serialize calls on one handle and never reenter it from callbacks.
+ * A database-backed row server. Serialize calls on one handle and never reenter it from callbacks; a reentrant call is refused with `STATUS_INVALID_ARGUMENT` or an empty result, and a reentrant free is ignored.
  */
 typedef struct beaconcrypt_RowServerHandle beaconcrypt_RowServerHandle;
 
@@ -129,7 +129,7 @@ typedef struct beaconcrypt_RowSessionHandle beaconcrypt_RowSessionHandle;
 /**
  * Opaque server handle owned by the C caller.
  *
- * Callers must serialize all access to one handle, including queries and destruction. Store callbacks must not reenter their owning handle.
+ * Callers must serialize all access to one handle, including queries and destruction. Store callbacks must not reenter their owning handle; such a call is refused with `STATUS_INVALID_ARGUMENT` or an empty result, and a reentrant free is ignored.
  */
 /**
  * Server backed by trusted snapshot storage. Store callbacks must not reenter this server.
@@ -389,7 +389,7 @@ uint32_t beaconcrypt_server_head(const struct beaconcrypt_Server *handle,
                                  struct beaconcrypt_SnapshotHeadInfo *out);
 
 /**
- * Query whether a failed commit has fenced this owner. Returns false for null and preserves the last operation's status.
+ * Query whether a failed commit has fenced this owner. Returns false for null, true while a reentrant callback queries an in-progress operation, and preserves the last operation's status.
  */
 bool beaconcrypt_server_is_poisoned(const struct beaconcrypt_Server *handle);
 
@@ -451,7 +451,7 @@ struct beaconcrypt_Beacon *beaconcrypt_beacon_new(uint64_t server_kid,
 /**
  * Release a server handle created by this API.
  *
- * Passing null is allowed. The handle must not be used after this call.
+ * Passing null is allowed. The handle must not be used after this call. A call made from one of the handle's own callbacks is ignored, because the active operation still owns the server.
  */
 void beaconcrypt_server_free(struct beaconcrypt_Server *handle);
 

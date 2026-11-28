@@ -4,7 +4,7 @@ use std::{cell::Cell, ffi::c_void, slice};
 use zeroize::Zeroizing;
 
 use crate::cbinds::{
-	Buffer, RegistrationResponse, STATUS_ENCODING, STATUS_GENERATION_EXHAUSTED,
+	Buffer, Exclusive, RegistrationResponse, STATUS_ENCODING, STATUS_GENERATION_EXHAUSTED,
 	STATUS_INITIALIZATION, STATUS_INVALID_ARGUMENT, STATUS_INVALID_SNAPSHOT,
 	STATUS_MISSING_SNAPSHOT, STATUS_OK, STATUS_REJECTED, STATUS_STALE_GENERATION, SendResult,
 	abi_ptr, empty_buffer, encrypted_state, failed_send_result, into_buffer, send_result,
@@ -15,8 +15,8 @@ use crate::{
 	RowSession, RowStore, RowTransaction, RowTransition, SnapshotLineage,
 };
 
-/// A database-backed row server. Serialize calls on one handle and never reenter it from callbacks.
-pub struct RowServerHandle(BindingRowServer<Box<dyn RowStore>>, Cell<u32>);
+/// A database-backed row server. Serialize calls on one handle and never reenter it from callbacks; a reentrant call is refused with `STATUS_INVALID_ARGUMENT` or an empty result, and a reentrant free is ignored.
+pub struct RowServerHandle(Exclusive<BindingRowServer<Box<dyn RowStore>>>, Cell<u32>);
 
 /// A committed row message and authenticated peer/sequence metadata. Free `data` with `beaconcrypt_free_buffer`; it contains ciphertext for encrypt and plaintext for decrypt. Failure returns an empty buffer and zero metadata; inspect the server's last status.
 #[repr(C)]
@@ -233,7 +233,10 @@ fn construct(
 			if !out.is_null() {
 				unsafe { *out = STATUS_OK };
 			}
-			Box::into_raw(Box::new(RowServerHandle(server, Cell::new(STATUS_OK))))
+			Box::into_raw(Box::new(RowServerHandle(
+				Exclusive::new(server),
+				Cell::new(STATUS_OK),
+			)))
 		}
 		Err(error) => {
 			if !out.is_null() {
@@ -393,25 +396,30 @@ pub extern "C" fn beaconcrypt_cached_row_server_open(
 /// Return zero for an uncached handle.
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_row_server_cache_capacity(handle: *const RowServerHandle) -> usize {
-	unsafe { handle.as_ref() }.map_or(0, |server| server.0.cache_capacity())
+	unsafe { handle.as_ref() }
+		.and_then(|server| server.0.enter())
+		.map_or(0, |owner| owner.cache_capacity())
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_row_server_cached_peer_count(
 	handle: *const RowServerHandle,
 ) -> usize {
-	unsafe { handle.as_ref() }.map_or(0, |server| server.0.cached_peer_count())
+	unsafe { handle.as_ref() }
+		.and_then(|server| server.0.enter())
+		.map_or(0, |owner| owner.cached_peer_count())
 }
 /// Discard local decoded peers without changing the database. Serialize with all other handle calls.
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_row_server_clear_cache(handle: *mut RowServerHandle) {
-	if let Some(server) = unsafe { handle.as_mut() } {
-		server.0.clear_cache();
+	if let Some(mut owner) = unsafe { handle.as_ref() }.and_then(|server| server.0.enter()) {
+		owner.clear_cache();
 	}
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_row_server_free(handle: *mut RowServerHandle) {
-	if !handle.is_null() {
+	// A free made from one of the handle's own callbacks is ignored; the active call owns it.
+	if !handle.is_null() && !(unsafe { &*handle }).0.is_busy() {
 		drop(unsafe { Box::from_raw(handle) });
 	}
 }
@@ -455,7 +463,11 @@ pub extern "C" fn beaconcrypt_row_server_register(
 		response: empty_buffer(),
 		key_id: 0,
 	};
-	let Some(server) = (unsafe { handle.as_mut() }) else {
+	let Some(server) = (unsafe { handle.as_ref() }) else {
+		return empty();
+	};
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty();
 	};
 	server.1.set(STATUS_INVALID_ARGUMENT);
@@ -468,9 +480,7 @@ pub extern "C" fn beaconcrypt_row_server_register(
 	};
 	match complete(
 		&server.1,
-		server
-			.0
-			.register_beacon(registration, has_message.then_some(message)),
+		owner.register_beacon(registration, has_message.then_some(message)),
 	) {
 		Some(response) => RegistrationResponse {
 			response: into_buffer(response.serialized),
@@ -497,14 +507,18 @@ pub extern "C" fn beaconcrypt_row_server_encrypt_with_metadata(
 	len: usize,
 	kid: u64,
 ) -> RowMessageBuffer {
-	let Some(server) = (unsafe { handle.as_mut() }) else {
+	let Some(server) = (unsafe { handle.as_ref() }) else {
+		return empty_message();
+	};
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_message();
 	};
 	server.1.set(STATUS_INVALID_ARGUMENT);
 	let Some(data) = (unsafe { bytes(data, len) }) else {
 		return empty_message();
 	};
-	complete(&server.1, server.0.encrypt_message(data, kid)).map_or_else(empty_message, |value| {
+	complete(&server.1, owner.encrypt_message(data, kid)).map_or_else(empty_message, |value| {
 		RowMessageBuffer {
 			data: into_buffer(value.ciphertext),
 			key_id: value.key_id,
@@ -521,14 +535,18 @@ pub extern "C" fn beaconcrypt_row_server_encrypt_outcome(
 	len: usize,
 	kid: u64,
 ) -> SendResult {
-	let Some(server) = (unsafe { handle.as_mut() }) else {
+	let Some(server) = (unsafe { handle.as_ref() }) else {
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
 		return failed_send_result(STATUS_INVALID_ARGUMENT);
 	};
 	let Some(data) = (unsafe { bytes(data, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return failed_send_result(STATUS_INVALID_ARGUMENT);
 	};
-	match server.0.encrypt_message_outcome(data, kid) {
+	match owner.encrypt_message_outcome(data, kid) {
 		Ok(outcome) => {
 			server.1.set(STATUS_OK);
 			send_result(
@@ -559,14 +577,18 @@ pub extern "C" fn beaconcrypt_row_server_decrypt_with_metadata(
 	data: *const u8,
 	len: usize,
 ) -> RowMessageBuffer {
-	let Some(server) = (unsafe { handle.as_mut() }) else {
+	let Some(server) = (unsafe { handle.as_ref() }) else {
+		return empty_message();
+	};
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_message();
 	};
 	server.1.set(STATUS_INVALID_ARGUMENT);
 	let Some(data) = (unsafe { bytes(data, len) }) else {
 		return empty_message();
 	};
-	complete(&server.1, server.0.decrypt_message(data)).map_or_else(empty_message, |value| {
+	complete(&server.1, owner.decrypt_message(data)).map_or_else(empty_message, |value| {
 		RowMessageBuffer {
 			data: into_buffer(value.plaintext),
 			key_id: value.key_id,
@@ -577,18 +599,22 @@ pub extern "C" fn beaconcrypt_row_server_decrypt_with_metadata(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_row_server_identity_pk(handle: *const RowServerHandle) -> Buffer {
-	unsafe { handle.as_ref() }.map_or_else(empty_buffer, |server| {
-		into_buffer(server.0.identity_pk().as_bytes().to_vec())
-	})
+	unsafe { handle.as_ref() }
+		.and_then(|server| server.0.enter())
+		.map_or_else(empty_buffer, |owner| {
+			into_buffer(owner.identity_pk().as_bytes().to_vec())
+		})
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_row_server_mldsa_public_key(
 	handle: *const RowServerHandle,
 ) -> Buffer {
-	unsafe { handle.as_ref() }.map_or_else(empty_buffer, |server| {
-		into_buffer(server.0.mldsa_public_key().to_vec())
-	})
+	unsafe { handle.as_ref() }
+		.and_then(|server| server.0.enter())
+		.map_or_else(empty_buffer, |owner| {
+			into_buffer(owner.mldsa_public_key().to_vec())
+		})
 }
 
 /// A trusted callback-scoped transaction session. The pointer and any calls using it must remain on the callback's thread and must not escape that callback. Recursive session calls are rejected and abort the transaction. Session outputs are pending and must not be published before the outer server call succeeds. Do not reenter the owning server.
@@ -680,14 +706,18 @@ pub extern "C" fn beaconcrypt_row_server_transaction(
 		) -> bool,
 	>,
 ) -> Buffer {
-	let Some(server) = (unsafe { handle.as_mut() }) else {
+	let Some(server) = (unsafe { handle.as_ref() }) else {
+		return empty_buffer();
+	};
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_buffer();
 	};
 	server.1.set(STATUS_INVALID_ARGUMENT);
 	let Some(callback) = callback else {
 		return empty_buffer();
 	};
-	let output = server.0.transaction(|session| {
+	let output = owner.transaction(|session| {
 		let mut handle = session_handle(session);
 		let mut output = Loaded::default();
 		let succeeded = unsafe {
@@ -733,14 +763,18 @@ pub extern "C" fn beaconcrypt_row_server_registration_transaction(
 	if !phase_out.is_null() {
 		unsafe { *phase_out = ROW_PHASE_ACCEPTANCE };
 	}
-	let Some(server) = (unsafe { handle.as_mut() }) else {
+	let Some(server) = (unsafe { handle.as_ref() }) else {
+		return empty_buffer();
+	};
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_buffer();
 	};
 	server.1.set(STATUS_INVALID_ARGUMENT);
 	let (Some(accept), Some(finish)) = (accept, finish) else {
 		return empty_buffer();
 	};
-	let output = server.0.registration_transaction(
+	let output = owner.registration_transaction(
 		|session| {
 			let mut handle = session_handle(session);
 			let mut output = Loaded::default();
@@ -1051,14 +1085,20 @@ mod composition_tests {
 					RowServer::create(19, Some(&[7; 32]), Some(&[8; 32]), store, lineage).unwrap(),
 				)
 			};
-			let mut handle = RowServerHandle(owner, Cell::new(STATUS_OK));
+			let mut handle = RowServerHandle(Exclusive::new(owner), Cell::new(STATUS_OK));
+			let mldsa_public_key = handle.0.get_mut().mldsa_public_key();
 			let mut beacon = Beacon::new(
 				19,
-				handle.0.identity_pk().as_bytes(),
-				&handle.0.mldsa_public_key(),
+				handle.0.get_mut().identity_pk().as_bytes(),
+				&mldsa_public_key,
 			);
 			let bundle = beacon.get_registration_bundle().unwrap();
-			let registration = handle.0.register_beacon(&bundle, None).unwrap().unwrap();
+			let registration = handle
+				.0
+				.get_mut()
+				.register_beacon(&bundle, None)
+				.unwrap()
+				.unwrap();
 			beacon
 				.finish_registration(&registration.serialized)
 				.unwrap();
@@ -1178,11 +1218,43 @@ mod abi_pointer_tests {
 		!pointer.is_null() && pointer.addr() < 4096
 	}
 
-	#[derive(Default)]
 	struct Database {
 		rows: BTreeMap<Vec<u8>, Vec<u8>>,
 		pending: Option<BTreeMap<Vec<u8>, Vec<u8>>>,
 		received: Vec<(*const u8, usize)>,
+		// A handle that the load callback reenters, and whether each reentry was refused.
+		reenter: *mut RowServerHandle,
+		refused_reentries: Vec<bool>,
+	}
+
+	impl Default for Database {
+		fn default() -> Self {
+			Self {
+				rows: BTreeMap::new(),
+				pending: None,
+				received: Vec::new(),
+				reenter: std::ptr::null_mut(),
+				refused_reentries: Vec::new(),
+			}
+		}
+	}
+
+	// Every row server entry point must refuse a call made from its own store callback.
+	fn reenter_own_handle(handle: *mut RowServerHandle) -> bool {
+		let sent = beaconcrypt_row_server_encrypt(handle, b"x".as_ptr(), 1, 20);
+		let send_refused = sent.ptr.is_null()
+			&& beaconcrypt_row_server_last_status(handle) == STATUS_INVALID_ARGUMENT;
+		let transaction =
+			beaconcrypt_row_server_transaction(handle, std::ptr::null_mut(), Some(store_empty));
+		let identity_refused = beaconcrypt_row_server_identity_pk(handle).ptr.is_null()
+			&& beaconcrypt_row_server_mldsa_public_key(handle)
+				.ptr
+				.is_null();
+		let cache_refused = beaconcrypt_row_server_cache_capacity(handle) == 0;
+		beaconcrypt_row_server_clear_cache(handle);
+		// A reentrant free is ignored; the outer call must still find its server.
+		beaconcrypt_row_server_free(handle);
+		send_refused && transaction.ptr.is_null() && identity_refused && cache_refused
 	}
 
 	unsafe fn database<'a>(context: *mut c_void) -> &'a mut Database {
@@ -1197,6 +1269,14 @@ mod abi_pointer_tests {
 	}
 	unsafe extern "C" fn begin(context: *mut c_void) -> bool {
 		let database = unsafe { database(context) };
+		if !database.reenter.is_null() {
+			let handle = std::mem::replace(&mut database.reenter, std::ptr::null_mut());
+			let refused = reenter_own_handle(handle);
+			unsafe { self::database(context) }
+				.refused_reentries
+				.push(refused);
+		}
+		let database = unsafe { self::database(context) };
 		database.pending = Some(database.rows.clone());
 		true
 	}
@@ -1378,7 +1458,7 @@ mod abi_pointer_tests {
 			beaconcrypt_free_buffer(output);
 		}
 
-		let server = unsafe { &(*handle).0 };
+		let server = unsafe { (*handle).0.get_mut() };
 		let mut beacon = Beacon::new(
 			19,
 			server.identity_pk().as_bytes(),
@@ -1412,6 +1492,14 @@ mod abi_pointer_tests {
 			assert_eq!(beaconcrypt_row_server_last_status(handle), STATUS_OK);
 			beaconcrypt_free_buffer(sent);
 		}
+
+		database.reenter = handle;
+		let sent = beaconcrypt_row_server_encrypt(handle, b"outer".as_ptr(), 5, kid);
+		assert_eq!(beaconcrypt_row_server_last_status(handle), STATUS_OK);
+		let frame = unsafe { view(sent.ptr, sent.len) }.to_vec();
+		beaconcrypt_free_buffer(sent);
+		assert_eq!(beacon.decrypt_message(&frame).unwrap().plaintext, b"outer");
+		assert_eq!(database.refused_reentries, [true]);
 
 		assert!(database.received.iter().any(|&(_, len)| len == 0));
 		for &(pointer, len) in &database.received {

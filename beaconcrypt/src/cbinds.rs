@@ -6,7 +6,7 @@ use crate::persistence::{
 };
 use crate::server::{RecvState, SendState};
 use crate::{Beacon, ProviderBeacon, SendOutcome};
-use std::cell::Cell;
+use std::cell::{Cell, UnsafeCell};
 use std::ffi::c_void;
 use std::mem;
 use std::slice;
@@ -14,8 +14,75 @@ use zeroize::{Zeroize, Zeroizing};
 
 /// Opaque server handle owned by the C caller.
 ///
-/// Callers must serialize all access to one handle, including queries and destruction. Store callbacks must not reenter their owning handle.
-pub struct Server(PersistentServer<Box<dyn SnapshotStore>>, Cell<u32>);
+/// Callers must serialize all access to one handle, including queries and destruction. Store callbacks must not reenter their owning handle; such a call is refused with `STATUS_INVALID_ARGUMENT` or an empty result, and a reentrant free is ignored.
+pub struct Server(
+	Exclusive<PersistentServer<Box<dyn SnapshotStore>>>,
+	Cell<u32>,
+);
+
+/// Owner state that at most one entry point can borrow at a time.
+///
+/// Entry points hold only a shared reference to their handle, so a reentrant call can observe the
+/// busy flag without aliasing the active call's mutable borrow.
+pub(crate) struct Exclusive<T> {
+	value: UnsafeCell<T>,
+	busy: Cell<bool>,
+}
+
+/// Exclusive access released when dropped.
+pub(crate) struct ExclusiveGuard<'a, T> {
+	value: &'a mut T,
+	busy: &'a Cell<bool>,
+}
+
+impl<T> Exclusive<T> {
+	pub(crate) const fn new(value: T) -> Self {
+		Self {
+			value: UnsafeCell::new(value),
+			busy: Cell::new(false),
+		}
+	}
+
+	/// Borrow the owner, or return `None` while another entry point on this handle is active.
+	pub(crate) fn enter(&self) -> Option<ExclusiveGuard<'_, T>> {
+		if self.busy.replace(true) {
+			return None;
+		}
+		// The busy flag admits one guard at a time, and `Cell` keeps the handle single-threaded.
+		Some(ExclusiveGuard {
+			value: unsafe { &mut *self.value.get() },
+			busy: &self.busy,
+		})
+	}
+
+	pub(crate) fn is_busy(&self) -> bool {
+		self.busy.get()
+	}
+
+	#[cfg(test)]
+	pub(crate) fn get_mut(&mut self) -> &mut T {
+		self.value.get_mut()
+	}
+}
+
+impl<T> core::ops::Deref for ExclusiveGuard<'_, T> {
+	type Target = T;
+	fn deref(&self) -> &T {
+		self.value
+	}
+}
+
+impl<T> core::ops::DerefMut for ExclusiveGuard<'_, T> {
+	fn deref_mut(&mut self) -> &mut T {
+		self.value
+	}
+}
+
+impl<T> Drop for ExclusiveGuard<'_, T> {
+	fn drop(&mut self) {
+		self.busy.set(false);
+	}
+}
 
 pub const STATUS_OK: u32 = 0;
 pub const STATUS_REJECTED: u32 = 1;
@@ -248,7 +315,10 @@ fn server_result(
 	match result {
 		Ok(server) => {
 			set_status_out(status_out, STATUS_OK);
-			Box::into_raw(Box::new(Server(server, Cell::new(STATUS_OK))))
+			Box::into_raw(Box::new(Server(
+				Exclusive::new(server),
+				Cell::new(STATUS_OK),
+			)))
 		}
 		Err(error) => {
 			set_status_out(status_out, error_status(error));
@@ -702,14 +772,24 @@ pub extern "C" fn beaconcrypt_server_head(
 	if handle.is_null() || out.is_null() {
 		return STATUS_INVALID_ARGUMENT;
 	}
-	unsafe { *out = (&*handle).0.head().into() };
+	let Some(owner) = (unsafe { &*handle }).0.enter() else {
+		return STATUS_INVALID_ARGUMENT;
+	};
+	unsafe { *out = owner.head().into() };
 	STATUS_OK
 }
 
-/// Query whether a failed commit has fenced this owner. Returns false for null and preserves the last operation's status.
+/// Query whether a failed commit has fenced this owner. Returns false for null, true while a reentrant callback queries an in-progress operation, and preserves the last operation's status.
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_server_is_poisoned(handle: *const Server) -> bool {
-	!handle.is_null() && unsafe { (&*handle).0.is_poisoned() }
+	if handle.is_null() {
+		return false;
+	}
+	// An in-progress operation has already fenced the owner until its commit succeeds.
+	(unsafe { &*handle })
+		.0
+		.enter()
+		.is_none_or(|owner| owner.is_poisoned())
 }
 
 /// Return the last server operation's status, or `beaconcrypt_STATUS_INVALID_ARGUMENT` for null.
@@ -806,7 +886,11 @@ pub extern "C" fn beaconcrypt_server_export_state(handle: *const Server) -> Buff
 		return empty_buffer();
 	}
 	let provider = unsafe { &*handle };
-	complete(&provider.1, provider.0.snapshot())
+	let Some(owner) = provider.0.enter() else {
+		provider.1.set(STATUS_INVALID_ARGUMENT);
+		return empty_buffer();
+	};
+	complete(&provider.1, owner.snapshot())
 		.map(|snapshot| into_buffer(snapshot.as_bytes().to_vec()))
 		.unwrap_or_else(empty_buffer)
 }
@@ -837,10 +921,10 @@ pub extern "C" fn beaconcrypt_beacon_new(
 
 /// Release a server handle created by this API.
 ///
-/// Passing null is allowed. The handle must not be used after this call.
+/// Passing null is allowed. The handle must not be used after this call. A call made from one of the handle's own callbacks is ignored, because the active operation still owns the server.
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_server_free(handle: *mut Server) {
-	if !handle.is_null() {
+	if !handle.is_null() && !(unsafe { &*handle }).0.is_busy() {
 		unsafe { drop(Box::from_raw(handle)) };
 	}
 }
@@ -862,8 +946,10 @@ pub extern "C" fn beaconcrypt_server_identity_pk(handle: *const Server) -> Buffe
 	if handle.is_null() {
 		return empty_buffer();
 	}
-	let provider = unsafe { &*handle };
-	into_buffer(provider.0.identity_pk().as_ref().to_vec())
+	let Some(owner) = (unsafe { &*handle }).0.enter() else {
+		return empty_buffer();
+	};
+	into_buffer(owner.identity_pk().as_ref().to_vec())
 }
 /// Copy the beacon identity public key into a caller-owned buffer.
 ///
@@ -884,8 +970,10 @@ pub extern "C" fn beaconcrypt_server_mldsa_public_key(handle: *const Server) -> 
 	if handle.is_null() {
 		return empty_buffer();
 	}
-	let provider = unsafe { &*handle };
-	into_buffer(provider.0.mldsa_public_key().to_vec())
+	let Some(owner) = (unsafe { &*handle }).0.enter() else {
+		return empty_buffer();
+	};
+	into_buffer(owner.mldsa_public_key().to_vec())
 }
 
 /// Generate the beacon's serialized registration bundle.
@@ -920,7 +1008,14 @@ pub extern "C" fn beaconcrypt_register_beacon(
 			key_id: 0,
 		};
 	}
-	let server = unsafe { &mut *handle };
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return RegistrationResponse {
+			response: empty_buffer(),
+			key_id: 0,
+		};
+	};
 	let Some(registration) = (unsafe { input(reg_ptr, reg_len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return RegistrationResponse {
@@ -935,8 +1030,7 @@ pub extern "C" fn beaconcrypt_register_beacon(
 			key_id: 0,
 		};
 	};
-	let Some(secret) = complete_operation(&server.1, server.0.get_shared_secret(registration))
-	else {
+	let Some(secret) = complete_operation(&server.1, owner.get_shared_secret(registration)) else {
 		return RegistrationResponse {
 			response: empty_buffer(),
 			key_id: 0,
@@ -944,7 +1038,7 @@ pub extern "C" fn beaconcrypt_register_beacon(
 	};
 	let Some(response) = complete_operation(
 		&server.1,
-		server.0.build_registration_response(secret, message),
+		owner.build_registration_response(secret, message),
 	) else {
 		return RegistrationResponse {
 			response: empty_buffer(),
@@ -1000,14 +1094,18 @@ pub extern "C" fn beaconcrypt_encrypt_to_beacon_outcome(
 	ptr: *const u8,
 	len: usize,
 ) -> SendResult {
-	let Some(server) = (unsafe { handle.as_mut() }) else {
+	let Some(server) = (unsafe { handle.as_ref() }) else {
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
 		return failed_send_result(STATUS_INVALID_ARGUMENT);
 	};
 	let Some(data) = (unsafe { send_input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return failed_send_result(STATUS_INVALID_ARGUMENT);
 	};
-	match server.0.encrypt_message_outcome(data, key_id) {
+	match owner.encrypt_message_outcome(data, key_id) {
 		Ok(outcome) => {
 			server.1.set(STATUS_OK);
 			send_result(outcome, encrypted_state)
@@ -1028,14 +1126,18 @@ pub extern "C" fn beaconcrypt_encrypt_and_update_outcome(
 	ptr: *const u8,
 	len: usize,
 ) -> SendResult {
-	let Some(server) = (unsafe { handle.as_mut() }) else {
+	let Some(server) = (unsafe { handle.as_ref() }) else {
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
 		return failed_send_result(STATUS_INVALID_ARGUMENT);
 	};
 	let Some(data) = (unsafe { send_input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return failed_send_result(STATUS_INVALID_ARGUMENT);
 	};
-	match server.0.encrypt_and_update_outcome(data, key_id) {
+	match owner.encrypt_and_update_outcome(data, key_id) {
 		Ok(outcome) => {
 			server.1.set(STATUS_OK);
 			send_result(outcome, outcome_update)
@@ -1056,18 +1158,21 @@ pub extern "C" fn beaconcrypt_encrypt_and_update_json_outcome(
 	ptr: *const u8,
 	len: usize,
 ) -> SendResult {
-	let Some(server) = (unsafe { handle.as_mut() }) else {
+	let Some(server) = (unsafe { handle.as_ref() }) else {
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
 		return failed_send_result(STATUS_INVALID_ARGUMENT);
 	};
 	let Some(data) = (unsafe { send_input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return failed_send_result(STATUS_INVALID_ARGUMENT);
 	};
-	match server.0.encrypt_and_update_json_outcome(data, key_id) {
+	match owner.encrypt_and_update_json_outcome(data, key_id) {
 		Ok(outcome) => {
 			server.1.set(STATUS_OK);
-			let sequence = server
-				.0
+			let sequence = owner
 				.ratchet_status(key_id)
 				.map_or(0, |status| status.send_sequence());
 			send_result(outcome, |json| EncryptState {
@@ -1126,12 +1231,16 @@ pub extern "C" fn beaconcrypt_encrypt_and_update(
 	if handle.is_null() {
 		return empty_encrypt_state();
 	}
-	let server = unsafe { &mut *handle };
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return empty_encrypt_state();
+	};
 	let Some(data) = (unsafe { input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_encrypt_state();
 	};
-	complete_operation(&server.1, server.0.encrypt_and_update(data, key_id))
+	complete_operation(&server.1, owner.encrypt_and_update(data, key_id))
 		.and_then(into_send_state)
 		.unwrap_or_else(empty_encrypt_state)
 }
@@ -1149,12 +1258,16 @@ pub extern "C" fn beaconcrypt_encrypt_and_update_json(
 	if handle.is_null() {
 		return empty_buffer();
 	}
-	let server = unsafe { &mut *handle };
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return empty_buffer();
+	};
 	let Some(data) = (unsafe { input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_buffer();
 	};
-	complete_operation(&server.1, server.0.encrypt_and_update_json(data, key_id))
+	complete_operation(&server.1, owner.encrypt_and_update_json(data, key_id))
 		.map(|state| into_buffer(state.into_bytes()))
 		.unwrap_or_else(empty_buffer)
 }
@@ -1171,12 +1284,16 @@ pub extern "C" fn beaconcrypt_decrypt_and_update(
 	if handle.is_null() {
 		return empty_encrypt_state();
 	}
-	let server = unsafe { &mut *handle };
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return empty_encrypt_state();
+	};
 	let Some(data) = (unsafe { input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_encrypt_state();
 	};
-	complete_operation(&server.1, server.0.decrypt_and_update(data))
+	complete_operation(&server.1, owner.decrypt_and_update(data))
 		.and_then(into_recv_state)
 		.unwrap_or_else(empty_encrypt_state)
 }
@@ -1193,12 +1310,16 @@ pub extern "C" fn beaconcrypt_decrypt_and_update_json(
 	if handle.is_null() {
 		return empty_buffer();
 	}
-	let server = unsafe { &mut *handle };
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return empty_buffer();
+	};
 	let Some(data) = (unsafe { input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_buffer();
 	};
-	complete_operation(&server.1, server.0.decrypt_and_update_json(data))
+	complete_operation(&server.1, owner.decrypt_and_update_json(data))
 		.map(|state| into_buffer(state.into_bytes()))
 		.unwrap_or_else(empty_buffer)
 }
@@ -1251,12 +1372,16 @@ fn encrypt(handle: *mut Server, ptr: *const u8, len: usize, key_id: u64) -> Buff
 	if handle.is_null() {
 		return empty_buffer();
 	}
-	let server = unsafe { &mut *handle };
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return empty_buffer();
+	};
 	let Some(data) = (unsafe { input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_buffer();
 	};
-	complete_operation(&server.1, server.0.encrypt_message(data, key_id))
+	complete_operation(&server.1, owner.encrypt_message(data, key_id))
 		.map(|encrypted| into_buffer(encrypted.ciphertext))
 		.unwrap_or_else(empty_buffer)
 }
@@ -1265,12 +1390,16 @@ fn decrypt(handle: *mut Server, ptr: *const u8, len: usize) -> Buffer {
 	if handle.is_null() {
 		return empty_buffer();
 	}
-	let server = unsafe { &mut *handle };
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return empty_buffer();
+	};
 	let Some(data) = (unsafe { input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_buffer();
 	};
-	complete_operation(&server.1, server.0.decrypt_message(data))
+	complete_operation(&server.1, owner.decrypt_message(data))
 		.map(|decrypted| into_buffer(decrypted.plaintext))
 		.unwrap_or_else(empty_buffer)
 }
@@ -1291,6 +1420,38 @@ mod tests {
 		fail_next: bool,
 		error_status: u32,
 		post_commit_status: u32,
+		// Address of a handle that the CAS callback reenters, and the refusals it observed.
+		reenter: usize,
+		refused_reentries: Vec<bool>,
+	}
+
+	// Every entry point must refuse a call made from its own handle's callback without touching it.
+	fn reenter_own_handle(handle: *mut Server) -> bool {
+		let mut head = SnapshotHeadInfo {
+			lineage: [0; 32],
+			generation: 0,
+			digest: [0; 32],
+		};
+		let head_refused = beaconcrypt_server_head(handle, &mut head) == STATUS_INVALID_ARGUMENT;
+		let poisoned = beaconcrypt_server_is_poisoned(handle);
+		let identity_refused = beaconcrypt_server_identity_pk(handle).ptr.is_null()
+			&& beaconcrypt_server_mldsa_public_key(handle).ptr.is_null()
+			&& beaconcrypt_server_export_state(handle).ptr.is_null();
+		let send_refused = beaconcrypt_encrypt_to_beacon(handle, 20, b"x".as_ptr(), 1)
+			.ptr
+			.is_null()
+			&& beaconcrypt_server_last_status(handle) == STATUS_INVALID_ARGUMENT;
+		let outcome = beaconcrypt_encrypt_to_beacon_outcome(handle, 20, b"x".as_ptr(), 1);
+		let registration =
+			beaconcrypt_register_beacon(handle, b"x".as_ptr(), 1, std::ptr::null(), 0);
+		// A reentrant free is ignored; the outer call below must still find its server.
+		beaconcrypt_server_free(handle);
+		head_refused
+			&& poisoned
+			&& identity_refused
+			&& send_refused
+			&& outcome.status == STATUS_INVALID_ARGUMENT
+			&& registration.response.ptr.is_null()
 	}
 
 	#[derive(Clone, Copy, Default)]
@@ -1355,6 +1516,16 @@ mod tests {
 		len: usize,
 	) -> bool {
 		let context = unsafe { &*context.cast::<StoreContext>() };
+		let reenter = context.state.lock().unwrap().reenter;
+		if reenter != 0 {
+			let refused = reenter_own_handle(std::ptr::with_exposed_provenance_mut(reenter));
+			context
+				.state
+				.lock()
+				.unwrap()
+				.refused_reentries
+				.push(refused);
+		}
 		let mut store = context.state.lock().unwrap();
 		store.attempts += 1;
 		if store.error_status != STATUS_OK {
@@ -2316,6 +2487,24 @@ mod tests {
 		);
 		assert!(!beacon.is_null());
 		beaconcrypt_beacon_free(beacon);
+	}
+
+	#[test]
+	fn reentrant_calls_from_store_callbacks_are_refused() {
+		let state = Arc::new(Mutex::new(StoreState::default()));
+		let destroyed = Arc::new(AtomicUsize::new(0));
+		let server = create_durable(&state, &destroyed);
+		let (mut beacon, kid) = register(&server);
+		state.lock().unwrap().reenter = server.0.expose_provenance();
+		let before = server.head();
+		let sent = beaconcrypt_encrypt_to_beacon(server.0, kid, b"outer".as_ptr(), 5);
+		assert_eq!(beaconcrypt_server_last_status(server.0), STATUS_OK);
+		let frame = copy_buffer(sent);
+		assert_eq!(beacon.decrypt_message(&frame).unwrap().plaintext, b"outer");
+		state.lock().unwrap().reenter = 0;
+		assert_eq!(server.head().generation, before.generation + 1);
+		assert_eq!(state.lock().unwrap().refused_reentries, [true]);
+		assert!(!beaconcrypt_server_is_poisoned(server.0));
 	}
 
 	#[test]
