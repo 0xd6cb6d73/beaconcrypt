@@ -94,6 +94,44 @@ impl<Role: roles::ChainKey + roles::Identified> Serialize for DirectionalRatchet
 	}
 }
 
+/// Standard padded base64 for message payloads in JSON updates. The constant-time encoder keeps
+/// timing independent of the plaintext, and the encoding is about 1.33 times the payload size.
+#[cfg(feature = "server")]
+pub(crate) struct Base64Data<'a>(pub(crate) &'a [u8]);
+
+#[cfg(feature = "server")]
+impl Base64Data<'_> {
+	pub(crate) fn encoded_len(&self) -> usize {
+		<base64ct::Base64 as base64ct::Encoding>::encoded_len(self.0)
+	}
+
+	/// Encode into exactly `encoded_len()` bytes.
+	pub(crate) fn encode_into(&self, output: &mut [u8]) -> Option<()> {
+		<base64ct::Base64 as base64ct::Encoding>::encode(self.0, output)
+			.ok()
+			.map(|_| ())
+	}
+}
+
+#[cfg(feature = "server")]
+impl Serialize for Base64Data<'_> {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: Serializer,
+	{
+		let mut encoded = Zeroizing::new(Vec::new());
+		encoded
+			.try_reserve_exact(self.encoded_len())
+			.map_err(|_| S::Error::custom("base64 allocation failed"))?;
+		encoded.resize(self.encoded_len(), 0);
+		self.encode_into(&mut encoded)
+			.ok_or_else(|| S::Error::custom("base64 encoding failed"))?;
+		let text = core::str::from_utf8(&encoded)
+			.map_err(|_| S::Error::custom("base64 encoding failed"))?;
+		serializer.serialize_str(text)
+	}
+}
+
 #[cfg(feature = "server")]
 impl<Role: roles::ChainKey> Serialize for StateUpdate<Role> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -104,7 +142,25 @@ impl<Role: roles::ChainKey> Serialize for StateUpdate<Role> {
 		state.serialize_field("kid", &self.kid)?;
 		state.serialize_field("seq", &self.seq)?;
 		state.serialize_field("state", &self.state)?;
-		state.serialize_field("data", &ByteBuffer(&self.data))?;
+		state.serialize_field("data", &Base64Data(&self.data))?;
+		state.end()
+	}
+}
+
+/// The bounded fields of a [`StateUpdate`], rendered before its payload is appended.
+#[cfg(feature = "server")]
+pub(crate) struct StateUpdateHead<'a, Role: roles::ChainKey>(pub(crate) &'a StateUpdate<Role>);
+
+#[cfg(feature = "server")]
+impl<Role: roles::ChainKey> Serialize for StateUpdateHead<'_, Role> {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: Serializer,
+	{
+		let mut state = serializer.serialize_struct("StateUpdate", 3)?;
+		state.serialize_field("kid", &self.0.kid)?;
+		state.serialize_field("seq", &self.0.seq)?;
+		state.serialize_field("state", &self.0.state)?;
 		state.end()
 	}
 }
@@ -403,7 +459,8 @@ mod tests {
 				"kid": 7,
 				"seq": 11,
 				"state": expected_send_state,
-				"data": [0x31, 0x32],
+				// Standard padded base64 of [0x31, 0x32].
+				"data": "MTI=",
 			})
 		);
 		assert_eq!(
@@ -412,7 +469,8 @@ mod tests {
 				"kid": 9,
 				"seq": 13,
 				"state": expected_recv_state,
-				"data": [0x51, 0x52],
+				// Standard padded base64 of [0x51, 0x52].
+				"data": "UVI=",
 			})
 		);
 	}

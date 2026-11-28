@@ -11,7 +11,20 @@ struct SerializedStateUpdate {
 	kid: u64,
 	seq: u64,
 	state: String,
+	#[serde(deserialize_with = "base64_data")]
 	data: Vec<u8>,
+}
+
+/// JSON updates carry their payload as standard padded base64.
+fn base64_data<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
+	use base64ct::{Base64, Encoding};
+	let text = <String as serde::Deserialize>::deserialize(deserializer)?;
+	let mut bytes = vec![0; text.len()];
+	let length = Base64::decode(&text, &mut bytes)
+		.map_err(serde::de::Error::custom)?
+		.len();
+	bytes.truncate(length);
+	Ok(bytes)
 }
 
 fn snapshot_status(snapshot: &str) -> (u64, u64, usize) {

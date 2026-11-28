@@ -1,3 +1,4 @@
+import base64
 import json
 
 import pytest
@@ -59,7 +60,7 @@ def test_snapshot_send_results_are_explicit_and_release_only_committed_outputs(m
         value = json.loads(value)
         assert value["kid"] == kid
         assert value["seq"] == sent.seq
-        frame = bytes(value["data"])
+        frame = base64.b64decode(value["data"], validate=True)
     else:
         assert isinstance(value, bytes)
         frame = value

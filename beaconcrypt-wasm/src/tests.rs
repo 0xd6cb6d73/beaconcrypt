@@ -156,7 +156,7 @@ fn guest_server_interoperates_with_native_beacon_updates_json_and_checkpoint() {
 	assert!(send_json.state.is_empty());
 	let json: serde_json::Value = serde_json::from_slice(&send_json.data).unwrap();
 	assert_eq!(json["kid"], peer);
-	let frame: Vec<u8> = serde_json::from_value(json["data"].clone()).unwrap();
+	let frame: Vec<u8> = json_data(&json["data"]);
 	assert_eq!(
 		beacon.decrypt_message(&frame).unwrap().plaintext,
 		b"JSON send"
@@ -164,10 +164,7 @@ fn guest_server_interoperates_with_native_beacon_updates_json_and_checkpoint() {
 	let inbound = beacon.encrypt_message(b"JSON receive").unwrap();
 	let receive_json = checked(23, owner, 0, &inbound.ciphertext, &[]);
 	let json: serde_json::Value = serde_json::from_slice(&receive_json.data).unwrap();
-	assert_eq!(
-		serde_json::from_value::<Vec<u8>>(json["data"].clone()).unwrap(),
-		b"JSON receive"
-	);
+	assert_eq!(json_data(&json["data"]), b"JSON receive");
 	assert_eq!(json["seq"], inbound.seq);
 	let skipped = beacon.encrypt_message(b"delayed native frame").unwrap();
 	let future = beacon.encrypt_message(b"future native frame").unwrap();
@@ -575,7 +572,7 @@ fn explicit_send_replies_preserve_effects_payloads_and_metadata() {
 			let json: serde_json::Value = serde_json::from_slice(&sent.data).unwrap();
 			assert_eq!(json["seq"], sent.seq);
 			assert_eq!(json["kid"], sent.key_id);
-			serde_json::from_value::<Vec<u8>>(json["data"].clone()).unwrap()
+			json_data(&json["data"])
 		} else {
 			sent.data.clone()
 		};
@@ -681,4 +678,16 @@ fn consumed_send_reply_and_persistence_errors_carry_no_payload_or_metadata() {
 		assert!(poisoned.data.is_empty() && poisoned.state.is_empty());
 		checked(9, owner, 0, &[], &[]);
 	}
+}
+
+/// Decode the standard base64 `data` field of a JSON update.
+fn json_data(value: &serde_json::Value) -> Vec<u8> {
+	use base64ct::{Base64, Encoding};
+	let text = value.as_str().expect("base64 JSON data");
+	let mut bytes = vec![0; text.len()];
+	let length = Base64::decode(text, &mut bytes)
+		.expect("canonical base64")
+		.len();
+	bytes.truncate(length);
+	bytes
 }

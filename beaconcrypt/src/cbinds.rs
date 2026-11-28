@@ -1701,6 +1701,18 @@ mod tests {
 		assert_eq!(destroyed.load(Ordering::SeqCst), 1);
 	}
 
+	/// Decode the standard base64 `data` field of a JSON update.
+	fn json_data(value: &serde_json::Value) -> Vec<u8> {
+		use base64ct::{Base64, Encoding};
+		let text = value.as_str().expect("base64 JSON data");
+		let mut bytes = vec![0; text.len()];
+		let length = Base64::decode(text, &mut bytes)
+			.expect("canonical base64")
+			.len();
+		bytes.truncate(length);
+		bytes
+	}
+
 	struct OwnedServer(*mut Server);
 
 	impl Drop for OwnedServer {
@@ -1893,7 +1905,7 @@ mod tests {
 				let json: serde_json::Value = serde_json::from_slice(&data).unwrap();
 				assert_eq!(json["kid"], kid);
 				assert_eq!(json["seq"], result.message.seq);
-				serde_json::from_value::<Vec<u8>>(json["data"].clone()).unwrap()
+				json_data(&json["data"])
 			} else {
 				data
 			};

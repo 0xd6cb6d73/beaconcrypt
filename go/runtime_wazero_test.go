@@ -344,7 +344,7 @@ func TestWasmSendOutcomeParserAcceptsCanonicalRepliesAndDetachesState(t *testing
 		{"consumed", 26, SendConsumedWithoutOutput, nil, []byte{2}, 0, 0},
 		{"raw", 25, SendSent, []byte("ciphertext"), []byte{1}, 7, 1},
 		{"update", 26, SendSent, []byte("ciphertext"), append([]byte{1}, []byte(`{"send_key":"secret"}`)...), 7, 1},
-		{"json", 27, SendSent, []byte(`{"data":[9]}`), []byte{1}, 7, 1},
+		{"json", 27, SendSent, []byte(`{"data":"CQ=="}`), []byte{1}, 7, 1},
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
 			engine, err := sharedWasmEngine()

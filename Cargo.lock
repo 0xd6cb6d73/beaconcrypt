@@ -113,6 +113,7 @@ checksum = "2af50177e190e07a26ab74f8b1efbfe2ef87da2116221318cb1c2e82baf7de06"
 name = "beaconcrypt"
 version = "0.6.1"
 dependencies = [
+ "base64ct",
  "beaconcrypt-core",
  "beaconcrypt-crypto",
  "beaconcrypt-parse",
@@ -159,6 +160,7 @@ dependencies = [
 name = "beaconcrypt-ffi"
 version = "0.6.1"
 dependencies = [
+ "base64ct",
  "beaconcrypt-core",
  "beaconcrypt-crypto",
  "beaconcrypt-parse",
@@ -184,6 +186,7 @@ dependencies = [
 name = "beaconcrypt-wasm"
 version = "0.6.1"
 dependencies = [
+ "base64ct",
  "beaconcrypt",
  "serde_json",
  "zeroize",

@@ -128,8 +128,37 @@ pub struct StateUpdate<Role: roles::ChainKey> {
 }
 
 impl<Role: roles::ChainKey> StateUpdate<Role> {
+	/// Render `{"kid":…,"seq":…,"state":…,"data":"<base64>"}`, identical to the `Serialize` output.
+	///
+	/// The bounded fields are rendered first, and the payload is then encoded into one exactly
+	/// sized, fallibly reserved allocation, so a maximum-size authenticated payload cannot force
+	/// repeated infallible growth.
 	pub(crate) fn try_render_json(&self) -> serde_json::Result<String> {
-		serde_json::to_string(self)
+		use serde::ser::Error as _;
+		const DATA_FIELD: &[u8] = b",\"data\":\"";
+		let failed = || serde_json::Error::custom("JSON update rendering failed");
+		let head = Zeroizing::new(serde_json::to_vec(&crate::shared::ser::StateUpdateHead(
+			self,
+		))?);
+		let prefix = head.strip_suffix(b"}").ok_or_else(failed)?;
+		let data = crate::shared::ser::Base64Data(&self.data);
+		let encoded_len = data.encoded_len();
+		let total = prefix
+			.len()
+			.checked_add(DATA_FIELD.len())
+			.and_then(|length| length.checked_add(encoded_len))
+			.and_then(|length| length.checked_add(2))
+			.ok_or_else(failed)?;
+		let mut json = Vec::new();
+		json.try_reserve_exact(total)
+			.map_err(|_| serde_json::Error::custom("JSON update allocation failed"))?;
+		json.extend_from_slice(prefix);
+		json.extend_from_slice(DATA_FIELD);
+		let start = json.len();
+		json.resize(start + encoded_len, 0);
+		data.encode_into(&mut json[start..]).ok_or_else(failed)?;
+		json.extend_from_slice(b"\"}");
+		String::from_utf8(json).map_err(|_| failed())
 	}
 }
 
@@ -683,7 +712,7 @@ impl ProviderServer for Server {
 	}
 
 	fn encrypt_and_update_json(&mut self, bytes: &[u8], kid: u64) -> Option<String> {
-		serde_json::to_string(&self.encrypt_and_update(bytes, kid)?).ok()
+		self.encrypt_and_update(bytes, kid)?.try_render_json().ok()
 	}
 
 	fn decrypt_and_update(&mut self, bytes: &[u8]) -> Option<RecvState> {
@@ -698,6 +727,43 @@ impl ProviderServer for Server {
 					.expect("an accepted receive update must be serializable as JSON")
 			})
 			.into_option()
+	}
+}
+
+#[cfg(all(test, feature = "beacon", feature = "std"))]
+mod json_tests {
+	use super::*;
+	use crate::{Beacon, ProviderBeacon};
+	use base64ct::{Base64, Encoding};
+
+	#[test]
+	fn json_updates_render_base64_data_identically_to_serialize() {
+		let mut server = Server::new(7, Some(&[11; 32]), Some(&[12; 32]));
+		let mut beacon = Beacon::new(
+			7,
+			server.identity_pk().as_bytes(),
+			&server.mldsa_public_key(),
+		);
+		let registration = beacon.get_registration_bundle().unwrap();
+		let pending = server.get_shared_secret(&registration).unwrap();
+		let response = server.build_registration_response(pending, None).unwrap();
+		beacon.finish_registration(&response.serialized).unwrap();
+		for length in [1, 2, 3, 1 << 20] {
+			let plaintext: Vec<u8> = (0..length).map(|index| (index * 7) as u8).collect();
+			let frame = beacon.encrypt_message(&plaintext).unwrap().ciphertext;
+			let update = server.decrypt_and_update(&frame).unwrap();
+			let rendered = update.try_render_json().unwrap();
+			assert_eq!(rendered, serde_json::to_string(&update).unwrap());
+			let value: serde_json::Value = serde_json::from_str(&rendered).unwrap();
+			assert_eq!(value["kid"], response.kid);
+			let encoded = value["data"].as_str().unwrap();
+			assert_eq!(encoded.len(), Base64::encoded_len(&plaintext));
+			let mut decoded = vec![0; encoded.len()];
+			let decoded = Base64::decode(encoded, &mut decoded).unwrap();
+			assert_eq!(decoded, plaintext.as_slice());
+			// Standard padded base64 plus a bounded header, rather than four bytes per byte.
+			assert!(rendered.len() < encoded.len() + 1024);
+		}
 	}
 }
 

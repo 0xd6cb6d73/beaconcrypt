@@ -1,3 +1,4 @@
+import base64
 import gc
 import json
 import threading
@@ -135,7 +136,7 @@ def test_all_send_apis_commit_before_exposing_output(method):
     elif method == "encrypt_and_update":
         ciphertext = output.data()
     else:
-        ciphertext = bytes(json.loads(output)["data"])
+        ciphertext = base64.b64decode(json.loads(output)["data"], validate=True)
     assert beacon.decrypt_server_message(ciphertext) == b"task"
     restored = BeaconCryptServer.restore(store)
     reply = beacon.encrypt_message_to_server(b"reply")
@@ -161,7 +162,7 @@ def test_all_receive_apis_commit_before_exposing_output_and_reject_replay(method
     elif method == "decrypt_and_update":
         plaintext = output.data()
     else:
-        plaintext = bytes(json.loads(output)["data"])
+        plaintext = base64.b64decode(json.loads(output)["data"], validate=True)
     assert plaintext == b"reply"
     restored = BeaconCryptServer.restore(store)
     calls = len(store.cas_calls)

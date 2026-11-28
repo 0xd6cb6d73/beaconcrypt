@@ -323,8 +323,10 @@ Its output has the following shape:
     "kid": 1,
     "seq": 2,
     "state": "{\"send_key\":[6,8,[...]],\"recv_key\":[6,9,[...]],\"send_ctr\":2,\"recv_past\":{},\"recv_ctr\":1}",
-    "data": [0,0,0,0,19,0,0,0]
+    "data": "AAAAABMAAAA="
 }
 ```
+
+`data` is the message payload as standard padded base64 (RFC 4648 with `=` padding), about 1.33 times the payload size. Go decodes it directly into a `[]byte` field, and Python with `base64.b64decode`. Earlier releases encoded it as an array of decimal byte values.
 
 The Python and Go wrappers expose the inert ratchet JSON through `EncryptState.state()` and `EncryptState.State`, respectively. It is useful for observing or indexing one peer's resulting state, but it is not a complete server checkpoint and cannot replace full persistence through `PersistentServer` or the binding checkpoint APIs.
