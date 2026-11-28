@@ -162,6 +162,7 @@ To read a `CryptoFrame`, the reader must:
   - The reference implementation permits at most 50 skipped keys, allowing up to 51 derivations including the target
   - The number of already cached receive keys plus `skipped` must also be at most 50
   - Abort processing without changing state if either limit is exceeded
+  - Cached keys are never evicted; a slot is freed only when its frame arrives, so the 50-key budget covers every frame that is never delivered over the session's lifetime
 - Privately prepare the candidate receive transition without changing the live receive chain, counter, or cache
   - For a future `seq`, derive the bounded candidate chain and material while staging only the skipped keys; keep the target material separate
   - For an old `seq`, select the exact sequence-tagged cached key without removing or moving it
@@ -177,6 +178,9 @@ To read a `CryptoFrame`, the reader must:
 
 State-neutral rejection prevents unauthenticated traffic from consuming receive-cache capacity, but it trades that protection for bounded recomputation: retrying the same invalid future frame can repeat up to 51 private ratchet-KDF steps—50 skipped-key derivations plus the separately consumed target. Deployments should apply per-peer rate limits, admission quotas, or transport replay filtering as external availability controls; those controls must not encode rejection by mutating the cryptographic ratchet.
 
+## Peer retirement
+The server can retire an established peer. Retirement is server-local and changes nothing on the wire: the peer's ratchet is erased, its frames are rejected like frames from an unknown `keyId`, and sends to it fail. Its registration identifier stays in the consumed set, so its Init cannot be replayed, and peer key IDs only increase, so a retired ID is never assigned again. The retired beacon is not notified.
+
 ## InitKex
 This message starts the beacon registration process by initiating the `PQXDH` protocol run. It is defined in [transport.cddl](../beaconcrypt-parse/schema/transport.cddl). It must only be run once per beacon instance. The Beacon constructor and Init controller generate the required Ed25519, X25519 and ML-KEM-768 key material through the configured crypto backend before constructing this message. Ed25519 and ML-KEM-768 public keys are encoded as a one-byte type marker followed by the public-key buffer. The two X25519 fields additionally authenticate their semantic role and are encoded as `[type: u8, role: u8, key]`: `preKey` is `[0x04, 0x80, 32-byte key]` and `oneTimeKey` is `[0x04, 0x81, 32-byte key]`. Type markers occupy the low half of the byte domain and role markers the high half, so the domains are disjoint. The beacon builds this message as follows:
 - Set `identityKey` to the beacon's Ed25519 encoded identity public key
@@ -186,7 +190,7 @@ This message starts the beacon registration process by initiating the `PQXDH` pr
 
 The three Init public-key signatures use the attached Ed25519 encoding `signature || buffer`. Init has no Beacon ML-DSA key or signature field. The response has a separate, mandatory 3,309-byte Server ML-DSA-65 signature field. Both roles retain the exact four decoded Init buffers until the response public fields are available; their combined width is 1,478 bytes, and the complete Init CBOR encoding is 1,490 bytes.
 
-The signed X25519 payloads are now 34 bytes and are intentionally incompatible with the former 33-byte encodings that did not distinguish prekeys from one-time keys. A live Beacon emits its registration bundle at most once, and any failure while completing registration permanently aborts that Beacon object. No Init field depends on the Beacon's Server pin, so the Server cannot detect a Beacon pinned to a different Server ML-DSA-65 key: it accepts that request, permanently consumes its registration identifier and returns a response, and only the Beacon aborts, because the response signature does not verify under its pin and the Init digest bound to that pin.
+The signed X25519 payloads are now 34 bytes and are intentionally incompatible with the former 33-byte encodings that did not distinguish prekeys from one-time keys. A live Beacon emits its registration bundle at most once, and any failure while completing registration permanently aborts that Beacon object. This includes a single unauthenticated message injected ahead of the genuine response: the Beacon must then be replaced, because the server has already consumed the registration identifier. No Init field depends on the Beacon's Server pin, so the Server cannot detect a Beacon pinned to a different Server ML-DSA-65 key: it accepts that request, permanently consumes its registration identifier and returns a response, and only the Beacon aborts, because the response signature does not verify under its pin and the Init digest bound to that pin.
 
 The server must use this message as follows:
 - Verify that all keys except `identityKey` are signed under `identityKey`
