@@ -169,7 +169,9 @@ fn peer_limit_refuses_acceptance_without_consuming_the_marker() {
 #[test]
 fn peer_limit_is_checked_again_at_completion() {
 	let (mut server, _) = create();
+	assert_eq!(server.max_peers(), None);
 	server.set_max_peers(NonZeroUsize::new(1));
+	assert_eq!(server.max_peers(), NonZeroUsize::new(1));
 	let mut first = beacon(&server);
 	let mut second = beacon(&server);
 	let first_accepted = server
