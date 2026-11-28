@@ -433,12 +433,21 @@ fn into_recv_state(state: RecvState) -> Option<EncryptState> {
 	})
 }
 
+// Required inputs reject null, empty and lengths that no Rust slice can have.
 unsafe fn input<'a>(ptr: *const u8, len: usize) -> Option<&'a [u8]> {
-	if ptr.is_null() || len == 0 {
+	if ptr.is_null() || len == 0 || len > isize::MAX as usize {
 		None
 	} else {
 		Some(unsafe { slice::from_raw_parts(ptr, len) })
 	}
+}
+
+// A null or zero-length seed selects generation; an impossible length is invalid, not absent.
+unsafe fn seed_input<'a>(ptr: *const u8, len: usize) -> Result<Option<&'a [u8]>, ()> {
+	if len > isize::MAX as usize {
+		return Err(());
+	}
+	Ok(unsafe { input(ptr, len) })
 }
 
 // Optional values preserve presence even when the provided slice is empty.
@@ -500,8 +509,14 @@ pub extern "C" fn beaconcrypt_server_new_from_seed(
 	mldsa_seed_ptr: *const u8,
 	mldsa_seed_len: usize,
 ) -> *mut Server {
-	let seed = unsafe { input(seed_ptr, seed_len) };
-	let mldsa_seed = unsafe { input(mldsa_seed_ptr, mldsa_seed_len) };
+	let (Ok(seed), Ok(mldsa_seed)) = (unsafe {
+		(
+			seed_input(seed_ptr, seed_len),
+			seed_input(mldsa_seed_ptr, mldsa_seed_len),
+		)
+	}) else {
+		return std::ptr::null_mut();
+	};
 	server_result(
 		PersistentServer::create(
 			server_kid,
@@ -556,8 +571,15 @@ pub extern "C" fn beaconcrypt_server_create_with_store_v2(
 	let Some(store) = callback_store(callbacks, status_out) else {
 		return std::ptr::null_mut();
 	};
-	let seed = unsafe { input(seed_ptr, seed_len) };
-	let mldsa_seed = unsafe { input(mldsa_seed_ptr, mldsa_seed_len) };
+	let (Ok(seed), Ok(mldsa_seed)) = (unsafe {
+		(
+			seed_input(seed_ptr, seed_len),
+			seed_input(mldsa_seed_ptr, mldsa_seed_len),
+		)
+	}) else {
+		set_status_out(status_out, STATUS_INVALID_ARGUMENT);
+		return std::ptr::null_mut();
+	};
 	server_result(
 		PersistentServer::create(server_kid, seed, mldsa_seed, store),
 		status_out,
@@ -619,8 +641,15 @@ pub extern "C" fn beaconcrypt_server_create_with_store_and_lineage_v2(
 		set_status_out(status_out, STATUS_INVALID_ARGUMENT);
 		return std::ptr::null_mut();
 	};
-	let seed = unsafe { input(seed_ptr, seed_len) };
-	let mldsa_seed = unsafe { input(mldsa_seed_ptr, mldsa_seed_len) };
+	let (Ok(seed), Ok(mldsa_seed)) = (unsafe {
+		(
+			seed_input(seed_ptr, seed_len),
+			seed_input(mldsa_seed_ptr, mldsa_seed_len),
+		)
+	}) else {
+		set_status_out(status_out, STATUS_INVALID_ARGUMENT);
+		return std::ptr::null_mut();
+	};
 	server_result(
 		PersistentServer::create_with_lineage(
 			server_kid,
@@ -2287,6 +2316,61 @@ mod tests {
 		);
 		assert!(!beacon.is_null());
 		beaconcrypt_beacon_free(beacon);
+	}
+
+	#[test]
+	fn required_inputs_and_seeds_reject_lengths_beyond_isize_max() {
+		// No Rust slice can be this long; building one would be undefined behaviour.
+		let oversized = isize::MAX as usize + 1;
+		let state = Arc::new(Mutex::new(StoreState::default()));
+		let destroyed = Arc::new(AtomicUsize::new(0));
+		let server = create_durable(&state, &destroyed);
+		let (_beacon, _kid) = register(&server);
+		let before = server.head();
+		let response =
+			beaconcrypt_register_beacon(server.0, b"x".as_ptr(), oversized, std::ptr::null(), 0);
+		assert!(response.response.ptr.is_null());
+		assert_eq!(
+			beaconcrypt_server_last_status(server.0),
+			STATUS_INVALID_ARGUMENT
+		);
+		let output = beaconcrypt_decrypt_beacon_message(server.0, b"x".as_ptr(), oversized);
+		assert!(output.ptr.is_null());
+		assert_eq!(
+			beaconcrypt_server_last_status(server.0),
+			STATUS_INVALID_ARGUMENT
+		);
+		assert_eq!(server.head(), before);
+
+		let public_key = copy_buffer(beaconcrypt_server_identity_pk(server.0));
+		let mldsa_key = copy_buffer(beaconcrypt_server_mldsa_public_key(server.0));
+		assert!(
+			beaconcrypt_beacon_new(19, public_key.as_ptr(), oversized, mldsa_key.as_ptr(), 32)
+				.is_null()
+		);
+		for (seed, mldsa) in [(oversized, 0), (0, oversized)] {
+			let (seed_ptr, mldsa_ptr) = ([7u8; 32].as_ptr(), [8u8; 32].as_ptr());
+			assert!(
+				beaconcrypt_server_new_from_seed(19, seed_ptr, seed, mldsa_ptr, mldsa).is_null()
+			);
+			let mut status = u32::MAX;
+			let before = destroyed.load(Ordering::SeqCst);
+			let created = beaconcrypt_server_create_with_store_v2(
+				19,
+				seed_ptr,
+				seed,
+				mldsa_ptr,
+				mldsa,
+				SnapshotStoreCallbacksV2 {
+					callbacks: callbacks(&state, &destroyed, LoadMode::Normal),
+					last_error: Some(last_error_callback),
+				},
+				&mut status,
+			);
+			assert!(created.is_null());
+			assert_eq!(status, STATUS_INVALID_ARGUMENT);
+			assert_eq!(destroyed.load(Ordering::SeqCst), before + 1);
+		}
 	}
 
 	#[test]
