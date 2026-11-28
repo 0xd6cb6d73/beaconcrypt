@@ -28,6 +28,11 @@ path = "examples/persistence_bench/main.rs"
 required-features = ["std", "pqxdh", "beacon", "server"]
 
 [[test]]
+name = "peer_retirement"
+path = "tests/peer_retirement.rs"
+required-features = ["std", "pqxdh", "beacon", "server"]
+
+[[test]]
 name = "row_persistence"
 path = "tests/row_persistence.rs"
 required-features = ["std", "pqxdh", "beacon", "server"]
@@ -78,6 +83,7 @@ beaconcrypt-parse = { version = "0.1.0", path = "../beaconcrypt-parse" }
 beaconcrypt-crypto = { version = "0.1.0", path = "../beaconcrypt-crypto", default-features = false }
 hashbrown = { version = "0.17.1", default-features = false, features = ["inline-more"], optional = true }
 siphasher = { version = "1", default-features = false, optional = true }
+base64ct = { version = "1.8.3", default-features = false, optional = true }
 ml-dsa = { version = "0.1.1", default-features = false, features = ["alloc", "zeroize"] }
 zeroize = "1.9"
 pyo3 = { version = "0.30.1", features = ["abi3-py311", "experimental-inspect"], optional = true }
@@ -87,7 +93,7 @@ serde_json = { version = "1", default-features = false, features = ["alloc"], op
 [features]
 default = ["std", "beacon", "server", "pqxdh"]
 std = ["beaconcrypt-crypto/std", "serde?/std", "serde_json?/std"]
-server = ["pqxdh", "dep:serde", "dep:serde_json", "dep:hashbrown", "dep:siphasher"]
+server = ["pqxdh", "dep:serde", "dep:serde_json", "dep:hashbrown", "dep:siphasher", "dep:base64ct"]
 beacon = ["pqxdh"]
 pqxdh = []
 gobinds = ["cbinds"]

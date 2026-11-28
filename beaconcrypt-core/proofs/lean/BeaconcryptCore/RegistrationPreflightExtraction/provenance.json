@@ -106,8 +106,8 @@
     "public_codec_law_proved": false,
     "scalar_word_body": "\tlet mut word = [0; 8];\n\tword[8 - width..].copy_from_slice(encoded);\n\tu64::from_be_bytes(word)",
     "source_sha256": {
-      "Cargo.lock": "2f9299d8f9844467ef90c9bbea76cdcacec7e1dffae7025930565ef56906b8e6",
-      "Cargo.toml": "755b24b6a434712ac0b941dcb1cf629321f128555a43b5e574c38dd5bf1b3b53",
+      "Cargo.lock": "96eb9ed30f1a0346926bbf0a2eb323d92f6c9cf698de8de3a118c49dc1243e4e",
+      "Cargo.toml": "0c618e68307b9823ee15027f803571b2f660b2558d12b7b4cc0e79650ea87a1d",
       "beaconcrypt-core/Cargo.toml": "8e41a5e7c6f9715417628967f404745000e89d177902bde70d1969ef00af5f09",
       "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RegistrationCodecFixedFields.lean": "d732fd3f052de539d072745a5f14ceb716df0c0849bf2211a307caba00f28018",
       "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RegistrationCodecStandardSlices.lean": "fbe6ef22545d85ac022dd1f04eacf7e25649cb95b58261c88b28015ed50d541b",
@@ -178,8 +178,8 @@
     "standard_prefix_body": "\n        // This function will need rewriting if and when SlicePattern becomes more sophisticated.\n        \n        let n = prefix.len();\n        if n <= input.len() {\n            let (head, tail) = input.split_at(n);\n            if head == prefix {\n                return Some(tail);\n            }\n        }\n        None\n    "
   },
   "source_sha256": {
-    "Cargo.lock": "2f9299d8f9844467ef90c9bbea76cdcacec7e1dffae7025930565ef56906b8e6",
-    "Cargo.toml": "755b24b6a434712ac0b941dcb1cf629321f128555a43b5e574c38dd5bf1b3b53",
+    "Cargo.lock": "96eb9ed30f1a0346926bbf0a2eb323d92f6c9cf698de8de3a118c49dc1243e4e",
+    "Cargo.toml": "0c618e68307b9823ee15027f803571b2f660b2558d12b7b4cc0e79650ea87a1d",
     "beaconcrypt-core/Cargo.toml": "8e41a5e7c6f9715417628967f404745000e89d177902bde70d1969ef00af5f09",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Extraction/Funs.lean": "74ca109a7e8e33723d8edf96002535a12ca5f821b3b19ef8217d03acf952f776",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Extraction/Types.lean": "79472aa24f2b553cc654783be11f2bbb8101cd299a75151c9fe7cc5774b31f09",

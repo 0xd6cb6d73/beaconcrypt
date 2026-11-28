@@ -56,6 +56,9 @@ impl<S: RowStore> BindingRowServer<S> {
 	pub(crate) fn decrypt_message(&mut self, bytes: &[u8]) -> Result<Option<Decrypted>, RowError> {
 		dispatch!(self, decrypt_message(bytes))
 	}
+	pub(crate) fn retire_peer(&mut self, kid: u64) -> Result<bool, RowError> {
+		dispatch!(self, retire_peer(kid))
+	}
 	pub(crate) fn transaction<T>(
 		&mut self,
 		operation: impl FnOnce(&mut RowSession<'_>) -> Result<T, RowError>,

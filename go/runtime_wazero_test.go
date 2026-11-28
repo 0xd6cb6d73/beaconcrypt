@@ -55,7 +55,7 @@ func TestWasmResponseStatusRejectsReservedAndUnknownCodes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, status := range []PersistenceStatus{StatusStorage, StatusCommitUnknown, StatusInvalidSession, 16, ^PersistenceStatus(0)} {
+	for _, status := range []PersistenceStatus{StatusStorage, StatusCommitUnknown, StatusCapacity, StatusInvalidSession, 17, ^PersistenceStatus(0)} {
 		t.Run(fmt.Sprintf("status=%d", status), func(t *testing.T) {
 			instance, err := engine.construct(1, 19, nil, []byte{0}, nil)
 			if err != nil {
@@ -68,7 +68,7 @@ func TestWasmResponseStatusRejectsReservedAndUnknownCodes(t *testing.T) {
 			if len(output.data) != 0 || len(output.state) != 0 {
 				t.Fatal("error response released output")
 			}
-			if status == StatusStorage || status == StatusCommitUnknown {
+			if status == StatusStorage || status == StatusCommitUnknown || status == StatusCapacity {
 				requirePersistenceStatus(t, err, status)
 				if instance.closed || instance.module.IsClosed() {
 					t.Fatal("known persistence status invalidated guest")
@@ -344,7 +344,7 @@ func TestWasmSendOutcomeParserAcceptsCanonicalRepliesAndDetachesState(t *testing
 		{"consumed", 26, SendConsumedWithoutOutput, nil, []byte{2}, 0, 0},
 		{"raw", 25, SendSent, []byte("ciphertext"), []byte{1}, 7, 1},
 		{"update", 26, SendSent, []byte("ciphertext"), append([]byte{1}, []byte(`{"send_key":"secret"}`)...), 7, 1},
-		{"json", 27, SendSent, []byte(`{"data":[9]}`), []byte{1}, 7, 1},
+		{"json", 27, SendSent, []byte(`{"data":"CQ=="}`), []byte{1}, 7, 1},
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
 			engine, err := sharedWasmEngine()

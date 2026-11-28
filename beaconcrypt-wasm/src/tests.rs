@@ -107,6 +107,47 @@ fn input_descriptors_require_owned_exact_allocations_and_free_is_checked() {
 }
 
 #[test]
+fn guest_server_retires_peers_reports_counts_and_enforces_a_limit() {
+	let owner = checked(1, 0, 19, &[9; 64], &[3]).handle;
+	let counts = |owner| {
+		let data = checked(29, owner, 0, &[], &[]).data.clone();
+		assert_eq!(data.len(), 16);
+		(
+			u64::from_le_bytes(data[..8].try_into().unwrap()),
+			u64::from_le_bytes(data[8..].try_into().unwrap()),
+		)
+	};
+	let identity = checked(3, owner, 0, &[], &[]).data.clone();
+	let mldsa = checked(24, owner, 0, &[], &[]).data.clone();
+	let mut beacon = Beacon::try_new(19, &identity, &mldsa).unwrap();
+	let registration = checked(5, owner, 0, &beacon.get_registration_bundle().unwrap(), &[]);
+	beacon.finish_registration(&registration.data).unwrap();
+	let peer = registration.key_id;
+	assert_eq!(counts(owner), (1, 1));
+
+	checked(30, owner, 1, &[], &[]);
+	let mut waiting = Beacon::try_new(19, &identity, &mldsa).unwrap();
+	let bundle = waiting.get_registration_bundle().unwrap();
+	assert_eq!(dispatch(5, owner, 0, &bundle, &[]).status, 16);
+	assert_eq!(counts(owner), (1, 1));
+
+	let retired = checked(28, owner, peer, &[], &[]);
+	assert_eq!(retired.key_id, peer);
+	assert_eq!(dispatch(28, owner, peer, &[], &[]).status, REJECTED);
+	assert_eq!(counts(owner), (0, 1));
+	let inbound = beacon.encrypt_message(b"refused").unwrap().ciphertext;
+	assert_eq!(dispatch(8, owner, 0, &inbound, &[]).status, REJECTED);
+	assert_eq!(dispatch(7, owner, peer, b"refused", &[]).status, REJECTED);
+
+	// The refused registration consumed nothing, and a zero limit removes the cap.
+	let late = checked(5, owner, 0, &bundle, &[]);
+	waiting.finish_registration(&late.data).unwrap();
+	assert!(late.key_id > peer);
+	checked(30, owner, 0, &[], &[]);
+	assert_eq!(counts(owner), (1, 2));
+}
+
+#[test]
 fn guest_server_interoperates_with_native_beacon_updates_json_and_checkpoint() {
 	let owner = checked(1, 0, 19, &[9; 64], &[3]).handle;
 	assert_eq!(dispatch(17, owner, u64::MAX, &[], &[]).status, REJECTED);
@@ -156,7 +197,7 @@ fn guest_server_interoperates_with_native_beacon_updates_json_and_checkpoint() {
 	assert!(send_json.state.is_empty());
 	let json: serde_json::Value = serde_json::from_slice(&send_json.data).unwrap();
 	assert_eq!(json["kid"], peer);
-	let frame: Vec<u8> = serde_json::from_value(json["data"].clone()).unwrap();
+	let frame: Vec<u8> = json_data(&json["data"]);
 	assert_eq!(
 		beacon.decrypt_message(&frame).unwrap().plaintext,
 		b"JSON send"
@@ -164,10 +205,7 @@ fn guest_server_interoperates_with_native_beacon_updates_json_and_checkpoint() {
 	let inbound = beacon.encrypt_message(b"JSON receive").unwrap();
 	let receive_json = checked(23, owner, 0, &inbound.ciphertext, &[]);
 	let json: serde_json::Value = serde_json::from_slice(&receive_json.data).unwrap();
-	assert_eq!(
-		serde_json::from_value::<Vec<u8>>(json["data"].clone()).unwrap(),
-		b"JSON receive"
-	);
+	assert_eq!(json_data(&json["data"]), b"JSON receive");
 	assert_eq!(json["seq"], inbound.seq);
 	let skipped = beacon.encrypt_message(b"delayed native frame").unwrap();
 	let future = beacon.encrypt_message(b"future native frame").unwrap();
@@ -575,7 +613,7 @@ fn explicit_send_replies_preserve_effects_payloads_and_metadata() {
 			let json: serde_json::Value = serde_json::from_slice(&sent.data).unwrap();
 			assert_eq!(json["seq"], sent.seq);
 			assert_eq!(json["kid"], sent.key_id);
-			serde_json::from_value::<Vec<u8>>(json["data"].clone()).unwrap()
+			json_data(&json["data"])
 		} else {
 			sent.data.clone()
 		};
@@ -681,4 +719,16 @@ fn consumed_send_reply_and_persistence_errors_carry_no_payload_or_metadata() {
 		assert!(poisoned.data.is_empty() && poisoned.state.is_empty());
 		checked(9, owner, 0, &[], &[]);
 	}
+}
+
+/// Decode the standard base64 `data` field of a JSON update.
+fn json_data(value: &serde_json::Value) -> Vec<u8> {
+	use base64ct::{Base64, Encoding};
+	let text = value.as_str().expect("base64 JSON data");
+	let mut bytes = vec![0; text.len()];
+	let length = Base64::decode(text, &mut bytes)
+		.expect("canonical base64")
+		.len();
+	bytes.truncate(length);
+	bytes
 }

@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: 0BSD
 
 use std::{
-	ptr::NonNull,
-	sync::{Arc, Mutex},
+	ptr,
+	sync::{
+		Arc, Mutex,
+		atomic::{AtomicBool, Ordering},
+	},
+	thread::{self, ThreadId},
 };
 
 use pyo3::{
@@ -390,9 +394,9 @@ impl RowServerPy {
 		py: Python<'_>,
 		data: Vec<u8>,
 		kid: u64,
-	) -> PyResult<Option<Vec<u8>>> {
+	) -> PyResult<Option<Py<PyBytes>>> {
 		self.encrypt_to_beacon_with_metadata(py, data, kid)
-			.map(|output| output.map(|mut output| std::mem::take(&mut *output.data)))
+			.map(|output| output.map(|output| PyBytes::new(py, &output.data).unbind()))
 	}
 
 	fn encrypt_to_beacon_with_metadata(
@@ -401,6 +405,7 @@ impl RowServerPy {
 		data: Vec<u8>,
 		kid: u64,
 	) -> PyResult<Option<RowMessagePy>> {
+		let data = Zeroizing::new(data);
 		let output = self.native()?.encrypt_message(&data, kid);
 		result(py, output, &self.errors).map(|output| output.map(RowMessagePy::from))
 	}
@@ -411,6 +416,7 @@ impl RowServerPy {
 		data: Vec<u8>,
 		kid: u64,
 	) -> PyResult<SendResultPy> {
+		let data = Zeroizing::new(data);
 		let output = self.native()?.encrypt_message_outcome(&data, kid);
 		result(py, output, &self.errors)
 			.map(|outcome| SendResultPy::encrypted(outcome.map(crate::RowMessage::into_encrypted)))
@@ -420,9 +426,10 @@ impl RowServerPy {
 		&mut self,
 		py: Python<'_>,
 		data: Vec<u8>,
-	) -> PyResult<Option<Vec<u8>>> {
+	) -> PyResult<Option<Py<PyBytes>>> {
+		// Copy from the zeroizing message buffer, which is wiped when the wrapper drops.
 		self.decrypt_beacon_message_with_metadata(py, data)
-			.map(|output| output.map(|mut output| std::mem::take(&mut *output.data)))
+			.map(|output| output.map(|output| PyBytes::new(py, &output.data).unbind()))
 	}
 
 	fn decrypt_beacon_message_with_metadata(
@@ -432,6 +439,12 @@ impl RowServerPy {
 	) -> PyResult<Option<RowMessagePy>> {
 		let output = self.native()?.decrypt_message(&data);
 		result(py, output, &self.errors).map(|output| output.map(RowMessagePy::from))
+	}
+
+	/// Retire an established peer in its own durable transaction: its row becomes a tombstone and later frames and sends are refused. The replay marker is kept and the key ID is never reassigned. Returns whether a peer was retired.
+	fn retire_peer(&mut self, py: Python<'_>, kid: u64) -> PyResult<bool> {
+		let output = self.native()?.retire_peer(kid);
+		result(py, output, &self.errors)
 	}
 }
 
@@ -491,19 +504,47 @@ impl RowRegistrationDecisionPy {
 }
 
 /// A trusted callback-scoped session. Methods reject use after callback return. Pending native outputs must not be published before the outer call succeeds. Native operations are limited to one attempted operation, including rejection; method failures abort the active transaction even if caught. Do not reenter the owning server.
-#[pyclass(name = "RowSession", unsendable)]
+#[pyclass(name = "RowSession", frozen)]
 pub struct RowSessionPy {
 	// Accessible only while the enclosing native callback holds the original mutable borrow.
-	session: Option<NonNull<RowSession<'static>>>,
+	session: Mutex<Option<SessionAccess>>,
+	// Set by any rejected concurrent, reentrant or cross-thread use; it aborts the transaction.
+	misused: AtomicBool,
 	errors: Errors,
 }
 
+// The callback's session, usable only on the thread running that callback. The exposed address
+// keeps the class Send and Sync without an unsafe impl; it is dereferenced only after the thread
+// check, while the native callback that owns the borrow is still on the stack.
+struct SessionAccess {
+	owner: ThreadId,
+	address: usize,
+}
+
 impl RowSessionPy {
-	fn native(&mut self) -> PyResult<&mut RowSession<'static>> {
-		self.session
-			.as_mut()
-			.map(|pointer| unsafe { pointer.as_mut() })
-			.ok_or_else(|| PyRuntimeError::new_err("row session callback has ended"))
+	fn with_native<T>(
+		&self,
+		py: Python<'_>,
+		operation: impl FnOnce(&mut RowSession<'static>) -> Result<T, RowError>,
+	) -> PyResult<T> {
+		let Ok(slot) = self.session.try_lock() else {
+			// Another call is active (reentry from a store callback) or one panicked.
+			self.misused.store(true, Ordering::Relaxed);
+			return Err(PyRuntimeError::new_err("row session is already in use"));
+		};
+		let access = slot
+			.as_ref()
+			.ok_or_else(|| PyRuntimeError::new_err("row session callback has ended"))?;
+		if access.owner != thread::current().id() {
+			self.misused.store(true, Ordering::Relaxed);
+			return Err(PyRuntimeError::new_err(
+				"row session used outside its callback thread",
+			));
+		}
+		let session = ptr::with_exposed_provenance_mut::<RowSession<'static>>(access.address);
+		let output = operation(unsafe { &mut *session });
+		drop(slot);
+		self.result(py, output)
 	}
 
 	fn result<T>(&self, py: Python<'_>, output: Result<T, RowError>) -> PyResult<T> {
@@ -521,40 +562,42 @@ impl RowSessionPy {
 
 #[pymethods]
 impl RowSessionPy {
-	fn load(&mut self, py: Python<'_>, key: &[u8]) -> PyResult<Option<Py<PyBytes>>> {
-		let output = self.native()?.load_application(key);
-		self.result(py, output)
+	fn load(&self, py: Python<'_>, key: &[u8]) -> PyResult<Option<Py<PyBytes>>> {
+		self.with_native(py, |session| session.load_application(key))
 			.map(|value| value.map(|bytes| PyBytes::new(py, &bytes).unbind()))
 	}
-	fn store(&mut self, py: Python<'_>, key: &[u8], value: &[u8]) -> PyResult<()> {
-		let output = self.native()?.store_application(key, value);
-		self.result(py, output)
+	fn store(&self, py: Python<'_>, key: &[u8], value: &[u8]) -> PyResult<()> {
+		self.with_native(py, |session| session.store_application(key, value))
 	}
 	fn encrypt_to_beacon(
-		&mut self,
+		&self,
 		py: Python<'_>,
 		data: &[u8],
 		kid: u64,
 	) -> PyResult<RowTransitionPy> {
-		let output = self.native()?.encrypt_message(data, kid);
-		RowTransitionPy::from_native(py, self.result(py, output)?)
+		let output = self.with_native(py, |session| session.encrypt_message(data, kid))?;
+		RowTransitionPy::from_native(py, output)
 	}
-	fn decrypt_beacon_message(&mut self, py: Python<'_>, data: &[u8]) -> PyResult<RowTransitionPy> {
-		let output = self.native()?.decrypt_message(data);
-		RowTransitionPy::from_native(py, self.result(py, output)?)
+	fn decrypt_beacon_message(&self, py: Python<'_>, data: &[u8]) -> PyResult<RowTransitionPy> {
+		let output = self.with_native(py, |session| session.decrypt_message(data))?;
+		RowTransitionPy::from_native(py, output)
 	}
-	fn accept_registration(&mut self, py: Python<'_>, data: &[u8]) -> PyResult<bool> {
-		let output = self.native()?.accept_registration(data);
-		self.result(py, output)
+	fn accept_registration(&self, py: Python<'_>, data: &[u8]) -> PyResult<bool> {
+		self.with_native(py, |session| session.accept_registration(data))
+	}
+	/// Retire an established peer as this session's native operation, composed with its application rows. Returns whether a peer was retired.
+	fn retire_peer(&self, py: Python<'_>, kid: u64) -> PyResult<bool> {
+		self.with_native(py, |session| session.retire_peer(kid))
 	}
 	#[pyo3(signature = (initial_message=None))]
 	fn complete_registration(
-		&mut self,
+		&self,
 		py: Python<'_>,
 		initial_message: Option<&[u8]>,
 	) -> PyResult<RowTransitionPy> {
-		let output = self.native()?.complete_registration(initial_message);
-		RowTransitionPy::from_native(py, self.result(py, output)?)
+		let output =
+			self.with_native(py, |session| session.complete_registration(initial_message))?;
+		RowTransitionPy::from_native(py, output)
 	}
 }
 
@@ -565,17 +608,34 @@ fn application_callback<T>(
 	callback: impl FnOnce(Py<RowSessionPy>) -> PyResult<T>,
 ) -> Result<T, RowError> {
 	let output = (|| {
-		let pointer = NonNull::from(session).cast::<RowSession<'static>>();
+		let address = (session as *mut RowSession<'_>)
+			.cast::<RowSession<'static>>()
+			.expose_provenance();
 		let temporary = Py::new(
 			py,
 			RowSessionPy {
-				session: Some(pointer),
+				session: Mutex::new(Some(SessionAccess {
+					owner: thread::current().id(),
+					address,
+				})),
+				misused: AtomicBool::new(false),
 				errors: Arc::clone(errors),
 			},
 		)?;
 		let output = callback(temporary.clone_ref(py));
-		// No Python callback is active here. Invalidating the retained wrapper prevents stale access.
-		temporary.borrow_mut(py).session = None;
+		// Only this thread's calls can hold the slot while Python code runs, and they have all
+		// returned; other threads hold it only briefly under the GIL, which this thread holds.
+		// Invalidating the retained wrapper prevents stale access.
+		let wrapper = temporary.get();
+		*wrapper
+			.session
+			.lock()
+			.unwrap_or_else(|error| error.into_inner()) = None;
+		if wrapper.misused.load(Ordering::Relaxed) && output.is_ok() {
+			return Err(PyRuntimeError::new_err(
+				"row session was used concurrently, reentrantly or outside its callback thread",
+			));
+		}
 		output
 	})();
 	output.map_err(|error| {

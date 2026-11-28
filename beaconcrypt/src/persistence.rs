@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 
 use alloc::{boxed::Box, string::String, vec::Vec};
-use core::{error::Error, fmt};
+use core::{error::Error, fmt, num::NonZeroUsize};
 
 use beaconcrypt_crypto::{TryCryptoRng, crypto_generichash};
 use zeroize::Zeroizing;
@@ -376,6 +376,11 @@ pub struct PersistentServer<S: SnapshotStore> {
 	store: S,
 	head: SnapshotHead,
 	poisoned: bool,
+	// The last assigned peer identifier as of the committed head. A failed commit leaves
+	// tentative state in `server`, which accessors must not report.
+	committed_server_kid: u64,
+	// Runtime registration limit; not part of the snapshot.
+	max_peers: Option<NonZeroUsize>,
 }
 
 impl<S: SnapshotStore> PersistentServer<S> {
@@ -447,10 +452,12 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		}
 		let head = snapshot.head()?;
 		Ok(Self {
+			committed_server_kid: server.server_kid(),
 			server,
 			store,
 			head,
 			poisoned: false,
+			max_peers: None,
 		})
 	}
 
@@ -472,10 +479,12 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		}
 		let head = activated.head()?;
 		Ok(Self {
+			committed_server_kid: server.server_kid(),
 			server,
 			store,
 			head,
 			poisoned: false,
+			max_peers: None,
 		})
 	}
 
@@ -512,15 +521,70 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		self.server.identity_key_kid()
 	}
 
+	/// The last assigned peer identifier as of the committed head, including while poisoned.
 	pub fn server_kid(&self) -> u64 {
-		self.server.server_kid()
+		self.committed_server_kid
 	}
 
+	/// A peer's identity key, or `None` while poisoned because in-memory peers may be uncommitted.
 	pub fn pk_by_kid(&self, kid: u64) -> Option<&beaconcrypt_crypto::crypto_sign::PublicKey> {
+		if self.poisoned {
+			return None;
+		}
 		self.server.pk_by_kid(kid)
 	}
 
+	/// The number of established peers, or `None` while poisoned.
+	pub fn peer_count(&self) -> Option<usize> {
+		(!self.poisoned).then(|| self.server.peer_count())
+	}
+
+	/// The number of retained registration replay markers, or `None` while poisoned.
+	///
+	/// Markers are never removed: each accepted registration costs one for the life of the lineage.
+	pub fn registration_marker_count(&self) -> Option<usize> {
+		(!self.poisoned).then(|| self.server.registration_marker_count())
+	}
+
+	/// Limit the number of established peers. The limit is a runtime setting, not snapshot state.
+	///
+	/// At the limit, acceptance fails with [`PersistenceError::CapacityExceeded`] before consuming
+	/// the registration's replay marker, so the beacon may retry later. Completion checks again;
+	/// an accepted registration refused there has consumed its marker and must be regenerated.
+	pub fn set_max_peers(&mut self, max_peers: Option<NonZeroUsize>) {
+		self.max_peers = max_peers;
+	}
+
+	pub const fn max_peers(&self) -> Option<NonZeroUsize> {
+		self.max_peers
+	}
+
+	fn check_capacity(&self) -> Result<(), PersistenceError> {
+		match self.max_peers {
+			Some(max) if !self.poisoned && self.server.peer_count() >= max.get() => {
+				Err(PersistenceError::CapacityExceeded)
+			}
+			_ => Ok(()),
+		}
+	}
+
+	/// Retire an established peer and durably commit the removal before returning.
+	///
+	/// Its ratchet is erased and later frames from it are rejected like an unknown identifier's.
+	/// The replay marker is kept and the identifier is never reassigned. Returns whether a peer
+	/// was removed; an unknown identifier commits nothing.
+	pub fn retire_peer(&mut self, kid: u64) -> Result<bool, PersistenceError> {
+		self.commit_transition(|server| {
+			let removed = server.retire_peer(kid);
+			(removed, removed)
+		})
+	}
+
+	/// A peer's ratchet position, or `None` while poisoned because it may be uncommitted.
 	pub fn ratchet_status(&self, kid: u64) -> Option<crate::RatchetStatus> {
+		if self.poisoned {
+			return None;
+		}
 		self.server.ratchet_status(kid)
 	}
 
@@ -538,6 +602,7 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		buffer: &[u8],
 		rng: &mut R,
 	) -> Result<Option<RegistrationOutput>, PersistenceError> {
+		self.check_capacity()?;
 		self.commit_transition(|server| {
 			// Acceptance inserts a replay marker only when returning its one-use token.
 			let output = server.get_shared_secret_with_rng(buffer, rng);
@@ -554,6 +619,7 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		if !self.server.registration_response_fits(data) {
 			return self.reject_oversized();
 		}
+		self.check_capacity()?;
 		self.commit_transition(|server| {
 			// Completion publishes the peer and counter together with its response.
 			let output = server.build_registration_response(registration, data);
@@ -747,6 +813,7 @@ impl<S: SnapshotStore> PersistentServer<S> {
 			return Err(PersistenceError::StaleGeneration);
 		}
 		self.head = successor_head;
+		self.committed_server_kid = self.server.server_kid();
 		self.poisoned = false;
 		Ok(output)
 	}
@@ -768,6 +835,8 @@ pub enum PersistenceError {
 	Storage,
 	/// A write may have committed; restore authoritative state before retrying.
 	CommitUnknown,
+	/// The configured peer limit is reached. Nothing was committed and the owner remains usable.
+	CapacityExceeded,
 }
 
 impl fmt::Display for PersistenceError {
@@ -785,6 +854,7 @@ impl fmt::Display for PersistenceError {
 			Self::Poisoned => "persistent server is poisoned after a failed commit",
 			Self::Storage => "snapshot storage operation failed",
 			Self::CommitUnknown => "snapshot commit outcome is unknown",
+			Self::CapacityExceeded => "peer capacity reached",
 		};
 		formatter.write_str(message)
 	}
@@ -1247,6 +1317,55 @@ mod tests {
 		assert!(panic.is_err());
 		assert!(persistent.is_poisoned());
 		assert_eq!(persistent.head(), committed_head);
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn poisoned_owner_accessors_report_only_committed_state() {
+		let mut persistent = deterministic_persistent_server();
+		let committed_kid = persistent.server_kid();
+		let mut beacon = Beacon::new(
+			committed_kid,
+			persistent.identity_pk().as_bytes(),
+			&persistent.mldsa_public_key(),
+		);
+		let bundle = beacon.get_registration_bundle().unwrap();
+		let registration = persistent.get_shared_secret(&bundle).unwrap().unwrap();
+		// Another owner has advanced the store, so completion's CAS conflicts.
+		persistent.store.head = None;
+		assert!(matches!(
+			persistent.build_registration_response(registration, Some(b"withheld")),
+			Err(PersistenceError::StaleGeneration)
+		));
+		assert!(persistent.is_poisoned());
+		let tentative = committed_kid + 1;
+		assert!(persistent.server.pk_by_kid(tentative).is_some());
+		assert_eq!(persistent.server_kid(), committed_kid);
+		assert!(persistent.pk_by_kid(tentative).is_none());
+		assert!(persistent.ratchet_status(tentative).is_none());
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn committed_registration_advances_reported_server_kid() {
+		let mut persistent = deterministic_persistent_server();
+		let committed_kid = persistent.server_kid();
+		let mut beacon = Beacon::new(
+			committed_kid,
+			persistent.identity_pk().as_bytes(),
+			&persistent.mldsa_public_key(),
+		);
+		let bundle = beacon.get_registration_bundle().unwrap();
+		let registration = persistent.get_shared_secret(&bundle).unwrap().unwrap();
+		let response = persistent
+			.build_registration_response(registration, Some(b"committed"))
+			.unwrap()
+			.unwrap();
+		assert_eq!(persistent.server_kid(), response.kid);
+		assert!(persistent.pk_by_kid(response.kid).is_some());
+		let restored = PersistentServer::restore(persistent.store).unwrap();
+		assert_eq!(restored.server_kid(), response.kid);
+		assert!(restored.ratchet_status(response.kid).is_some());
 	}
 
 	#[cfg(feature = "beacon")]

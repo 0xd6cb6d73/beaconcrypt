@@ -372,6 +372,27 @@ fn dispatch(op: u32, handle: u32, arg: u64, input: &[u8], extra: &[u8]) -> Respo
 				}
 				None => Response::failed(REJECTED),
 			},
+			(28, Handle::Server(server)) => match server.retire_peer(arg) {
+				Ok(true) => Response::success(handle, arg, Vec::new()),
+				Ok(false) => Response::failed(REJECTED),
+				Err(error) => Response::persistence(error),
+			},
+			(29, Handle::Server(server)) => {
+				match (server.peer_count(), server.registration_marker_count()) {
+					(Some(peers), Some(markers)) => {
+						let mut data = Vec::with_capacity(16);
+						data.extend_from_slice(&(peers as u64).to_le_bytes());
+						data.extend_from_slice(&(markers as u64).to_le_bytes());
+						Response::success(handle, 0, data)
+					}
+					_ => Response::persistence(PersistenceError::Poisoned),
+				}
+			}
+			(30, Handle::Server(server)) => {
+				let limit = usize::try_from(arg).unwrap_or(usize::MAX);
+				server.set_max_peers(core::num::NonZeroUsize::new(limit));
+				Response::success(handle, 0, Vec::new())
+			}
 			(10, Handle::Server(server)) => match server.snapshot() {
 				Ok(snapshot) => Response::success(handle, 0, snapshot.as_bytes().to_vec()),
 				Err(error) => Response::persistence(error),

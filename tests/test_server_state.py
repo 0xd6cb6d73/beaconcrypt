@@ -1,3 +1,4 @@
+import base64
 import json
 
 from beaconcrypt import BeaconCryptBeacon, BeaconCryptServer
@@ -33,7 +34,12 @@ def test_json_updates_include_direction_tags_and_payloads():
     assert send_snapshot["send_key"][:2] == [6, 8]
     assert len(send_snapshot["send_key"][2]) == 32
     assert send_snapshot["recv_key"][:2] == [6, 9]
-    assert beacon.decrypt_server_message(bytes(send_update["data"])) == outbound
+    assert (
+        beacon.decrypt_server_message(
+            base64.b64decode(send_update["data"], validate=True)
+        )
+        == outbound
+    )
 
     inbound = b"beacon to server JSON update"
     ciphertext = beacon.encrypt_message_to_server(inbound)
@@ -48,7 +54,7 @@ def test_json_updates_include_direction_tags_and_payloads():
     assert recv_snapshot["recv_key"][:2] == [6, 9]
     assert len(recv_snapshot["recv_key"][2]) == 32
     assert recv_snapshot["send_key"][:2] == [6, 8]
-    assert bytes(recv_update["data"]) == inbound
+    assert base64.b64decode(recv_update["data"], validate=True) == inbound
 
 
 def test_json_update_failures_return_none():

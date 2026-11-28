@@ -36,6 +36,7 @@ fn persistence_error(py: Python<'_>, error: NativePersistenceError, cause: Optio
 		NativePersistenceError::Poisoned => "poisoned",
 		NativePersistenceError::Storage => "storage",
 		NativePersistenceError::CommitUnknown => "commit_unknown",
+		NativePersistenceError::CapacityExceeded => "capacity_exceeded",
 	};
 	let exception = PersistenceError::new_err(error.to_string());
 	if let Err(attribute_error) = exception.value(py).setattr("code", code) {
@@ -526,9 +527,10 @@ impl Server {
 
 	/// Read this owner's committed plaintext checkpoint from the trusted store.
 	/// For the default in-memory store, save after every potentially mutating call, including failures; rejected receives leave the checkpoint unchanged.
-	fn export_state(&self, py: Python<'_>) -> PyResult<Vec<u8>> {
+	fn export_state(&self, py: Python<'_>) -> PyResult<Py<PyBytes>> {
+		// Copy straight from the zeroizing snapshot so no unwiped native copy remains.
 		persistence_result(py, self._0.snapshot(), &self.callback_error)
-			.map(|snapshot| snapshot.as_bytes().to_vec())
+			.map(|snapshot| PyBytes::new(py, snapshot.as_bytes()).unbind())
 	}
 
 	fn head(&self) -> SnapshotHeadPy {
@@ -568,9 +570,9 @@ impl Server {
 		&mut self,
 		py: Python<'_>,
 		data: Vec<u8>,
-	) -> PyResult<Option<Vec<u8>>> {
+	) -> PyResult<Option<Py<PyBytes>>> {
 		persistence_result(py, self._0.decrypt_message(&data), &self.callback_error)
-			.map(|decrypted| decrypted.map(|decrypted| decrypted.plaintext))
+			.map(|decrypted| decrypted.map(|decrypted| secret_bytes(py, decrypted.plaintext)))
 	}
 
 	fn encrypt_to_beacon(
@@ -579,6 +581,7 @@ impl Server {
 		data: Vec<u8>,
 		kid: u64,
 	) -> PyResult<Option<Vec<u8>>> {
+		let data = Zeroizing::new(data);
 		persistence_result(
 			py,
 			self._0.encrypt_message(&data, kid),
@@ -593,6 +596,7 @@ impl Server {
 		data: Vec<u8>,
 		kid: u64,
 	) -> PyResult<Option<EncryptStatePy>> {
+		let data = Zeroizing::new(data);
 		persistence_result(
 			py,
 			self._0.encrypt_and_update(&data, kid),
@@ -606,12 +610,14 @@ impl Server {
 		py: Python<'_>,
 		data: Vec<u8>,
 		kid: u64,
-	) -> PyResult<Option<String>> {
+	) -> PyResult<Option<Py<PyString>>> {
+		let data = Zeroizing::new(data);
 		persistence_result(
 			py,
 			self._0.encrypt_and_update_json(&data, kid),
 			&self.callback_error,
 		)
+		.map(|json| json.map(|json| secret_string(py, json)))
 	}
 
 	/// Return an explicit committed send effect instead of an ambiguous optional message.
@@ -621,6 +627,7 @@ impl Server {
 		data: Vec<u8>,
 		kid: u64,
 	) -> PyResult<SendResultPy> {
+		let data = Zeroizing::new(data);
 		persistence_result(
 			py,
 			self._0.encrypt_message_outcome(&data, kid),
@@ -635,6 +642,7 @@ impl Server {
 		data: Vec<u8>,
 		kid: u64,
 	) -> PyResult<SendResultPy> {
+		let data = Zeroizing::new(data);
 		persistence_result(
 			py,
 			self._0.encrypt_and_update_outcome(&data, kid),
@@ -649,6 +657,7 @@ impl Server {
 		data: Vec<u8>,
 		kid: u64,
 	) -> PyResult<SendResultPy> {
+		let data = Zeroizing::new(data);
 		let outcome = persistence_result(
 			py,
 			self._0.encrypt_and_update_json_outcome(&data, kid),
@@ -674,12 +683,13 @@ impl Server {
 		&mut self,
 		py: Python<'_>,
 		data: Vec<u8>,
-	) -> PyResult<Option<String>> {
+	) -> PyResult<Option<Py<PyString>>> {
 		persistence_result(
 			py,
 			self._0.decrypt_and_update_json(&data),
 			&self.callback_error,
 		)
+		.map(|json| json.map(|json| secret_string(py, json)))
 	}
 
 	fn id_pk(&self) -> &[u8] {
@@ -689,6 +699,44 @@ impl Server {
 	fn mldsa_public_key(&self) -> Vec<u8> {
 		self._0.mldsa_public_key().to_vec()
 	}
+
+	/// Retire an established peer and durably commit the removal. Its frames and sends are then refused; its replay marker is kept and its key ID is never reassigned. Returns whether a peer was removed.
+	fn retire_peer(&mut self, py: Python<'_>, kid: u64) -> PyResult<bool> {
+		persistence_result(py, self._0.retire_peer(kid), &self.callback_error)
+	}
+
+	/// Return the number of established peers. Raises PersistenceError while poisoned.
+	fn peer_count(&self, py: Python<'_>) -> PyResult<usize> {
+		self._0
+			.peer_count()
+			.ok_or_else(|| persistence_error(py, NativePersistenceError::Poisoned, None))
+	}
+
+	/// Return the number of retained registration replay markers, which are never removed. Raises PersistenceError while poisoned.
+	fn registration_marker_count(&self, py: Python<'_>) -> PyResult<usize> {
+		self._0
+			.registration_marker_count()
+			.ok_or_else(|| persistence_error(py, NativePersistenceError::Poisoned, None))
+	}
+
+	/// Limit established peers, or remove the limit with None. Registration at the limit raises PersistenceError with code capacity_exceeded; acceptance is refused before it consumes the replay marker. The limit is not saved in snapshots.
+	#[pyo3(signature = (max_peers))]
+	fn set_max_peers(&mut self, max_peers: Option<usize>) {
+		self._0
+			.set_max_peers(max_peers.and_then(core::num::NonZeroUsize::new));
+	}
+}
+
+/// Copy secret bytes into Python; the native buffer is wiped when it is dropped here.
+pub(crate) fn secret_bytes(py: Python<'_>, bytes: Vec<u8>) -> Py<PyBytes> {
+	let bytes = Zeroizing::new(bytes);
+	PyBytes::new(py, &bytes).unbind()
+}
+
+/// Copy secret-bearing JSON into Python; the native string is wiped when it is dropped here.
+fn secret_string(py: Python<'_>, text: String) -> Py<PyString> {
+	let text = Zeroizing::new(text);
+	PyString::new(py, &text).unbind()
 }
 
 #[pyclass(name = "BeaconCryptBeacon")]
@@ -711,21 +759,25 @@ impl Beacon {
 
 	/// Process the registration response and optional initial data. The raw buffer sent by the server must be passed as-is as `data`.
 	/// The response contains the contents of the initial message, or `0xFF` if there was none. Once this function returns, the beacon is registered
-	fn process_initial_message(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
-		self._0.finish_registration(data.as_slice())
+	fn process_initial_message(&mut self, py: Python<'_>, data: Vec<u8>) -> Option<Py<PyBytes>> {
+		self._0
+			.finish_registration(data.as_slice())
+			.map(|plaintext| secret_bytes(py, plaintext))
 	}
 
-	fn decrypt_server_message(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
+	fn decrypt_server_message(&mut self, py: Python<'_>, data: Vec<u8>) -> Option<Py<PyBytes>> {
 		self._0
 			.decrypt_message(&data)
-			.map(|decrypted| decrypted.plaintext)
+			.map(|decrypted| secret_bytes(py, decrypted.plaintext))
 	}
 
 	fn encrypt_message_to_server_outcome(&mut self, data: Vec<u8>) -> SendResultPy {
+		let data = Zeroizing::new(data);
 		SendResultPy::encrypted(self._0.encrypt_message_outcome(&data))
 	}
 
 	fn encrypt_message_to_server(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
+		let data = Zeroizing::new(data);
 		self._0
 			.encrypt_message(&data)
 			.map(|encrypted| encrypted.ciphertext)

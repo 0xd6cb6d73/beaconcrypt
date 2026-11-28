@@ -63,8 +63,8 @@
   ],
   "rustflags": "--cfg hax_compilation --cfg hax_backend_lean",
   "source_sha256": {
-    "Cargo.lock": "2f9299d8f9844467ef90c9bbea76cdcacec7e1dffae7025930565ef56906b8e6",
-    "Cargo.toml": "755b24b6a434712ac0b941dcb1cf629321f128555a43b5e574c38dd5bf1b3b53",
+    "Cargo.lock": "96eb9ed30f1a0346926bbf0a2eb323d92f6c9cf698de8de3a118c49dc1243e4e",
+    "Cargo.toml": "0c618e68307b9823ee15027f803571b2f660b2558d12b7b4cc0e79650ea87a1d",
     "beaconcrypt-core/Cargo.toml": "8e41a5e7c6f9715417628967f404745000e89d177902bde70d1969ef00af5f09",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RegistrationPositiveSlice.lean": "e3f8925ac04b10fa8fdf3f996532a58ae74b28cb3cd9d4073cc3466e37ec305c",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RegistrationPrimitivePlatform.lean": "63c6fdafaa16d5beabe5bb4af35adbf11597a6b1cc195dbc03b4c98431786e99",

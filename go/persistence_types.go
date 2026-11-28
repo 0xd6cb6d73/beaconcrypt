@@ -48,6 +48,10 @@ const (
 // StatusCommitUnknown reports a failed callback whose durable commit outcome is unknown.
 const StatusCommitUnknown PersistenceStatus = 15
 
+// StatusCapacity reports that the configured peer limit is reached. Nothing was
+// committed and the server remains usable.
+const StatusCapacity PersistenceStatus = 16
+
 // PersistenceError reports a persistence failure, including an underlying store
 // error when a callback supplied one. A failed commit suppresses operation output.
 type PersistenceError struct {
@@ -71,6 +75,7 @@ func (e *PersistenceError) Error() string {
 		StatusPoisoned:             "persistent server is poisoned",
 		StatusStorage:              "storage operation failed",
 		StatusCommitUnknown:        "snapshot commit outcome is unknown",
+		StatusCapacity:             "peer capacity reached",
 		StatusInvalidSession:       "invalid transaction session operation",
 	}[e.Code]
 	if message == "" {

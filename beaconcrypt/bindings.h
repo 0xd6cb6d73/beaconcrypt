@@ -86,6 +86,11 @@
 #define beaconcrypt_STATUS_COMMIT_UNKNOWN 15
 
 /**
+ * The configured peer limit is reached; nothing was committed and the handle remains usable.
+ */
+#define beaconcrypt_STATUS_CAPACITY 16
+
+/**
  * No send key was consumed and no output is available.
  */
 #define beaconcrypt_SEND_OUTCOME_REJECTED 0
@@ -117,7 +122,7 @@
 typedef struct beaconcrypt_Beacon beaconcrypt_Beacon;
 
 /**
- * A database-backed row server. Serialize calls on one handle and never reenter it from callbacks.
+ * A database-backed row server. Serialize calls on one handle and never reenter it from callbacks; a reentrant call is refused with `STATUS_INVALID_ARGUMENT` or an empty result, and a reentrant free is ignored.
  */
 typedef struct beaconcrypt_RowServerHandle beaconcrypt_RowServerHandle;
 
@@ -129,7 +134,7 @@ typedef struct beaconcrypt_RowSessionHandle beaconcrypt_RowSessionHandle;
 /**
  * Opaque server handle owned by the C caller.
  *
- * Callers must serialize all access to one handle, including queries and destruction. Store callbacks must not reenter their owning handle.
+ * Callers must serialize all access to one handle, including queries and destruction. Store callbacks must not reenter their owning handle; such a call is refused with `STATUS_INVALID_ARGUMENT` or an empty result, and a reentrant free is ignored.
  */
 /**
  * Server backed by trusted snapshot storage. Store callbacks must not reenter this server.
@@ -139,11 +144,11 @@ typedef struct beaconcrypt_Server beaconcrypt_Server;
 /**
  * Heap-allocated byte buffer returned by the C API.
  *
- * A non-empty buffer must be released exactly once with `beaconcrypt_free_buffer`. An empty buffer has a null `ptr` and indicates either empty output or failure, depending on the called function.
+ * A buffer with a non-null `ptr` must be released exactly once with `beaconcrypt_free_buffer`. A null `ptr` indicates either empty output or failure, depending on the called function. Where a function distinguishes absence from a present empty value, the present empty value is a non-null buffer with zero `len`; it owns a real allocation and is released like any other buffer. No buffer, and no byte pointer passed to a callback, carries a dangling address: a zero-length callback slice is null or points to a valid static byte, which must not be read or written.
  */
 typedef struct beaconcrypt_Buffer {
   /**
-   * Pointer to the first byte, or null when the buffer is empty.
+   * Pointer to the first byte, null for no output, or a valid allocation when a present value is empty.
    */
   uint8_t *ptr;
   /**
@@ -389,7 +394,7 @@ uint32_t beaconcrypt_server_head(const struct beaconcrypt_Server *handle,
                                  struct beaconcrypt_SnapshotHeadInfo *out);
 
 /**
- * Query whether a failed commit has fenced this owner. Returns false for null and preserves the last operation's status.
+ * Query whether a failed commit has fenced this owner. Returns false for null, true while a reentrant callback queries an in-progress operation, and preserves the last operation's status.
  */
 bool beaconcrypt_server_is_poisoned(const struct beaconcrypt_Server *handle);
 
@@ -398,6 +403,31 @@ bool beaconcrypt_server_is_poisoned(const struct beaconcrypt_Server *handle);
  * Head, identity and poison-state queries preserve this value; checkpoint export records its own status.
  */
 uint32_t beaconcrypt_server_last_status(const struct beaconcrypt_Server *handle);
+
+/**
+ * Retire an established peer and durably commit the removal before returning.
+ *
+ * Its ratchet is erased and later frames and sends for `key_id` are refused like an unknown identifier's. The registration replay marker is kept and the identifier is never reassigned. Returns true when a peer was removed. Returns false with `STATUS_REJECTED` for an unknown or already retired identifier, which commits nothing, or with another status on failure.
+ */
+bool beaconcrypt_server_retire_peer(struct beaconcrypt_Server *handle,
+                                    uint64_t key_id);
+
+/**
+ * Write the number of established peers and of retained registration replay markers.
+ *
+ * Returns `STATUS_POISONED` for a poisoned owner and `STATUS_INVALID_ARGUMENT` for null arguments, without changing the last operation's status. Markers are never removed, so their count grows with every accepted registration.
+ */
+uint32_t beaconcrypt_server_peer_counts(const struct beaconcrypt_Server *handle,
+                                        uint64_t *peers_out,
+                                        uint64_t *markers_out);
+
+/**
+ * Limit the number of established peers; zero removes the limit. The limit is a runtime setting and is not saved in snapshots.
+ *
+ * At the limit, registration fails with `STATUS_CAPACITY`. Acceptance is refused before it consumes the replay marker, so the beacon may retry; a registration refused at completion has consumed its marker. Returns a status without changing the last operation's status.
+ */
+uint32_t beaconcrypt_server_set_max_peers(struct beaconcrypt_Server *handle,
+                                          uint64_t max_peers);
 
 /**
  * Parse a snapshot envelope and compute its exact-byte head. This does not authenticate bytes or establish freshness.
@@ -451,7 +481,7 @@ struct beaconcrypt_Beacon *beaconcrypt_beacon_new(uint64_t server_kid,
 /**
  * Release a server handle created by this API.
  *
- * Passing null is allowed. The handle must not be used after this call.
+ * Passing null is allowed. The handle must not be used after this call. A call made from one of the handle's own callbacks is ignored, because the active operation still owns the server.
  */
 void beaconcrypt_server_free(struct beaconcrypt_Server *handle);
 
@@ -671,6 +701,12 @@ uintptr_t beaconcrypt_row_server_cached_peer_count(const struct beaconcrypt_RowS
  */
 void beaconcrypt_row_server_clear_cache(struct beaconcrypt_RowServerHandle *handle);
 
+/**
+ * Retire an established peer in its own durable transaction: its row becomes a tombstone, and later frames and sends for `key_id` are refused. The replay marker is kept and the identifier is never reassigned. Returns true when a peer was retired; false with STATUS_REJECTED for an unknown or already retired identifier, which writes nothing, or with another status on failure.
+ */
+bool beaconcrypt_row_server_retire_peer(struct beaconcrypt_RowServerHandle *handle,
+                                        uint64_t key_id);
+
 void beaconcrypt_row_server_free(struct beaconcrypt_RowServerHandle *handle);
 
 uint32_t beaconcrypt_row_server_last_status(const struct beaconcrypt_RowServerHandle *handle);
@@ -774,6 +810,12 @@ struct beaconcrypt_RowTransitionBuffer beaconcrypt_row_session_decrypt(struct be
 bool beaconcrypt_row_session_accept_registration(struct beaconcrypt_RowSessionHandle *handle,
                                                  const uint8_t *data,
                                                  uintptr_t len);
+
+/**
+ * Retire an established peer as this session's native operation, composed with the transaction's application rows. Returns true when a peer was retired; false with STATUS_REJECTED for an unknown or already retired identifier, or with another status, which aborts the transaction.
+ */
+bool beaconcrypt_row_session_retire_peer(struct beaconcrypt_RowSessionHandle *handle,
+                                         uint64_t key_id);
 
 /**
  * A null initial message uses the protocol witness; a non-null empty one attempts an empty payload. This function is valid only in the completion callback.

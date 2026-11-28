@@ -171,10 +171,10 @@ TOKEN_SHA256 = {
 # Full authentication/AD lifting is not inferred from these whole-file tripwires.
 SOURCE_SHA256 = {
     "beaconcrypt/src/beacon.rs": "669482d038c8143ac25698bd4a1517480745c9b29c348d7d5c023992f813a845",
-    "beaconcrypt/src/server.rs": "b5e6992a58eacce5b51d2624ff58206fbd56c744a97561146d07176a9242b66b",
+    "beaconcrypt/src/server.rs": "f00083746068778587480f3f2eddb7175052427406fec0849324a11a57045ec4",
     "beaconcrypt-core/src/pqxdh.rs": "0e90604b6537968f73873850ca7626f5019a9482c3225bb333d9a3ff555fde4f",
     "beaconcrypt/src/ratchet.rs": "f9fa5f0b41821cc54fe5f626d18a853489300a7a2cde061efd8f7f0da277370d",
-    "beaconcrypt/src/shared.rs": "98ff9810f5b1a8425a2177dab49c53eda6aa75cf5f78aedb1617712b4da17387",
+    "beaconcrypt/src/shared.rs": "d04ba72e34b116214896e6a3d8d8eafbfe6d55af68decd98c0a605575cb36813",
     "beaconcrypt/src/pqxdh.rs": "031465df2916c2fd118a28b3cb91f79484f535e2149c9c5bc48d3c5395dacf23",
     "beaconcrypt-core/src/session.rs": "4f83234a89c0fe8df60d68753930339f68208e2f14c464849177006af550c15e",
     "beaconcrypt/src/auth.rs": "f812e268cdd86cac01c43fdba5b25b944ebcdda1f6c03407203a6fbfa9ed16b5",
@@ -192,10 +192,10 @@ SOURCE_SHA256 = {
     "beaconcrypt-crypto/src/crypto_sign.rs": "8340a01b3c081ab79c621785cd4c6193b8af1fa483a4cd726b00ddc172fa011c",
     "beaconcrypt-crypto/src/lib.rs": "5d808be88690164585ab2c5c17f84396789defbf694694ab3150e709b7debc7f",
     "beaconcrypt-crypto/Cargo.toml": "dc34ba30e7cfbe1c17e27be5ffe2e49f151c9ba170fed7e42baf5bc09cec4560",
-    "Cargo.lock": "2f9299d8f9844467ef90c9bbea76cdcacec7e1dffae7025930565ef56906b8e6",
+    "Cargo.lock": "96eb9ed30f1a0346926bbf0a2eb323d92f6c9cf698de8de3a118c49dc1243e4e",
     "beaconcrypt/src/collections.rs": "2eac87345a8673bad9fe89e705a65eb0f20c6ac67a2516872fedd599576b8334",
     "beaconcrypt/src/lib.rs": "59b2239615ff5c4bfa10db7a7162b078db5abdd10f143f9a3624937a6ff4a3ba",
-    "beaconcrypt/Cargo.toml": "bd72a2dd47102f91b1f927b90666f78674a9e4af91419dffad3ac69d7195a098",
+    "beaconcrypt/Cargo.toml": "de9f6bd946f81149af8ed78f696f72c5fe5b47c9e93cd93b54c06d8f7409dbb1",
 }
 
 

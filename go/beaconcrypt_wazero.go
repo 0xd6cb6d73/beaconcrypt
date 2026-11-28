@@ -313,6 +313,42 @@ func (s *Server) Head() (SnapshotHead, error) {
 	return decodeWasmHead(r.data)
 }
 
+// RetirePeer removes an established peer and durably commits the removal before
+// returning. Its frames and sends are then refused, its registration cannot be
+// replayed, and its key ID is never reassigned. It reports whether a peer was
+// removed; an unknown or already retired key ID commits nothing.
+func (s *Server) RetirePeer(keyID uint64) (bool, error) {
+	_, err := s.wasmCall(28, keyID, nil, nil)
+	var failure *PersistenceError
+	if errors.As(err, &failure) && failure.Code == StatusRejected {
+		return false, nil
+	}
+	return err == nil, err
+}
+
+// PeerCounts returns the number of established peers and of retained
+// registration replay markers. Markers are never removed, so their count grows
+// with every accepted registration.
+func (s *Server) PeerCounts() (peers, markers uint64, err error) {
+	r, err := s.wasmCall(29, 0, nil, nil)
+	if err != nil {
+		return 0, 0, err
+	}
+	if len(r.data) != 16 {
+		return 0, 0, ErrCrypto
+	}
+	return binary.LittleEndian.Uint64(r.data[:8]), binary.LittleEndian.Uint64(r.data[8:]), nil
+}
+
+// SetMaxPeers limits the number of established peers; zero removes the limit.
+// Registration at the limit fails with StatusCapacity: acceptance is refused
+// before it consumes the replay marker, so the beacon may retry. The limit is a
+// runtime setting and is not saved in snapshots.
+func (s *Server) SetMaxPeers(maxPeers uint64) error {
+	_, err := s.wasmCall(30, maxPeers, nil, nil)
+	return err
+}
+
 // IsPoisoned reports whether a failed commit has disabled the server, or the
 // server is closed or absent.
 func (s *Server) IsPoisoned() bool {

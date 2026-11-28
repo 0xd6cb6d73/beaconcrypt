@@ -140,7 +140,7 @@ fn receive(
 		_ => server.decrypt_and_update_json(frame).map(|output| {
 			output.map(|json| {
 				let value: serde_json::Value = serde_json::from_str(&json).unwrap();
-				serde_json::from_value(value["data"].clone()).unwrap()
+				json_data(&value["data"])
 			})
 		}),
 	}
@@ -475,4 +475,16 @@ proptest! {
 			}
 		}
 	}
+}
+
+/// Decode the standard base64 `data` field of a JSON update.
+fn json_data(value: &serde_json::Value) -> Vec<u8> {
+	use base64ct::{Base64, Encoding};
+	let text = value.as_str().expect("base64 JSON data");
+	let mut bytes = vec![0; text.len()];
+	let length = Base64::decode(text, &mut bytes)
+		.expect("canonical base64")
+		.len();
+	bytes.truncate(length);
+	bytes
 }

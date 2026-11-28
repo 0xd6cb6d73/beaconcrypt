@@ -16,6 +16,8 @@ dynamic = ["version"]
 [tool.maturin]
 bindings = "pyo3"
 features = ["pybinds"]
+# Release wheels use the unwinding profile defined in Cargo.toml.
+profile = "release-python"
 # Git preserves the native wrapper's parent-relative shared-source lib path.
 # Cargo's package generator strips that target because its source is outside the crate.
 sdist-generator = "git"

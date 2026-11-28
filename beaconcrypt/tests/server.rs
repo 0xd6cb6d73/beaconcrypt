@@ -308,7 +308,7 @@ fn accept_through(
 		PersistentReceiveApi::Json => {
 			let json = server.decrypt_and_update_json(frame).unwrap().unwrap();
 			let update: serde_json::Value = serde_json::from_str(&json).unwrap();
-			serde_json::from_value(update["data"].clone()).unwrap()
+			json_data(&update["data"])
 		}
 	}
 }
@@ -924,7 +924,7 @@ fn persistent_structured_updates_return_committed_outputs() {
 		.unwrap()
 		.unwrap();
 	let send: serde_json::Value = serde_json::from_str(&send_json).unwrap();
-	let ciphertext: Vec<u8> = serde_json::from_value(send["data"].clone()).unwrap();
+	let ciphertext: Vec<u8> = json_data(&send["data"]);
 	assert_eq!(
 		beacon.decrypt_message(&ciphertext).unwrap().plaintext,
 		b"JSON send"
@@ -934,8 +934,20 @@ fn persistent_structured_updates_return_committed_outputs() {
 	let receive_json = server.decrypt_and_update_json(&encrypted).unwrap().unwrap();
 	let receive: serde_json::Value = serde_json::from_str(&receive_json).unwrap();
 	assert_eq!(receive["kid"], kid);
-	let plaintext: Vec<u8> = serde_json::from_value(receive["data"].clone()).unwrap();
+	let plaintext: Vec<u8> = json_data(&receive["data"]);
 	assert_eq!(plaintext, b"JSON receive");
 
 	assert_eq!(store.trusted_head(), Some(server.head()));
+}
+
+/// Decode the standard base64 `data` field of a JSON update.
+fn json_data(value: &serde_json::Value) -> Vec<u8> {
+	use base64ct::{Base64, Encoding};
+	let text = value.as_str().expect("base64 JSON data");
+	let mut bytes = vec![0; text.len()];
+	let length = Base64::decode(text, &mut bytes)
+		.expect("canonical base64")
+		.len();
+	bytes.truncate(length);
+	bytes
 }

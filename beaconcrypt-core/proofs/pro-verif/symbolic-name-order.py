@@ -36,7 +36,7 @@ TOKEN_SHA256 = {
     "fs-common.pvl": "86ba720e2790fa558957cc8b755057bc41cce7feb2d0426e5be14c51dd581cdd",
 }
 SOURCE_SHA256 = {
-    "beaconcrypt/src/server.rs": "b5e6992a58eacce5b51d2624ff58206fbd56c744a97561146d07176a9242b66b",
+    "beaconcrypt/src/server.rs": "f00083746068778587480f3f2eddb7175052427406fec0849324a11a57045ec4",
     "beaconcrypt-core/src/session.rs": "4f83234a89c0fe8df60d68753930339f68208e2f14c464849177006af550c15e",
     "beaconcrypt/src/auth.rs": "f812e268cdd86cac01c43fdba5b25b944ebcdda1f6c03407203a6fbfa9ed16b5",
     "beaconcrypt/src/pqxdh.rs": "031465df2916c2fd118a28b3cb91f79484f535e2149c9c5bc48d3c5395dacf23",
@@ -55,10 +55,10 @@ SOURCE_SHA256 = {
     "beaconcrypt-crypto/src/crypto_sign.rs": "8340a01b3c081ab79c621785cd4c6193b8af1fa483a4cd726b00ddc172fa011c",
     "beaconcrypt-crypto/src/lib.rs": "5d808be88690164585ab2c5c17f84396789defbf694694ab3150e709b7debc7f",
     "beaconcrypt-crypto/Cargo.toml": "dc34ba30e7cfbe1c17e27be5ffe2e49f151c9ba170fed7e42baf5bc09cec4560",
-    "Cargo.lock": "2f9299d8f9844467ef90c9bbea76cdcacec7e1dffae7025930565ef56906b8e6",
+    "Cargo.lock": "96eb9ed30f1a0346926bbf0a2eb323d92f6c9cf698de8de3a118c49dc1243e4e",
     "beaconcrypt/src/collections.rs": "2eac87345a8673bad9fe89e705a65eb0f20c6ac67a2516872fedd599576b8334",
     "beaconcrypt/src/lib.rs": "59b2239615ff5c4bfa10db7a7162b078db5abdd10f143f9a3624937a6ff4a3ba",
-    "beaconcrypt/Cargo.toml": "bd72a2dd47102f91b1f927b90666f78674a9e4af91419dffad3ac69d7195a098",
+    "beaconcrypt/Cargo.toml": "de9f6bd946f81149af8ed78f696f72c5fe5b47c9e93cd93b54c06d8f7409dbb1",
 }
 NAMES = ("ephemeral_secret", "kem_coins")
 

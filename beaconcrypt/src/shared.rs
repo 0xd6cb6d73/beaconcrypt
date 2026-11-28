@@ -40,7 +40,7 @@ use beaconcrypt_crypto::crypto_aead;
 mod deser;
 #[cfg(feature = "server")]
 #[path = "ser.rs"]
-mod ser;
+pub(crate) mod ser;
 #[cfg(feature = "server")]
 pub(crate) use deser::{deserialize_row_peer, deserialize_server_state};
 #[cfg(feature = "server")]

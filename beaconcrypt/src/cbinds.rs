@@ -6,7 +6,7 @@ use crate::persistence::{
 };
 use crate::server::{RecvState, SendState};
 use crate::{Beacon, ProviderBeacon, SendOutcome};
-use std::cell::Cell;
+use std::cell::{Cell, UnsafeCell};
 use std::ffi::c_void;
 use std::mem;
 use std::slice;
@@ -14,8 +14,75 @@ use zeroize::{Zeroize, Zeroizing};
 
 /// Opaque server handle owned by the C caller.
 ///
-/// Callers must serialize all access to one handle, including queries and destruction. Store callbacks must not reenter their owning handle.
-pub struct Server(PersistentServer<Box<dyn SnapshotStore>>, Cell<u32>);
+/// Callers must serialize all access to one handle, including queries and destruction. Store callbacks must not reenter their owning handle; such a call is refused with `STATUS_INVALID_ARGUMENT` or an empty result, and a reentrant free is ignored.
+pub struct Server(
+	Exclusive<PersistentServer<Box<dyn SnapshotStore>>>,
+	Cell<u32>,
+);
+
+/// Owner state that at most one entry point can borrow at a time.
+///
+/// Entry points hold only a shared reference to their handle, so a reentrant call can observe the
+/// busy flag without aliasing the active call's mutable borrow.
+pub(crate) struct Exclusive<T> {
+	value: UnsafeCell<T>,
+	busy: Cell<bool>,
+}
+
+/// Exclusive access released when dropped.
+pub(crate) struct ExclusiveGuard<'a, T> {
+	value: &'a mut T,
+	busy: &'a Cell<bool>,
+}
+
+impl<T> Exclusive<T> {
+	pub(crate) const fn new(value: T) -> Self {
+		Self {
+			value: UnsafeCell::new(value),
+			busy: Cell::new(false),
+		}
+	}
+
+	/// Borrow the owner, or return `None` while another entry point on this handle is active.
+	pub(crate) fn enter(&self) -> Option<ExclusiveGuard<'_, T>> {
+		if self.busy.replace(true) {
+			return None;
+		}
+		// The busy flag admits one guard at a time, and `Cell` keeps the handle single-threaded.
+		Some(ExclusiveGuard {
+			value: unsafe { &mut *self.value.get() },
+			busy: &self.busy,
+		})
+	}
+
+	pub(crate) fn is_busy(&self) -> bool {
+		self.busy.get()
+	}
+
+	#[cfg(test)]
+	pub(crate) fn get_mut(&mut self) -> &mut T {
+		self.value.get_mut()
+	}
+}
+
+impl<T> core::ops::Deref for ExclusiveGuard<'_, T> {
+	type Target = T;
+	fn deref(&self) -> &T {
+		self.value
+	}
+}
+
+impl<T> core::ops::DerefMut for ExclusiveGuard<'_, T> {
+	fn deref_mut(&mut self) -> &mut T {
+		self.value
+	}
+}
+
+impl<T> Drop for ExclusiveGuard<'_, T> {
+	fn drop(&mut self) {
+		self.busy.set(false);
+	}
+}
 
 pub const STATUS_OK: u32 = 0;
 pub const STATUS_REJECTED: u32 = 1;
@@ -33,6 +100,8 @@ pub const STATUS_POISONED: u32 = 12;
 pub const STATUS_STORAGE: u32 = 13;
 // Status 14 belongs to invalid row transaction sessions.
 pub const STATUS_COMMIT_UNKNOWN: u32 = 15;
+/// The configured peer limit is reached; nothing was committed and the handle remains usable.
+pub const STATUS_CAPACITY: u32 = 16;
 
 /// Non-secret identity of one complete server snapshot. Its digest is not an authenticator.
 #[repr(C)]
@@ -185,7 +254,7 @@ impl SnapshotStore for CallbackStore {
 				expected
 					.as_ref()
 					.map_or(std::ptr::null(), std::ptr::from_ref),
-				replacement.as_bytes().as_ptr(),
+				abi_ptr(replacement.as_bytes()),
 				replacement.as_bytes().len(),
 			)
 		};
@@ -208,6 +277,7 @@ fn error_status(error: PersistenceError) -> u32 {
 		PersistenceError::Poisoned => STATUS_POISONED,
 		PersistenceError::Storage => STATUS_STORAGE,
 		PersistenceError::CommitUnknown => STATUS_COMMIT_UNKNOWN,
+		PersistenceError::CapacityExceeded => STATUS_CAPACITY,
 	}
 }
 
@@ -248,7 +318,10 @@ fn server_result(
 	match result {
 		Ok(server) => {
 			set_status_out(status_out, STATUS_OK);
-			Box::into_raw(Box::new(Server(server, Cell::new(STATUS_OK))))
+			Box::into_raw(Box::new(Server(
+				Exclusive::new(server),
+				Cell::new(STATUS_OK),
+			)))
 		}
 		Err(error) => {
 			set_status_out(status_out, error_status(error));
@@ -274,10 +347,10 @@ fn callback_store(
 
 /// Heap-allocated byte buffer returned by the C API.
 ///
-/// A non-empty buffer must be released exactly once with `beaconcrypt_free_buffer`. An empty buffer has a null `ptr` and indicates either empty output or failure, depending on the called function.
+/// A buffer with a non-null `ptr` must be released exactly once with `beaconcrypt_free_buffer`. A null `ptr` indicates either empty output or failure, depending on the called function. Where a function distinguishes absence from a present empty value, the present empty value is a non-null buffer with zero `len`; it owns a real allocation and is released like any other buffer. No buffer, and no byte pointer passed to a callback, carries a dangling address: a zero-length callback slice is null or points to a valid static byte, which must not be read or written.
 #[repr(C)]
 pub struct Buffer {
-	/// Pointer to the first byte, or null when the buffer is empty.
+	/// Pointer to the first byte, null for no output, or a valid allocation when a present value is empty.
 	pub ptr: *mut u8,
 	/// Number of initialized bytes available through `ptr`.
 	pub len: usize,
@@ -376,7 +449,25 @@ pub(crate) fn empty_buffer() -> Buffer {
 	}
 }
 
+// Rust represents empty slices and unallocated vectors with a dangling address such as 0x1.
+// Foreign runtimes may treat such a value in a pointer-typed slot as corruption (Go aborts
+// when it copies a stack holding one), so no dangling address may cross this ABI.
+static EMPTY_BYTES: u8 = 0;
+
+/// The address passed to foreign callbacks for `bytes`: a valid static address when empty.
+pub(crate) fn abi_ptr(bytes: &[u8]) -> *const u8 {
+	if bytes.is_empty() {
+		&raw const EMPTY_BYTES
+	} else {
+		bytes.as_ptr()
+	}
+}
+
 pub(crate) fn into_buffer(mut data: Vec<u8>) -> Buffer {
+	// A present empty buffer owns a real allocation, so its non-null pointer stays freeable.
+	if data.capacity() == 0 {
+		data.reserve_exact(1);
+	}
 	let buffer = Buffer {
 		ptr: data.as_mut_ptr(),
 		len: data.len(),
@@ -415,12 +506,21 @@ fn into_recv_state(state: RecvState) -> Option<EncryptState> {
 	})
 }
 
+// Required inputs reject null, empty and lengths that no Rust slice can have.
 unsafe fn input<'a>(ptr: *const u8, len: usize) -> Option<&'a [u8]> {
-	if ptr.is_null() || len == 0 {
+	if ptr.is_null() || len == 0 || len > isize::MAX as usize {
 		None
 	} else {
 		Some(unsafe { slice::from_raw_parts(ptr, len) })
 	}
+}
+
+// A null or zero-length seed selects generation; an impossible length is invalid, not absent.
+unsafe fn seed_input<'a>(ptr: *const u8, len: usize) -> Result<Option<&'a [u8]>, ()> {
+	if len > isize::MAX as usize {
+		return Err(());
+	}
+	Ok(unsafe { input(ptr, len) })
 }
 
 // Optional values preserve presence even when the provided slice is empty.
@@ -482,8 +582,14 @@ pub extern "C" fn beaconcrypt_server_new_from_seed(
 	mldsa_seed_ptr: *const u8,
 	mldsa_seed_len: usize,
 ) -> *mut Server {
-	let seed = unsafe { input(seed_ptr, seed_len) };
-	let mldsa_seed = unsafe { input(mldsa_seed_ptr, mldsa_seed_len) };
+	let (Ok(seed), Ok(mldsa_seed)) = (unsafe {
+		(
+			seed_input(seed_ptr, seed_len),
+			seed_input(mldsa_seed_ptr, mldsa_seed_len),
+		)
+	}) else {
+		return std::ptr::null_mut();
+	};
 	server_result(
 		PersistentServer::create(
 			server_kid,
@@ -538,8 +644,15 @@ pub extern "C" fn beaconcrypt_server_create_with_store_v2(
 	let Some(store) = callback_store(callbacks, status_out) else {
 		return std::ptr::null_mut();
 	};
-	let seed = unsafe { input(seed_ptr, seed_len) };
-	let mldsa_seed = unsafe { input(mldsa_seed_ptr, mldsa_seed_len) };
+	let (Ok(seed), Ok(mldsa_seed)) = (unsafe {
+		(
+			seed_input(seed_ptr, seed_len),
+			seed_input(mldsa_seed_ptr, mldsa_seed_len),
+		)
+	}) else {
+		set_status_out(status_out, STATUS_INVALID_ARGUMENT);
+		return std::ptr::null_mut();
+	};
 	server_result(
 		PersistentServer::create(server_kid, seed, mldsa_seed, store),
 		status_out,
@@ -601,8 +714,15 @@ pub extern "C" fn beaconcrypt_server_create_with_store_and_lineage_v2(
 		set_status_out(status_out, STATUS_INVALID_ARGUMENT);
 		return std::ptr::null_mut();
 	};
-	let seed = unsafe { input(seed_ptr, seed_len) };
-	let mldsa_seed = unsafe { input(mldsa_seed_ptr, mldsa_seed_len) };
+	let (Ok(seed), Ok(mldsa_seed)) = (unsafe {
+		(
+			seed_input(seed_ptr, seed_len),
+			seed_input(mldsa_seed_ptr, mldsa_seed_len),
+		)
+	}) else {
+		set_status_out(status_out, STATUS_INVALID_ARGUMENT);
+		return std::ptr::null_mut();
+	};
 	server_result(
 		PersistentServer::create_with_lineage(
 			server_kid,
@@ -655,14 +775,24 @@ pub extern "C" fn beaconcrypt_server_head(
 	if handle.is_null() || out.is_null() {
 		return STATUS_INVALID_ARGUMENT;
 	}
-	unsafe { *out = (&*handle).0.head().into() };
+	let Some(owner) = (unsafe { &*handle }).0.enter() else {
+		return STATUS_INVALID_ARGUMENT;
+	};
+	unsafe { *out = owner.head().into() };
 	STATUS_OK
 }
 
-/// Query whether a failed commit has fenced this owner. Returns false for null and preserves the last operation's status.
+/// Query whether a failed commit has fenced this owner. Returns false for null, true while a reentrant callback queries an in-progress operation, and preserves the last operation's status.
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_server_is_poisoned(handle: *const Server) -> bool {
-	!handle.is_null() && unsafe { (&*handle).0.is_poisoned() }
+	if handle.is_null() {
+		return false;
+	}
+	// An in-progress operation has already fenced the owner until its commit succeeds.
+	(unsafe { &*handle })
+		.0
+		.enter()
+		.is_none_or(|owner| owner.is_poisoned())
 }
 
 /// Return the last server operation's status, or `beaconcrypt_STATUS_INVALID_ARGUMENT` for null.
@@ -673,6 +803,75 @@ pub extern "C" fn beaconcrypt_server_last_status(handle: *const Server) -> u32 {
 		return STATUS_INVALID_ARGUMENT;
 	}
 	unsafe { (&*handle).1.get() }
+}
+
+/// Retire an established peer and durably commit the removal before returning.
+///
+/// Its ratchet is erased and later frames and sends for `key_id` are refused like an unknown identifier's. The registration replay marker is kept and the identifier is never reassigned. Returns true when a peer was removed. Returns false with `STATUS_REJECTED` for an unknown or already retired identifier, which commits nothing, or with another status on failure.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_server_retire_peer(handle: *mut Server, key_id: u64) -> bool {
+	if handle.is_null() {
+		return false;
+	}
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return false;
+	};
+	match owner.retire_peer(key_id) {
+		Ok(removed) => {
+			server
+				.1
+				.set(if removed { STATUS_OK } else { STATUS_REJECTED });
+			removed
+		}
+		Err(error) => {
+			server.1.set(error_status(error));
+			false
+		}
+	}
+}
+
+/// Write the number of established peers and of retained registration replay markers.
+///
+/// Returns `STATUS_POISONED` for a poisoned owner and `STATUS_INVALID_ARGUMENT` for null arguments, without changing the last operation's status. Markers are never removed, so their count grows with every accepted registration.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_server_peer_counts(
+	handle: *const Server,
+	peers_out: *mut u64,
+	markers_out: *mut u64,
+) -> u32 {
+	if handle.is_null() || peers_out.is_null() || markers_out.is_null() {
+		return STATUS_INVALID_ARGUMENT;
+	}
+	let Some(owner) = (unsafe { &*handle }).0.enter() else {
+		return STATUS_INVALID_ARGUMENT;
+	};
+	let (Some(peers), Some(markers)) = (owner.peer_count(), owner.registration_marker_count())
+	else {
+		return STATUS_POISONED;
+	};
+	unsafe {
+		*peers_out = peers as u64;
+		*markers_out = markers as u64;
+	}
+	STATUS_OK
+}
+
+/// Limit the number of established peers; zero removes the limit. The limit is a runtime setting and is not saved in snapshots.
+///
+/// At the limit, registration fails with `STATUS_CAPACITY`. Acceptance is refused before it consumes the replay marker, so the beacon may retry; a registration refused at completion has consumed its marker. Returns a status without changing the last operation's status.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_server_set_max_peers(handle: *mut Server, max_peers: u64) -> u32 {
+	if handle.is_null() {
+		return STATUS_INVALID_ARGUMENT;
+	}
+	let Some(mut owner) = (unsafe { &*handle }).0.enter() else {
+		return STATUS_INVALID_ARGUMENT;
+	};
+	let limit = usize::try_from(max_peers).unwrap_or(usize::MAX);
+	owner.set_max_peers(core::num::NonZeroUsize::new(limit));
+	STATUS_OK
 }
 
 /// Parse a snapshot envelope and compute its exact-byte head. This does not authenticate bytes or establish freshness.
@@ -759,7 +958,11 @@ pub extern "C" fn beaconcrypt_server_export_state(handle: *const Server) -> Buff
 		return empty_buffer();
 	}
 	let provider = unsafe { &*handle };
-	complete(&provider.1, provider.0.snapshot())
+	let Some(owner) = provider.0.enter() else {
+		provider.1.set(STATUS_INVALID_ARGUMENT);
+		return empty_buffer();
+	};
+	complete(&provider.1, owner.snapshot())
 		.map(|snapshot| into_buffer(snapshot.as_bytes().to_vec()))
 		.unwrap_or_else(empty_buffer)
 }
@@ -790,10 +993,10 @@ pub extern "C" fn beaconcrypt_beacon_new(
 
 /// Release a server handle created by this API.
 ///
-/// Passing null is allowed. The handle must not be used after this call.
+/// Passing null is allowed. The handle must not be used after this call. A call made from one of the handle's own callbacks is ignored, because the active operation still owns the server.
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_server_free(handle: *mut Server) {
-	if !handle.is_null() {
+	if !handle.is_null() && !(unsafe { &*handle }).0.is_busy() {
 		unsafe { drop(Box::from_raw(handle)) };
 	}
 }
@@ -815,8 +1018,10 @@ pub extern "C" fn beaconcrypt_server_identity_pk(handle: *const Server) -> Buffe
 	if handle.is_null() {
 		return empty_buffer();
 	}
-	let provider = unsafe { &*handle };
-	into_buffer(provider.0.identity_pk().as_ref().to_vec())
+	let Some(owner) = (unsafe { &*handle }).0.enter() else {
+		return empty_buffer();
+	};
+	into_buffer(owner.identity_pk().as_ref().to_vec())
 }
 /// Copy the beacon identity public key into a caller-owned buffer.
 ///
@@ -837,8 +1042,10 @@ pub extern "C" fn beaconcrypt_server_mldsa_public_key(handle: *const Server) -> 
 	if handle.is_null() {
 		return empty_buffer();
 	}
-	let provider = unsafe { &*handle };
-	into_buffer(provider.0.mldsa_public_key().to_vec())
+	let Some(owner) = (unsafe { &*handle }).0.enter() else {
+		return empty_buffer();
+	};
+	into_buffer(owner.mldsa_public_key().to_vec())
 }
 
 /// Generate the beacon's serialized registration bundle.
@@ -873,7 +1080,14 @@ pub extern "C" fn beaconcrypt_register_beacon(
 			key_id: 0,
 		};
 	}
-	let server = unsafe { &mut *handle };
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return RegistrationResponse {
+			response: empty_buffer(),
+			key_id: 0,
+		};
+	};
 	let Some(registration) = (unsafe { input(reg_ptr, reg_len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return RegistrationResponse {
@@ -888,8 +1102,7 @@ pub extern "C" fn beaconcrypt_register_beacon(
 			key_id: 0,
 		};
 	};
-	let Some(secret) = complete_operation(&server.1, server.0.get_shared_secret(registration))
-	else {
+	let Some(secret) = complete_operation(&server.1, owner.get_shared_secret(registration)) else {
 		return RegistrationResponse {
 			response: empty_buffer(),
 			key_id: 0,
@@ -897,7 +1110,7 @@ pub extern "C" fn beaconcrypt_register_beacon(
 	};
 	let Some(response) = complete_operation(
 		&server.1,
-		server.0.build_registration_response(secret, message),
+		owner.build_registration_response(secret, message),
 	) else {
 		return RegistrationResponse {
 			response: empty_buffer(),
@@ -953,14 +1166,18 @@ pub extern "C" fn beaconcrypt_encrypt_to_beacon_outcome(
 	ptr: *const u8,
 	len: usize,
 ) -> SendResult {
-	let Some(server) = (unsafe { handle.as_mut() }) else {
+	let Some(server) = (unsafe { handle.as_ref() }) else {
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
 		return failed_send_result(STATUS_INVALID_ARGUMENT);
 	};
 	let Some(data) = (unsafe { send_input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return failed_send_result(STATUS_INVALID_ARGUMENT);
 	};
-	match server.0.encrypt_message_outcome(data, key_id) {
+	match owner.encrypt_message_outcome(data, key_id) {
 		Ok(outcome) => {
 			server.1.set(STATUS_OK);
 			send_result(outcome, encrypted_state)
@@ -981,14 +1198,18 @@ pub extern "C" fn beaconcrypt_encrypt_and_update_outcome(
 	ptr: *const u8,
 	len: usize,
 ) -> SendResult {
-	let Some(server) = (unsafe { handle.as_mut() }) else {
+	let Some(server) = (unsafe { handle.as_ref() }) else {
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
 		return failed_send_result(STATUS_INVALID_ARGUMENT);
 	};
 	let Some(data) = (unsafe { send_input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return failed_send_result(STATUS_INVALID_ARGUMENT);
 	};
-	match server.0.encrypt_and_update_outcome(data, key_id) {
+	match owner.encrypt_and_update_outcome(data, key_id) {
 		Ok(outcome) => {
 			server.1.set(STATUS_OK);
 			send_result(outcome, outcome_update)
@@ -1009,18 +1230,21 @@ pub extern "C" fn beaconcrypt_encrypt_and_update_json_outcome(
 	ptr: *const u8,
 	len: usize,
 ) -> SendResult {
-	let Some(server) = (unsafe { handle.as_mut() }) else {
+	let Some(server) = (unsafe { handle.as_ref() }) else {
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
 		return failed_send_result(STATUS_INVALID_ARGUMENT);
 	};
 	let Some(data) = (unsafe { send_input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return failed_send_result(STATUS_INVALID_ARGUMENT);
 	};
-	match server.0.encrypt_and_update_json_outcome(data, key_id) {
+	match owner.encrypt_and_update_json_outcome(data, key_id) {
 		Ok(outcome) => {
 			server.1.set(STATUS_OK);
-			let sequence = server
-				.0
+			let sequence = owner
 				.ratchet_status(key_id)
 				.map_or(0, |status| status.send_sequence());
 			send_result(outcome, |json| EncryptState {
@@ -1079,12 +1303,16 @@ pub extern "C" fn beaconcrypt_encrypt_and_update(
 	if handle.is_null() {
 		return empty_encrypt_state();
 	}
-	let server = unsafe { &mut *handle };
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return empty_encrypt_state();
+	};
 	let Some(data) = (unsafe { input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_encrypt_state();
 	};
-	complete_operation(&server.1, server.0.encrypt_and_update(data, key_id))
+	complete_operation(&server.1, owner.encrypt_and_update(data, key_id))
 		.and_then(into_send_state)
 		.unwrap_or_else(empty_encrypt_state)
 }
@@ -1102,12 +1330,16 @@ pub extern "C" fn beaconcrypt_encrypt_and_update_json(
 	if handle.is_null() {
 		return empty_buffer();
 	}
-	let server = unsafe { &mut *handle };
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return empty_buffer();
+	};
 	let Some(data) = (unsafe { input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_buffer();
 	};
-	complete_operation(&server.1, server.0.encrypt_and_update_json(data, key_id))
+	complete_operation(&server.1, owner.encrypt_and_update_json(data, key_id))
 		.map(|state| into_buffer(state.into_bytes()))
 		.unwrap_or_else(empty_buffer)
 }
@@ -1124,12 +1356,16 @@ pub extern "C" fn beaconcrypt_decrypt_and_update(
 	if handle.is_null() {
 		return empty_encrypt_state();
 	}
-	let server = unsafe { &mut *handle };
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return empty_encrypt_state();
+	};
 	let Some(data) = (unsafe { input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_encrypt_state();
 	};
-	complete_operation(&server.1, server.0.decrypt_and_update(data))
+	complete_operation(&server.1, owner.decrypt_and_update(data))
 		.and_then(into_recv_state)
 		.unwrap_or_else(empty_encrypt_state)
 }
@@ -1146,12 +1382,16 @@ pub extern "C" fn beaconcrypt_decrypt_and_update_json(
 	if handle.is_null() {
 		return empty_buffer();
 	}
-	let server = unsafe { &mut *handle };
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return empty_buffer();
+	};
 	let Some(data) = (unsafe { input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_buffer();
 	};
-	complete_operation(&server.1, server.0.decrypt_and_update_json(data))
+	complete_operation(&server.1, owner.decrypt_and_update_json(data))
 		.map(|state| into_buffer(state.into_bytes()))
 		.unwrap_or_else(empty_buffer)
 }
@@ -1204,12 +1444,16 @@ fn encrypt(handle: *mut Server, ptr: *const u8, len: usize, key_id: u64) -> Buff
 	if handle.is_null() {
 		return empty_buffer();
 	}
-	let server = unsafe { &mut *handle };
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return empty_buffer();
+	};
 	let Some(data) = (unsafe { input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_buffer();
 	};
-	complete_operation(&server.1, server.0.encrypt_message(data, key_id))
+	complete_operation(&server.1, owner.encrypt_message(data, key_id))
 		.map(|encrypted| into_buffer(encrypted.ciphertext))
 		.unwrap_or_else(empty_buffer)
 }
@@ -1218,12 +1462,16 @@ fn decrypt(handle: *mut Server, ptr: *const u8, len: usize) -> Buffer {
 	if handle.is_null() {
 		return empty_buffer();
 	}
-	let server = unsafe { &mut *handle };
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return empty_buffer();
+	};
 	let Some(data) = (unsafe { input(ptr, len) }) else {
 		server.1.set(STATUS_INVALID_ARGUMENT);
 		return empty_buffer();
 	};
-	complete_operation(&server.1, server.0.decrypt_message(data))
+	complete_operation(&server.1, owner.decrypt_message(data))
 		.map(|decrypted| into_buffer(decrypted.plaintext))
 		.unwrap_or_else(empty_buffer)
 }
@@ -1244,6 +1492,38 @@ mod tests {
 		fail_next: bool,
 		error_status: u32,
 		post_commit_status: u32,
+		// Address of a handle that the CAS callback reenters, and the refusals it observed.
+		reenter: usize,
+		refused_reentries: Vec<bool>,
+	}
+
+	// Every entry point must refuse a call made from its own handle's callback without touching it.
+	fn reenter_own_handle(handle: *mut Server) -> bool {
+		let mut head = SnapshotHeadInfo {
+			lineage: [0; 32],
+			generation: 0,
+			digest: [0; 32],
+		};
+		let head_refused = beaconcrypt_server_head(handle, &mut head) == STATUS_INVALID_ARGUMENT;
+		let poisoned = beaconcrypt_server_is_poisoned(handle);
+		let identity_refused = beaconcrypt_server_identity_pk(handle).ptr.is_null()
+			&& beaconcrypt_server_mldsa_public_key(handle).ptr.is_null()
+			&& beaconcrypt_server_export_state(handle).ptr.is_null();
+		let send_refused = beaconcrypt_encrypt_to_beacon(handle, 20, b"x".as_ptr(), 1)
+			.ptr
+			.is_null()
+			&& beaconcrypt_server_last_status(handle) == STATUS_INVALID_ARGUMENT;
+		let outcome = beaconcrypt_encrypt_to_beacon_outcome(handle, 20, b"x".as_ptr(), 1);
+		let registration =
+			beaconcrypt_register_beacon(handle, b"x".as_ptr(), 1, std::ptr::null(), 0);
+		// A reentrant free is ignored; the outer call below must still find its server.
+		beaconcrypt_server_free(handle);
+		head_refused
+			&& poisoned
+			&& identity_refused
+			&& send_refused
+			&& outcome.status == STATUS_INVALID_ARGUMENT
+			&& registration.response.ptr.is_null()
 	}
 
 	#[derive(Clone, Copy, Default)]
@@ -1308,6 +1588,16 @@ mod tests {
 		len: usize,
 	) -> bool {
 		let context = unsafe { &*context.cast::<StoreContext>() };
+		let reenter = context.state.lock().unwrap().reenter;
+		if reenter != 0 {
+			let refused = reenter_own_handle(std::ptr::with_exposed_provenance_mut(reenter));
+			context
+				.state
+				.lock()
+				.unwrap()
+				.refused_reentries
+				.push(refused);
+		}
 		let mut store = context.state.lock().unwrap();
 		store.attempts += 1;
 		if store.error_status != STATUS_OK {
@@ -1481,6 +1771,18 @@ mod tests {
 		assert!(store.load().unwrap().is_none());
 		drop(store);
 		assert_eq!(destroyed.load(Ordering::SeqCst), 1);
+	}
+
+	/// Decode the standard base64 `data` field of a JSON update.
+	fn json_data(value: &serde_json::Value) -> Vec<u8> {
+		use base64ct::{Base64, Encoding};
+		let text = value.as_str().expect("base64 JSON data");
+		let mut bytes = vec![0; text.len()];
+		let length = Base64::decode(text, &mut bytes)
+			.expect("canonical base64")
+			.len();
+		bytes.truncate(length);
+		bytes
 	}
 
 	struct OwnedServer(*mut Server);
@@ -1675,7 +1977,7 @@ mod tests {
 				let json: serde_json::Value = serde_json::from_slice(&data).unwrap();
 				assert_eq!(json["kid"], kid);
 				assert_eq!(json["seq"], result.message.seq);
-				serde_json::from_value::<Vec<u8>>(json["data"].clone()).unwrap()
+				json_data(&json["data"])
 			} else {
 				data
 			};
@@ -2269,6 +2571,151 @@ mod tests {
 		);
 		assert!(!beacon.is_null());
 		beaconcrypt_beacon_free(beacon);
+	}
+
+	#[test]
+	fn retirement_counts_and_peer_limit_through_the_c_abi() {
+		let state = Arc::new(Mutex::new(StoreState::default()));
+		let destroyed = Arc::new(AtomicUsize::new(0));
+		let server = create_durable(&state, &destroyed);
+		let (mut beacon, kid) = register(&server);
+		let counts = |server: &OwnedServer| {
+			let (mut peers, mut markers) = (u64::MAX, u64::MAX);
+			assert_eq!(
+				beaconcrypt_server_peer_counts(server.0, &mut peers, &mut markers),
+				STATUS_OK
+			);
+			(peers, markers)
+		};
+		assert_eq!(counts(&server), (1, 1));
+		assert_eq!(
+			beaconcrypt_server_peer_counts(server.0, std::ptr::null_mut(), &mut 0),
+			STATUS_INVALID_ARGUMENT
+		);
+
+		assert_eq!(beaconcrypt_server_set_max_peers(server.0, 1), STATUS_OK);
+		let public_key = copy_buffer(beaconcrypt_server_identity_pk(server.0));
+		let mldsa_key = copy_buffer(beaconcrypt_server_mldsa_public_key(server.0));
+		let mut waiting = Beacon::new(19, &public_key, &mldsa_key);
+		let bundle = waiting.get_registration_bundle().unwrap();
+		let head = server.head();
+		let refused = beaconcrypt_register_beacon(
+			server.0,
+			bundle.as_ptr(),
+			bundle.len(),
+			std::ptr::null(),
+			0,
+		);
+		assert!(refused.response.ptr.is_null());
+		assert_eq!(beaconcrypt_server_last_status(server.0), STATUS_CAPACITY);
+		assert!(!beaconcrypt_server_is_poisoned(server.0));
+		assert_eq!(server.head(), head);
+
+		assert!(beaconcrypt_server_retire_peer(server.0, kid));
+		assert_eq!(beaconcrypt_server_last_status(server.0), STATUS_OK);
+		assert_eq!(server.head().generation, head.generation + 1);
+		assert!(!beaconcrypt_server_retire_peer(server.0, kid));
+		assert_eq!(beaconcrypt_server_last_status(server.0), STATUS_REJECTED);
+		assert_eq!(counts(&server), (0, 1));
+		let inbound = beacon.encrypt_message(b"refused").unwrap().ciphertext;
+		assert!(
+			beaconcrypt_decrypt_beacon_message(server.0, inbound.as_ptr(), inbound.len())
+				.ptr
+				.is_null()
+		);
+
+		let response = beaconcrypt_register_beacon(
+			server.0,
+			bundle.as_ptr(),
+			bundle.len(),
+			std::ptr::null(),
+			0,
+		);
+		assert_eq!(beaconcrypt_server_last_status(server.0), STATUS_OK);
+		waiting
+			.finish_registration(&copy_buffer(response.response))
+			.unwrap();
+		assert!(response.key_id > kid);
+		assert_eq!(beaconcrypt_server_set_max_peers(server.0, 0), STATUS_OK);
+		assert_eq!(counts(&server), (1, 2));
+		assert!(!beaconcrypt_server_retire_peer(std::ptr::null_mut(), kid));
+		assert_eq!(
+			beaconcrypt_server_set_max_peers(std::ptr::null_mut(), 1),
+			STATUS_INVALID_ARGUMENT
+		);
+	}
+
+	#[test]
+	fn reentrant_calls_from_store_callbacks_are_refused() {
+		let state = Arc::new(Mutex::new(StoreState::default()));
+		let destroyed = Arc::new(AtomicUsize::new(0));
+		let server = create_durable(&state, &destroyed);
+		let (mut beacon, kid) = register(&server);
+		state.lock().unwrap().reenter = server.0.expose_provenance();
+		let before = server.head();
+		let sent = beaconcrypt_encrypt_to_beacon(server.0, kid, b"outer".as_ptr(), 5);
+		assert_eq!(beaconcrypt_server_last_status(server.0), STATUS_OK);
+		let frame = copy_buffer(sent);
+		assert_eq!(beacon.decrypt_message(&frame).unwrap().plaintext, b"outer");
+		state.lock().unwrap().reenter = 0;
+		assert_eq!(server.head().generation, before.generation + 1);
+		assert_eq!(state.lock().unwrap().refused_reentries, [true]);
+		assert!(!beaconcrypt_server_is_poisoned(server.0));
+	}
+
+	#[test]
+	fn required_inputs_and_seeds_reject_lengths_beyond_isize_max() {
+		// No Rust slice can be this long; building one would be undefined behaviour.
+		let oversized = isize::MAX as usize + 1;
+		let state = Arc::new(Mutex::new(StoreState::default()));
+		let destroyed = Arc::new(AtomicUsize::new(0));
+		let server = create_durable(&state, &destroyed);
+		let (_beacon, _kid) = register(&server);
+		let before = server.head();
+		let response =
+			beaconcrypt_register_beacon(server.0, b"x".as_ptr(), oversized, std::ptr::null(), 0);
+		assert!(response.response.ptr.is_null());
+		assert_eq!(
+			beaconcrypt_server_last_status(server.0),
+			STATUS_INVALID_ARGUMENT
+		);
+		let output = beaconcrypt_decrypt_beacon_message(server.0, b"x".as_ptr(), oversized);
+		assert!(output.ptr.is_null());
+		assert_eq!(
+			beaconcrypt_server_last_status(server.0),
+			STATUS_INVALID_ARGUMENT
+		);
+		assert_eq!(server.head(), before);
+
+		let public_key = copy_buffer(beaconcrypt_server_identity_pk(server.0));
+		let mldsa_key = copy_buffer(beaconcrypt_server_mldsa_public_key(server.0));
+		assert!(
+			beaconcrypt_beacon_new(19, public_key.as_ptr(), oversized, mldsa_key.as_ptr(), 32)
+				.is_null()
+		);
+		for (seed, mldsa) in [(oversized, 0), (0, oversized)] {
+			let (seed_ptr, mldsa_ptr) = ([7u8; 32].as_ptr(), [8u8; 32].as_ptr());
+			assert!(
+				beaconcrypt_server_new_from_seed(19, seed_ptr, seed, mldsa_ptr, mldsa).is_null()
+			);
+			let mut status = u32::MAX;
+			let before = destroyed.load(Ordering::SeqCst);
+			let created = beaconcrypt_server_create_with_store_v2(
+				19,
+				seed_ptr,
+				seed,
+				mldsa_ptr,
+				mldsa,
+				SnapshotStoreCallbacksV2 {
+					callbacks: callbacks(&state, &destroyed, LoadMode::Normal),
+					last_error: Some(last_error_callback),
+				},
+				&mut status,
+			);
+			assert!(created.is_null());
+			assert_eq!(status, STATUS_INVALID_ARGUMENT);
+			assert_eq!(destroyed.load(Ordering::SeqCst), before + 1);
+		}
 	}
 
 	#[test]
