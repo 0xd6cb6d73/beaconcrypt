@@ -128,37 +128,8 @@ pub struct StateUpdate<Role: roles::ChainKey> {
 }
 
 impl<Role: roles::ChainKey> StateUpdate<Role> {
-	/// Render `{"kid":…,"seq":…,"state":…,"data":"<base64>"}`, identical to the `Serialize` output.
-	///
-	/// The bounded fields are rendered first, and the payload is then encoded into one exactly
-	/// sized, fallibly reserved allocation, so a maximum-size authenticated payload cannot force
-	/// repeated infallible growth.
 	pub(crate) fn try_render_json(&self) -> serde_json::Result<String> {
-		use serde::ser::Error as _;
-		const DATA_FIELD: &[u8] = b",\"data\":\"";
-		let failed = || serde_json::Error::custom("JSON update rendering failed");
-		let head = Zeroizing::new(serde_json::to_vec(&crate::shared::ser::StateUpdateHead(
-			self,
-		))?);
-		let prefix = head.strip_suffix(b"}").ok_or_else(failed)?;
-		let data = crate::shared::ser::Base64Data(&self.data);
-		let encoded_len = data.encoded_len();
-		let total = prefix
-			.len()
-			.checked_add(DATA_FIELD.len())
-			.and_then(|length| length.checked_add(encoded_len))
-			.and_then(|length| length.checked_add(2))
-			.ok_or_else(failed)?;
-		let mut json = Vec::new();
-		json.try_reserve_exact(total)
-			.map_err(|_| serde_json::Error::custom("JSON update allocation failed"))?;
-		json.extend_from_slice(prefix);
-		json.extend_from_slice(DATA_FIELD);
-		let start = json.len();
-		json.resize(start + encoded_len, 0);
-		data.encode_into(&mut json[start..]).ok_or_else(failed)?;
-		json.extend_from_slice(b"\"}");
-		String::from_utf8(json).map_err(|_| failed())
+		render_state_update_json(self)
 	}
 }
 
@@ -363,20 +334,6 @@ impl Server {
 	}
 	pub fn pk_by_kid(&self, k: u64) -> Option<&crypto_sign::PublicKey> {
 		self.known_ids.get(&k).map(EstablishedRemote::pk)
-	}
-	/// Retire an established peer: erase its ratchet so its frames and sends are refused like an
-	/// unknown identifier's. Its registration replay marker is kept, and identifiers only
-	/// increase, so the identifier is never reassigned. Returns whether a peer was removed.
-	pub fn retire_peer(&mut self, kid: u64) -> bool {
-		self.known_ids.remove(&kid).is_some()
-	}
-	/// The number of established peers held in memory.
-	pub fn peer_count(&self) -> usize {
-		self.known_ids.len()
-	}
-	/// The number of accepted registrations whose replay markers are retained.
-	pub fn registration_marker_count(&self) -> usize {
-		self.consumed_registrations.len()
 	}
 	pub fn ratchet_status(&self, k: u64) -> Option<RatchetStatus> {
 		Some(self.ratchet_manager(k)?.status())
@@ -741,6 +698,60 @@ impl ProviderServer for Server {
 					.expect("an accepted receive update must be serializable as JSON")
 			})
 			.into_option()
+	}
+}
+
+// New items are kept below the extracted adapter code so its pinned source positions stay valid.
+
+/// Render a [`StateUpdate`] as `{"kid":…,"seq":…,"state":…,"data":"<base64>"}`, identical to the `Serialize` output.
+///
+/// The bounded fields are rendered first, and the payload is then encoded into one exactly
+/// sized, fallibly reserved allocation, so a maximum-size authenticated payload cannot force
+/// repeated infallible growth.
+fn render_state_update_json<Role: roles::ChainKey>(
+	update: &StateUpdate<Role>,
+) -> serde_json::Result<String> {
+	use serde::ser::Error as _;
+	const DATA_FIELD: &[u8] = b",\"data\":\"";
+	let failed = || serde_json::Error::custom("JSON update rendering failed");
+	let head = Zeroizing::new(serde_json::to_vec(&crate::shared::ser::StateUpdateHead(
+		update,
+	))?);
+	let prefix = head.strip_suffix(b"}").ok_or_else(failed)?;
+	let data = crate::shared::ser::Base64Data(&update.data);
+	let encoded_len = data.encoded_len();
+	let total = prefix
+		.len()
+		.checked_add(DATA_FIELD.len())
+		.and_then(|length| length.checked_add(encoded_len))
+		.and_then(|length| length.checked_add(2))
+		.ok_or_else(failed)?;
+	let mut json = Vec::new();
+	json.try_reserve_exact(total)
+		.map_err(|_| serde_json::Error::custom("JSON update allocation failed"))?;
+	json.extend_from_slice(prefix);
+	json.extend_from_slice(DATA_FIELD);
+	let start = json.len();
+	json.resize(start + encoded_len, 0);
+	data.encode_into(&mut json[start..]).ok_or_else(failed)?;
+	json.extend_from_slice(b"\"}");
+	String::from_utf8(json).map_err(|_| failed())
+}
+
+impl Server {
+	/// Retire an established peer: erase its ratchet so its frames and sends are refused like an
+	/// unknown identifier's. Its registration replay marker is kept, and identifiers only
+	/// increase, so the identifier is never reassigned. Returns whether a peer was removed.
+	pub fn retire_peer(&mut self, kid: u64) -> bool {
+		self.known_ids.remove(&kid).is_some()
+	}
+	/// The number of established peers held in memory.
+	pub fn peer_count(&self) -> usize {
+		self.known_ids.len()
+	}
+	/// The number of accepted registrations whose replay markers are retained.
+	pub fn registration_marker_count(&self) -> usize {
+		self.consumed_registrations.len()
 	}
 }
 
