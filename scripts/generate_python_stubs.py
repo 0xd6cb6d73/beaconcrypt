@@ -108,6 +108,9 @@ def main() -> int:
             str(ROOT / "beaconcrypt-ffi" / "Cargo.toml"),
             "--features",
             "pybinds",
+            # Introspection needs unstripped symbols; pyproject.toml selects a stripped profile.
+            "--profile",
+            "dev",
             "--out",
             str(out_dir),
         ],

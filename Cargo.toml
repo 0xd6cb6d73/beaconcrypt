@@ -8,3 +8,9 @@ strip = true
 lto = true
 codegen-units = 1
 panic = "abort"
+
+# Python wheels unwind so that a Rust panic becomes PanicException instead of killing the host
+# interpreter. The C and Go libraries keep the release profile's abort strategy.
+[profile.release-python]
+inherits = "release"
+panic = "unwind"
