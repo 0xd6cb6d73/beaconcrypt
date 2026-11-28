@@ -394,9 +394,9 @@ impl RowServerPy {
 		py: Python<'_>,
 		data: Vec<u8>,
 		kid: u64,
-	) -> PyResult<Option<Vec<u8>>> {
+	) -> PyResult<Option<Py<PyBytes>>> {
 		self.encrypt_to_beacon_with_metadata(py, data, kid)
-			.map(|output| output.map(|mut output| std::mem::take(&mut *output.data)))
+			.map(|output| output.map(|output| PyBytes::new(py, &output.data).unbind()))
 	}
 
 	fn encrypt_to_beacon_with_metadata(
@@ -405,6 +405,7 @@ impl RowServerPy {
 		data: Vec<u8>,
 		kid: u64,
 	) -> PyResult<Option<RowMessagePy>> {
+		let data = Zeroizing::new(data);
 		let output = self.native()?.encrypt_message(&data, kid);
 		result(py, output, &self.errors).map(|output| output.map(RowMessagePy::from))
 	}
@@ -415,6 +416,7 @@ impl RowServerPy {
 		data: Vec<u8>,
 		kid: u64,
 	) -> PyResult<SendResultPy> {
+		let data = Zeroizing::new(data);
 		let output = self.native()?.encrypt_message_outcome(&data, kid);
 		result(py, output, &self.errors)
 			.map(|outcome| SendResultPy::encrypted(outcome.map(crate::RowMessage::into_encrypted)))
@@ -424,9 +426,10 @@ impl RowServerPy {
 		&mut self,
 		py: Python<'_>,
 		data: Vec<u8>,
-	) -> PyResult<Option<Vec<u8>>> {
+	) -> PyResult<Option<Py<PyBytes>>> {
+		// Copy from the zeroizing message buffer, which is wiped when the wrapper drops.
 		self.decrypt_beacon_message_with_metadata(py, data)
-			.map(|output| output.map(|mut output| std::mem::take(&mut *output.data)))
+			.map(|output| output.map(|output| PyBytes::new(py, &output.data).unbind()))
 	}
 
 	fn decrypt_beacon_message_with_metadata(

@@ -383,6 +383,8 @@ func callStateUpdate(data []byte, call func(*C.uint8_t, C.uintptr_t) C.beaconcry
 	if err != nil {
 		return nil, err
 	}
+	// The secret ratchet JSON is copied into the returned string; wipe this intermediate copy.
+	defer clear(serializedState)
 	return &EncryptState{
 		Data:  output,
 		State: string(serializedState),
