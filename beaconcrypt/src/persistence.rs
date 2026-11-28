@@ -376,6 +376,9 @@ pub struct PersistentServer<S: SnapshotStore> {
 	store: S,
 	head: SnapshotHead,
 	poisoned: bool,
+	// The last assigned peer identifier as of the committed head. A failed commit leaves
+	// tentative state in `server`, which accessors must not report.
+	committed_server_kid: u64,
 }
 
 impl<S: SnapshotStore> PersistentServer<S> {
@@ -447,6 +450,7 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		}
 		let head = snapshot.head()?;
 		Ok(Self {
+			committed_server_kid: server.server_kid(),
 			server,
 			store,
 			head,
@@ -472,6 +476,7 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		}
 		let head = activated.head()?;
 		Ok(Self {
+			committed_server_kid: server.server_kid(),
 			server,
 			store,
 			head,
@@ -512,15 +517,24 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		self.server.identity_key_kid()
 	}
 
+	/// The last assigned peer identifier as of the committed head, including while poisoned.
 	pub fn server_kid(&self) -> u64 {
-		self.server.server_kid()
+		self.committed_server_kid
 	}
 
+	/// A peer's identity key, or `None` while poisoned because in-memory peers may be uncommitted.
 	pub fn pk_by_kid(&self, kid: u64) -> Option<&beaconcrypt_crypto::crypto_sign::PublicKey> {
+		if self.poisoned {
+			return None;
+		}
 		self.server.pk_by_kid(kid)
 	}
 
+	/// A peer's ratchet position, or `None` while poisoned because it may be uncommitted.
 	pub fn ratchet_status(&self, kid: u64) -> Option<crate::RatchetStatus> {
+		if self.poisoned {
+			return None;
+		}
 		self.server.ratchet_status(kid)
 	}
 
@@ -747,6 +761,7 @@ impl<S: SnapshotStore> PersistentServer<S> {
 			return Err(PersistenceError::StaleGeneration);
 		}
 		self.head = successor_head;
+		self.committed_server_kid = self.server.server_kid();
 		self.poisoned = false;
 		Ok(output)
 	}
@@ -1247,6 +1262,55 @@ mod tests {
 		assert!(panic.is_err());
 		assert!(persistent.is_poisoned());
 		assert_eq!(persistent.head(), committed_head);
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn poisoned_owner_accessors_report_only_committed_state() {
+		let mut persistent = deterministic_persistent_server();
+		let committed_kid = persistent.server_kid();
+		let mut beacon = Beacon::new(
+			committed_kid,
+			persistent.identity_pk().as_bytes(),
+			&persistent.mldsa_public_key(),
+		);
+		let bundle = beacon.get_registration_bundle().unwrap();
+		let registration = persistent.get_shared_secret(&bundle).unwrap().unwrap();
+		// Another owner has advanced the store, so completion's CAS conflicts.
+		persistent.store.head = None;
+		assert!(matches!(
+			persistent.build_registration_response(registration, Some(b"withheld")),
+			Err(PersistenceError::StaleGeneration)
+		));
+		assert!(persistent.is_poisoned());
+		let tentative = committed_kid + 1;
+		assert!(persistent.server.pk_by_kid(tentative).is_some());
+		assert_eq!(persistent.server_kid(), committed_kid);
+		assert!(persistent.pk_by_kid(tentative).is_none());
+		assert!(persistent.ratchet_status(tentative).is_none());
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn committed_registration_advances_reported_server_kid() {
+		let mut persistent = deterministic_persistent_server();
+		let committed_kid = persistent.server_kid();
+		let mut beacon = Beacon::new(
+			committed_kid,
+			persistent.identity_pk().as_bytes(),
+			&persistent.mldsa_public_key(),
+		);
+		let bundle = beacon.get_registration_bundle().unwrap();
+		let registration = persistent.get_shared_secret(&bundle).unwrap().unwrap();
+		let response = persistent
+			.build_registration_response(registration, Some(b"committed"))
+			.unwrap()
+			.unwrap();
+		assert_eq!(persistent.server_kid(), response.kid);
+		assert!(persistent.pk_by_kid(response.kid).is_some());
+		let restored = PersistentServer::restore(persistent.store).unwrap();
+		assert_eq!(restored.server_kid(), response.kid);
+		assert!(restored.ratchet_status(response.kid).is_some());
 	}
 
 	#[cfg(feature = "beacon")]
