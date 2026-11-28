@@ -181,6 +181,7 @@ func (s *RowSession) AcceptRegistration(data []byte) (bool, error) {
 		return accepted, rowSessionError(state)
 	})
 }
+
 // RetirePeer retires an established peer as this session's native operation,
 // composed atomically with the transaction's application rows. It reports
 // whether a peer was retired.
