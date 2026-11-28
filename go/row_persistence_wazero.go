@@ -51,6 +51,8 @@ func (s *RowSession) AcceptRegistration(data []byte) (bool, error) {
 func (s *RowSession) CompleteRegistration(initialMessage []byte) (*RowTransition, error) {
 	return nil, ErrRowSessionExpired
 }
+func (s *RowSession) RetirePeer(kid uint64) (bool, error) { return false, ErrRowSessionExpired }
+func (s *RowServer) RetirePeer(kid uint64) (bool, error)  { return false, ErrClosed }
 
 // CachedRowServer reserves the native cached row API in WASM builds.
 type CachedRowServer struct{ RowServer }

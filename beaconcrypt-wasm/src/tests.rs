@@ -107,6 +107,47 @@ fn input_descriptors_require_owned_exact_allocations_and_free_is_checked() {
 }
 
 #[test]
+fn guest_server_retires_peers_reports_counts_and_enforces_a_limit() {
+	let owner = checked(1, 0, 19, &[9; 64], &[3]).handle;
+	let counts = |owner| {
+		let data = checked(29, owner, 0, &[], &[]).data.clone();
+		assert_eq!(data.len(), 16);
+		(
+			u64::from_le_bytes(data[..8].try_into().unwrap()),
+			u64::from_le_bytes(data[8..].try_into().unwrap()),
+		)
+	};
+	let identity = checked(3, owner, 0, &[], &[]).data.clone();
+	let mldsa = checked(24, owner, 0, &[], &[]).data.clone();
+	let mut beacon = Beacon::try_new(19, &identity, &mldsa).unwrap();
+	let registration = checked(5, owner, 0, &beacon.get_registration_bundle().unwrap(), &[]);
+	beacon.finish_registration(&registration.data).unwrap();
+	let peer = registration.key_id;
+	assert_eq!(counts(owner), (1, 1));
+
+	checked(30, owner, 1, &[], &[]);
+	let mut waiting = Beacon::try_new(19, &identity, &mldsa).unwrap();
+	let bundle = waiting.get_registration_bundle().unwrap();
+	assert_eq!(dispatch(5, owner, 0, &bundle, &[]).status, 16);
+	assert_eq!(counts(owner), (1, 1));
+
+	let retired = checked(28, owner, peer, &[], &[]);
+	assert_eq!(retired.key_id, peer);
+	assert_eq!(dispatch(28, owner, peer, &[], &[]).status, REJECTED);
+	assert_eq!(counts(owner), (0, 1));
+	let inbound = beacon.encrypt_message(b"refused").unwrap().ciphertext;
+	assert_eq!(dispatch(8, owner, 0, &inbound, &[]).status, REJECTED);
+	assert_eq!(dispatch(7, owner, peer, b"refused", &[]).status, REJECTED);
+
+	// The refused registration consumed nothing, and a zero limit removes the cap.
+	let late = checked(5, owner, 0, &bundle, &[]);
+	waiting.finish_registration(&late.data).unwrap();
+	assert!(late.key_id > peer);
+	checked(30, owner, 0, &[], &[]);
+	assert_eq!(counts(owner), (1, 2));
+}
+
+#[test]
 fn guest_server_interoperates_with_native_beacon_updates_json_and_checkpoint() {
 	let owner = checked(1, 0, 19, &[9; 64], &[3]).handle;
 	assert_eq!(dispatch(17, owner, u64::MAX, &[], &[]).status, REJECTED);

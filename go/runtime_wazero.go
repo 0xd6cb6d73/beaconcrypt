@@ -250,7 +250,7 @@ func (i *wasmInstance) call(op uint32, arg uint64, input, extra []byte) (out was
 	}
 	status := PersistenceStatus(binary.LittleEndian.Uint32(view))
 	dataLen, stateLen := binary.LittleEndian.Uint32(view[24:]), binary.LittleEndian.Uint32(view[28:])
-	if (status > StatusStorage && status != StatusCommitUnknown) || uint64(dataLen)+uint64(stateLen)+32 != uint64(a.length) {
+	if (status > StatusStorage && status != StatusCommitUnknown && status != StatusCapacity) || uint64(dataLen)+uint64(stateLen)+32 != uint64(a.length) {
 		return out, i.invalidABI("invalid response header")
 	}
 	if status != StatusOK {

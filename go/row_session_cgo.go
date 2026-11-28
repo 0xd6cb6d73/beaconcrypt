@@ -181,6 +181,15 @@ func (s *RowSession) AcceptRegistration(data []byte) (bool, error) {
 		return accepted, rowSessionError(state)
 	})
 }
+// RetirePeer retires an established peer as this session's native operation,
+// composed atomically with the transaction's application rows. It reports
+// whether a peer was retired.
+func (s *RowSession) RetirePeer(kid uint64) (bool, error) {
+	return rowSessionCall(s, func(state *rowSessionState) (bool, error) {
+		retired := bool(C.beaconcrypt_row_session_retire_peer(state.handle, C.uint64_t(kid)))
+		return retired, rowSessionError(state)
+	})
+}
 func (s *RowSession) CompleteRegistration(initialMessage []byte) (*RowTransition, error) {
 	return rowSessionCall(s, func(state *rowSessionState) (*RowTransition, error) {
 		message := initialMessage

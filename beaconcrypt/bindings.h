@@ -86,6 +86,11 @@
 #define beaconcrypt_STATUS_COMMIT_UNKNOWN 15
 
 /**
+ * The configured peer limit is reached; nothing was committed and the handle remains usable.
+ */
+#define beaconcrypt_STATUS_CAPACITY 16
+
+/**
  * No send key was consumed and no output is available.
  */
 #define beaconcrypt_SEND_OUTCOME_REJECTED 0
@@ -400,6 +405,31 @@ bool beaconcrypt_server_is_poisoned(const struct beaconcrypt_Server *handle);
 uint32_t beaconcrypt_server_last_status(const struct beaconcrypt_Server *handle);
 
 /**
+ * Retire an established peer and durably commit the removal before returning.
+ *
+ * Its ratchet is erased and later frames and sends for `key_id` are refused like an unknown identifier's. The registration replay marker is kept and the identifier is never reassigned. Returns true when a peer was removed. Returns false with `STATUS_REJECTED` for an unknown or already retired identifier, which commits nothing, or with another status on failure.
+ */
+bool beaconcrypt_server_retire_peer(struct beaconcrypt_Server *handle,
+                                    uint64_t key_id);
+
+/**
+ * Write the number of established peers and of retained registration replay markers.
+ *
+ * Returns `STATUS_POISONED` for a poisoned owner and `STATUS_INVALID_ARGUMENT` for null arguments, without changing the last operation's status. Markers are never removed, so their count grows with every accepted registration.
+ */
+uint32_t beaconcrypt_server_peer_counts(const struct beaconcrypt_Server *handle,
+                                        uint64_t *peers_out,
+                                        uint64_t *markers_out);
+
+/**
+ * Limit the number of established peers; zero removes the limit. The limit is a runtime setting and is not saved in snapshots.
+ *
+ * At the limit, registration fails with `STATUS_CAPACITY`. Acceptance is refused before it consumes the replay marker, so the beacon may retry; a registration refused at completion has consumed its marker. Returns a status without changing the last operation's status.
+ */
+uint32_t beaconcrypt_server_set_max_peers(struct beaconcrypt_Server *handle,
+                                          uint64_t max_peers);
+
+/**
  * Parse a snapshot envelope and compute its exact-byte head. This does not authenticate bytes or establish freshness.
  */
 uint32_t beaconcrypt_snapshot_head(const uint8_t *bytes,
@@ -671,6 +701,12 @@ uintptr_t beaconcrypt_row_server_cached_peer_count(const struct beaconcrypt_RowS
  */
 void beaconcrypt_row_server_clear_cache(struct beaconcrypt_RowServerHandle *handle);
 
+/**
+ * Retire an established peer in its own durable transaction: its row becomes a tombstone, and later frames and sends for `key_id` are refused. The replay marker is kept and the identifier is never reassigned. Returns true when a peer was retired; false with STATUS_REJECTED for an unknown or already retired identifier, which writes nothing, or with another status on failure.
+ */
+bool beaconcrypt_row_server_retire_peer(struct beaconcrypt_RowServerHandle *handle,
+                                        uint64_t key_id);
+
 void beaconcrypt_row_server_free(struct beaconcrypt_RowServerHandle *handle);
 
 uint32_t beaconcrypt_row_server_last_status(const struct beaconcrypt_RowServerHandle *handle);
@@ -774,6 +810,12 @@ struct beaconcrypt_RowTransitionBuffer beaconcrypt_row_session_decrypt(struct be
 bool beaconcrypt_row_session_accept_registration(struct beaconcrypt_RowSessionHandle *handle,
                                                  const uint8_t *data,
                                                  uintptr_t len);
+
+/**
+ * Retire an established peer as this session's native operation, composed with the transaction's application rows. Returns true when a peer was retired; false with STATUS_REJECTED for an unknown or already retired identifier, or with another status, which aborts the transaction.
+ */
+bool beaconcrypt_row_session_retire_peer(struct beaconcrypt_RowSessionHandle *handle,
+                                         uint64_t key_id);
 
 /**
  * A null initial message uses the protocol witness; a non-null empty one attempts an empty payload. This function is valid only in the completion callback.

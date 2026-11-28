@@ -134,6 +134,18 @@ class BeaconCryptServer:
 
     def id_pk(self, /) -> bytes: ...
     def mldsa_public_key(self, /) -> bytes: ...
+    def retire_peer(self, /, kid: int) -> bool:
+        """Retire an established peer and durably commit the removal. Its frames and sends are then refused; its replay marker is kept and its key ID is never reassigned. Returns whether a peer was removed."""
+
+    def peer_count(self, /) -> int:
+        """Return the number of established peers. Raises PersistenceError while poisoned."""
+
+    def registration_marker_count(self, /) -> int:
+        """Return the number of retained registration replay markers, which are never removed. Raises PersistenceError while poisoned."""
+
+    def set_max_peers(self, /, max_peers: int | None) -> None:
+        """Limit established peers, or remove the limit with None or 0. Registration at the limit raises PersistenceError with code "capacity_exceeded"; acceptance is refused before it consumes the replay marker. The limit is not saved in snapshots."""
+
     def register_beacon(
         self, /, reg_buffer: bytes, initial_message: bytes | None
     ) -> RegResponse | None: ...
@@ -234,6 +246,9 @@ class RowSession:
     def encrypt_to_beacon(self, data: bytes, kid: int) -> RowTransition: ...
     def decrypt_beacon_message(self, data: bytes) -> RowTransition: ...
     def accept_registration(self, data: bytes) -> bool: ...
+    def retire_peer(self, kid: int) -> bool:
+        """Retire an established peer as this session's native operation, composed with its application rows. Returns whether a peer was retired."""
+
     def complete_registration(
         self, initial_message: bytes | None = None
     ) -> RowTransition: ...
@@ -274,6 +289,9 @@ class BeaconCryptRowServer:
     def decrypt_beacon_message_with_metadata(
         self, data: Sequence[int]
     ) -> RowMessage | None: ...
+    def retire_peer(self, kid: int) -> bool:
+        """Retire an established peer in its own durable transaction: its row becomes a tombstone and later frames and sends are refused. The replay marker is kept and the key ID is never reassigned. Returns whether a peer was retired."""
+
     def transaction(self, callback: Callable[[RowSession], bytes]) -> bytes: ...
     def registration_transaction(
         self,

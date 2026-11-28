@@ -699,6 +699,32 @@ impl Server {
 	fn mldsa_public_key(&self) -> Vec<u8> {
 		self._0.mldsa_public_key().to_vec()
 	}
+
+	/// Retire an established peer and durably commit the removal. Its frames and sends are then refused; its replay marker is kept and its key ID is never reassigned. Returns whether a peer was removed.
+	fn retire_peer(&mut self, py: Python<'_>, kid: u64) -> PyResult<bool> {
+		persistence_result(py, self._0.retire_peer(kid), &self.callback_error)
+	}
+
+	/// Return the number of established peers. Raises PersistenceError while poisoned.
+	fn peer_count(&self, py: Python<'_>) -> PyResult<usize> {
+		self._0
+			.peer_count()
+			.ok_or_else(|| persistence_error(py, NativePersistenceError::Poisoned, None))
+	}
+
+	/// Return the number of retained registration replay markers, which are never removed. Raises PersistenceError while poisoned.
+	fn registration_marker_count(&self, py: Python<'_>) -> PyResult<usize> {
+		self._0
+			.registration_marker_count()
+			.ok_or_else(|| persistence_error(py, NativePersistenceError::Poisoned, None))
+	}
+
+	/// Limit established peers, or remove the limit with None. Registration at the limit raises PersistenceError with code capacity_exceeded; acceptance is refused before it consumes the replay marker. The limit is not saved in snapshots.
+	#[pyo3(signature = (max_peers))]
+	fn set_max_peers(&mut self, max_peers: Option<usize>) {
+		self._0
+			.set_max_peers(max_peers.and_then(core::num::NonZeroUsize::new));
+	}
 }
 
 /// Copy secret bytes into Python; the native buffer is wiped when it is dropped here.

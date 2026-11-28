@@ -440,6 +440,12 @@ impl RowServerPy {
 		let output = self.native()?.decrypt_message(&data);
 		result(py, output, &self.errors).map(|output| output.map(RowMessagePy::from))
 	}
+
+	/// Retire an established peer in its own durable transaction: its row becomes a tombstone and later frames and sends are refused. The replay marker is kept and the key ID is never reassigned. Returns whether a peer was retired.
+	fn retire_peer(&mut self, py: Python<'_>, kid: u64) -> PyResult<bool> {
+		let output = self.native()?.retire_peer(kid);
+		result(py, output, &self.errors)
+	}
 }
 
 /// Pending effect within a trusted transaction callback. Message bytes must not be published until the outer call succeeds.
@@ -578,6 +584,10 @@ impl RowSessionPy {
 	}
 	fn accept_registration(&self, py: Python<'_>, data: &[u8]) -> PyResult<bool> {
 		self.with_native(py, |session| session.accept_registration(data))
+	}
+	/// Retire an established peer as this session's native operation, composed with its application rows. Returns whether a peer was retired.
+	fn retire_peer(&self, py: Python<'_>, kid: u64) -> PyResult<bool> {
+		self.with_native(py, |session| session.retire_peer(kid))
 	}
 	#[pyo3(signature = (initial_message=None))]
 	fn complete_registration(

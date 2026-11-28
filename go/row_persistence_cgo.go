@@ -194,6 +194,16 @@ func (s *RowServer) DecryptBeaconMessageWithMetadata(data []byte) (*RowMessage, 
 	})
 }
 
+// RetirePeer retires an established peer in its own durable transaction: its row
+// becomes a tombstone and later frames and sends for kid are refused. The replay
+// marker is kept and the key ID is never reassigned. It reports whether a peer
+// was retired; an unknown or already retired key ID writes nothing.
+func (s *RowServer) RetirePeer(kid uint64) (bool, error) {
+	return rowCall(s, true, func(handle *C.beaconcrypt_RowServerHandle) (bool, error) {
+		return bool(C.beaconcrypt_row_server_retire_peer(handle, C.uint64_t(kid))), nil
+	})
+}
+
 func copyRowMessage(value C.beaconcrypt_RowMessageBuffer) (*RowMessage, error) {
 	data, err := copyBuffer(value.data)
 	if err != nil {

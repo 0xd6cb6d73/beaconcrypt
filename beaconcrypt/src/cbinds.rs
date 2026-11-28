@@ -805,6 +805,75 @@ pub extern "C" fn beaconcrypt_server_last_status(handle: *const Server) -> u32 {
 	unsafe { (&*handle).1.get() }
 }
 
+/// Retire an established peer and durably commit the removal before returning.
+///
+/// Its ratchet is erased and later frames and sends for `key_id` are refused like an unknown identifier's. The registration replay marker is kept and the identifier is never reassigned. Returns true when a peer was removed. Returns false with `STATUS_REJECTED` for an unknown or already retired identifier, which commits nothing, or with another status on failure.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_server_retire_peer(handle: *mut Server, key_id: u64) -> bool {
+	if handle.is_null() {
+		return false;
+	}
+	let server = unsafe { &*handle };
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return false;
+	};
+	match owner.retire_peer(key_id) {
+		Ok(removed) => {
+			server
+				.1
+				.set(if removed { STATUS_OK } else { STATUS_REJECTED });
+			removed
+		}
+		Err(error) => {
+			server.1.set(error_status(error));
+			false
+		}
+	}
+}
+
+/// Write the number of established peers and of retained registration replay markers.
+///
+/// Returns `STATUS_POISONED` for a poisoned owner and `STATUS_INVALID_ARGUMENT` for null arguments, without changing the last operation's status. Markers are never removed, so their count grows with every accepted registration.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_server_peer_counts(
+	handle: *const Server,
+	peers_out: *mut u64,
+	markers_out: *mut u64,
+) -> u32 {
+	if handle.is_null() || peers_out.is_null() || markers_out.is_null() {
+		return STATUS_INVALID_ARGUMENT;
+	}
+	let Some(owner) = (unsafe { &*handle }).0.enter() else {
+		return STATUS_INVALID_ARGUMENT;
+	};
+	let (Some(peers), Some(markers)) = (owner.peer_count(), owner.registration_marker_count())
+	else {
+		return STATUS_POISONED;
+	};
+	unsafe {
+		*peers_out = peers as u64;
+		*markers_out = markers as u64;
+	}
+	STATUS_OK
+}
+
+/// Limit the number of established peers; zero removes the limit. The limit is a runtime setting and is not saved in snapshots.
+///
+/// At the limit, registration fails with `STATUS_CAPACITY`. Acceptance is refused before it consumes the replay marker, so the beacon may retry; a registration refused at completion has consumed its marker. Returns a status without changing the last operation's status.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_server_set_max_peers(handle: *mut Server, max_peers: u64) -> u32 {
+	if handle.is_null() {
+		return STATUS_INVALID_ARGUMENT;
+	}
+	let Some(mut owner) = (unsafe { &*handle }).0.enter() else {
+		return STATUS_INVALID_ARGUMENT;
+	};
+	let limit = usize::try_from(max_peers).unwrap_or(usize::MAX);
+	owner.set_max_peers(core::num::NonZeroUsize::new(limit));
+	STATUS_OK
+}
+
 /// Parse a snapshot envelope and compute its exact-byte head. This does not authenticate bytes or establish freshness.
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_snapshot_head(
@@ -2502,6 +2571,78 @@ mod tests {
 		);
 		assert!(!beacon.is_null());
 		beaconcrypt_beacon_free(beacon);
+	}
+
+	#[test]
+	fn retirement_counts_and_peer_limit_through_the_c_abi() {
+		let state = Arc::new(Mutex::new(StoreState::default()));
+		let destroyed = Arc::new(AtomicUsize::new(0));
+		let server = create_durable(&state, &destroyed);
+		let (mut beacon, kid) = register(&server);
+		let counts = |server: &OwnedServer| {
+			let (mut peers, mut markers) = (u64::MAX, u64::MAX);
+			assert_eq!(
+				beaconcrypt_server_peer_counts(server.0, &mut peers, &mut markers),
+				STATUS_OK
+			);
+			(peers, markers)
+		};
+		assert_eq!(counts(&server), (1, 1));
+		assert_eq!(
+			beaconcrypt_server_peer_counts(server.0, std::ptr::null_mut(), &mut 0),
+			STATUS_INVALID_ARGUMENT
+		);
+
+		assert_eq!(beaconcrypt_server_set_max_peers(server.0, 1), STATUS_OK);
+		let public_key = copy_buffer(beaconcrypt_server_identity_pk(server.0));
+		let mldsa_key = copy_buffer(beaconcrypt_server_mldsa_public_key(server.0));
+		let mut waiting = Beacon::new(19, &public_key, &mldsa_key);
+		let bundle = waiting.get_registration_bundle().unwrap();
+		let head = server.head();
+		let refused = beaconcrypt_register_beacon(
+			server.0,
+			bundle.as_ptr(),
+			bundle.len(),
+			std::ptr::null(),
+			0,
+		);
+		assert!(refused.response.ptr.is_null());
+		assert_eq!(beaconcrypt_server_last_status(server.0), STATUS_CAPACITY);
+		assert!(!beaconcrypt_server_is_poisoned(server.0));
+		assert_eq!(server.head(), head);
+
+		assert!(beaconcrypt_server_retire_peer(server.0, kid));
+		assert_eq!(beaconcrypt_server_last_status(server.0), STATUS_OK);
+		assert_eq!(server.head().generation, head.generation + 1);
+		assert!(!beaconcrypt_server_retire_peer(server.0, kid));
+		assert_eq!(beaconcrypt_server_last_status(server.0), STATUS_REJECTED);
+		assert_eq!(counts(&server), (0, 1));
+		let inbound = beacon.encrypt_message(b"refused").unwrap().ciphertext;
+		assert!(
+			beaconcrypt_decrypt_beacon_message(server.0, inbound.as_ptr(), inbound.len())
+				.ptr
+				.is_null()
+		);
+
+		let response = beaconcrypt_register_beacon(
+			server.0,
+			bundle.as_ptr(),
+			bundle.len(),
+			std::ptr::null(),
+			0,
+		);
+		assert_eq!(beaconcrypt_server_last_status(server.0), STATUS_OK);
+		waiting
+			.finish_registration(&copy_buffer(response.response))
+			.unwrap();
+		assert!(response.key_id > kid);
+		assert_eq!(beaconcrypt_server_set_max_peers(server.0, 0), STATUS_OK);
+		assert_eq!(counts(&server), (1, 2));
+		assert!(!beaconcrypt_server_retire_peer(std::ptr::null_mut(), kid));
+		assert_eq!(
+			beaconcrypt_server_set_max_peers(std::ptr::null_mut(), 1),
+			STATUS_INVALID_ARGUMENT
+		);
 	}
 
 	#[test]

@@ -416,6 +416,33 @@ pub extern "C" fn beaconcrypt_row_server_clear_cache(handle: *mut RowServerHandl
 	}
 }
 
+/// Retire an established peer in its own durable transaction: its row becomes a tombstone, and later frames and sends for `key_id` are refused. The replay marker is kept and the identifier is never reassigned. Returns true when a peer was retired; false with STATUS_REJECTED for an unknown or already retired identifier, which writes nothing, or with another status on failure.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_row_server_retire_peer(
+	handle: *mut RowServerHandle,
+	key_id: u64,
+) -> bool {
+	let Some(server) = (unsafe { handle.as_ref() }) else {
+		return false;
+	};
+	let Some(mut owner) = server.0.enter() else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return false;
+	};
+	match owner.retire_peer(key_id) {
+		Ok(retired) => {
+			server
+				.1
+				.set(if retired { STATUS_OK } else { STATUS_REJECTED });
+			retired
+		}
+		Err(error) => {
+			server.1.set(status(error));
+			false
+		}
+	}
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_row_server_free(handle: *mut RowServerHandle) {
 	// A free made from one of the handle's own callbacks is ignored; the active call owns it.
@@ -997,6 +1024,32 @@ pub extern "C" fn beaconcrypt_row_session_accept_registration(
 				.status
 				.set(if accepted { STATUS_OK } else { STATUS_REJECTED });
 			accepted
+		}
+		Err(error) => {
+			handle.status.set(status(error));
+			false
+		}
+	}
+}
+
+/// Retire an established peer as this session's native operation, composed with the transaction's application rows. Returns true when a peer was retired; false with STATUS_REJECTED for an unknown or already retired identifier, or with another status, which aborts the transaction.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_row_session_retire_peer(
+	handle: *mut RowSessionHandle,
+	key_id: u64,
+) -> bool {
+	let Some(handle) = (unsafe { handle.as_ref() }) else {
+		return false;
+	};
+	let Some(_guard) = handle.enter() else {
+		return false;
+	};
+	match unsafe { &mut *handle.session }.retire_peer(key_id) {
+		Ok(retired) => {
+			handle
+				.status
+				.set(if retired { STATUS_OK } else { STATUS_REJECTED });
+			retired
 		}
 		Err(error) => {
 			handle.status.set(status(error));

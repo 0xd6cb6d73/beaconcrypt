@@ -146,6 +146,53 @@ func (s *Server) Head() (SnapshotHead, error) {
 	})
 }
 
+// RetirePeer removes an established peer and durably commits the removal before
+// returning. Its frames and sends are then refused, its registration cannot be
+// replayed, and its key ID is never reassigned. It reports whether a peer was
+// removed; an unknown or already retired key ID commits nothing.
+func (s *Server) RetirePeer(keyID uint64) (bool, error) {
+	if s == nil {
+		return false, ErrClosed
+	}
+	return withServerMutation(s.native, func(handle *C.beaconcrypt_Server) (bool, error) {
+		return bool(C.beaconcrypt_server_retire_peer(handle, C.uint64_t(keyID))), nil
+	})
+}
+
+// PeerCounts returns the number of established peers and of retained
+// registration replay markers. Markers are never removed, so their count grows
+// with every accepted registration.
+func (s *Server) PeerCounts() (peers, markers uint64, err error) {
+	if s == nil {
+		return 0, 0, ErrClosed
+	}
+	counts, err := withServerHandle(s.native, func(handle *C.beaconcrypt_Server) ([2]uint64, error) {
+		var peers, markers C.uint64_t
+		if status := C.beaconcrypt_server_peer_counts(handle, &peers, &markers); status != 0 {
+			return [2]uint64{}, &PersistenceError{Code: PersistenceStatus(status)}
+		}
+		return [2]uint64{uint64(peers), uint64(markers)}, nil
+	})
+	return counts[0], counts[1], err
+}
+
+// SetMaxPeers limits the number of established peers; zero removes the limit.
+// Registration at the limit fails with StatusCapacity: acceptance is refused
+// before it consumes the replay marker, so the beacon may retry. The limit is a
+// runtime setting and is not saved in snapshots.
+func (s *Server) SetMaxPeers(maxPeers uint64) error {
+	if s == nil {
+		return ErrClosed
+	}
+	_, err := withServerHandle(s.native, func(handle *C.beaconcrypt_Server) (struct{}, error) {
+		if status := C.beaconcrypt_server_set_max_peers(handle, C.uint64_t(maxPeers)); status != 0 {
+			return struct{}{}, &PersistenceError{Code: PersistenceStatus(status)}
+		}
+		return struct{}{}, nil
+	})
+	return err
+}
+
 // IsPoisoned reports whether a failed commit has disabled the server.
 // It also returns true for a closed or absent handle.
 func (s *Server) IsPoisoned() bool {
